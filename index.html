@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="GRACIOU — Premium Streetwear Theme Preview Dashboard" />
+  <title>GRACIOU — Theme Hub</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@300;400;500&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ecru:       #FDFDD0;
+      --moss:       #4F5D3A;
+      --moss-light: #6B7A50;
+      --moss-dark:  #3A4529;
+      --navy:       #1A1A1A;
+      --white:      #FFFFFF;
+      --f-head:     'Barlow Condensed', sans-serif;
+      --f-body:     'DM Sans', sans-serif;
+      --f-logo:     'Oswald', sans-serif;
+      --ease:       cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--f-body);
+      background-color: var(--navy);
+      color: var(--ecru);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Background decorative grids & noise */
+    body::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(253, 253, 208, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(253, 253, 208, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .glow {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(79, 93, 58, 0.25) 0%, rgba(26, 26, 26, 0) 70%);
+      z-index: 2;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 900px;
+      padding: 3rem 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo-container {
+      margin-bottom: 2.5rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s var(--ease) forwards;
+    }
+
+    .logo {
+      font-family: var(--f-logo);
+      font-size: 3.5rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ecru);
+      display: inline-block;
+      border: 2px solid var(--ecru);
+      padding: 0.5rem 2rem;
+      line-height: 1;
+      margin-bottom: 1rem;
+      transition: all 0.5s var(--ease);
+    }
+
+    .logo:hover {
+      background: var(--ecru);
+      color: var(--navy);
+      box-shadow: 0 0 30px rgba(253, 253, 208, 0.3);
+    }
+
+    .tagline {
+      font-family: var(--f-head);
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--moss-light);
+    }
+
+    .subtitle {
+      max-width: 500px;
+      font-size: 0.95rem;
+      font-weight: 300;
+      line-height: 1.6;
+      color: rgba(253, 253, 208, 0.6);
+      margin-bottom: 4rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s var(--ease) 0.2s forwards;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      width: 100%;
+      margin-bottom: 4rem;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s var(--ease) 0.4s forwards;
+    }
+
+    @media (max-width: 640px) {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+      }
+    }
+
+    .card {
+      background: rgba(253, 253, 208, 0.02);
+      border: 1px solid rgba(253, 253, 208, 0.08);
+      border-radius: 4px;
+      padding: 2.5rem;
+      text-align: left;
+      text-decoration: none;
+      color: var(--ecru);
+      transition: all 0.4s var(--ease);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 240px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(79, 93, 58, 0.1) 0%, rgba(0, 0, 0, 0) 100%);
+      opacity: 0;
+      transition: opacity 0.4s var(--ease);
+      z-index: 1;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      border-color: var(--ecru);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 1px rgba(253, 253, 208, 0.2);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-content {
+      position: relative;
+      z-index: 2;
+    }
+
+    .card-tag {
+      font-family: var(--f-head);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--moss-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-title {
+      font-family: var(--f-head);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      line-height: 1.1;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-desc {
+      font-size: 0.875rem;
+      color: rgba(253, 253, 208, 0.55);
+      line-height: 1.5;
+      font-weight: 300;
+    }
+
+    .card-action {
+      position: relative;
+      z-index: 2;
+      font-family: var(--f-head);
+      font-size: 0.875rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--ecru);
+      margin-top: 1.5rem;
+    }
+
+    .card-action svg {
+      transition: transform 0.3s var(--ease);
+    }
+
+    .card:hover .card-action svg {
+      transform: translateX(6px);
+    }
+
+    .footer {
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: rgba(253, 253, 208, 0.3);
+      border-top: 1px solid rgba(253, 253, 208, 0.05);
+      width: 100%;
+      padding-top: 2rem;
+      margin-top: auto;
+      opacity: 0;
+      animation: fadeIn 1s var(--ease) 0.6s forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow"></div>
+
+  <div class="container">
+    <div class="logo-container">
+      <div class="logo">GRACIOU</div>
+      <div class="tagline">Grace in Every Thread</div>
+    </div>
+
+    <p class="subtitle">
+      Painel de desenvolvimento local da loja GRACIOU — catálogo, carrinho, checkout, cupons e painel de pedidos. Clique abaixo para explorar as páginas.
+    </p>
+
+    <div class="grid">
+      <a href="/preview.html" class="card" target="_blank">
+        <div class="card-content">
+          <div class="card-tag">Protótipo da Loja</div>
+          <h2 class="card-title">Homepage Preview</h2>
+          <p class="card-desc">Prévia interativa da página inicial contendo o menu nativo, Hero Editorial, Grid de Produtos Assimétrico e Filosofia de Marca.</p>
+        </div>
+        <div class="card-action">
+          Visualizar página
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </a>
+
+      <a href="/collection.html" class="card" target="_blank">
+        <div class="card-content">
+          <div class="card-tag">Protótipo da Loja</div>
+          <h2 class="card-title">Coleção Editorial</h2>
+          <p class="card-desc">Visualização da página de coleção de produtos, exibindo os drops mais recentes com visualização e filtros de produtos.</p>
+        </div>
+        <div class="card-action">
+          Visualizar página
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </a>
+
+      <a href="/cart.html" class="card" target="_blank">
+        <div class="card-content">
+          <div class="card-tag">Loja</div>
+          <h2 class="card-title">Carrinho</h2>
+          <p class="card-desc">Carrinho persistente com quantidades, cupom e regra de frete grátis a partir de duas peças. Segue para o checkout.</p>
+        </div>
+        <div class="card-action">
+          Visualizar página
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </a>
+
+      <a href="/checkout.html" class="card" target="_blank">
+        <div class="card-content">
+          <div class="card-tag">Loja</div>
+          <h2 class="card-title">Checkout</h2>
+          <p class="card-desc">Dados do cliente, endereço e revisão do pedido. Envia o pedido para a API, que recalcula valores e grava no banco.</p>
+        </div>
+        <div class="card-action">
+          Visualizar página
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </a>
+
+      <a href="/admin.html" class="card" target="_blank">
+        <div class="card-content">
+          <div class="card-tag">Operação</div>
+          <h2 class="card-title">Painel de Pedidos</h2>
+          <p class="card-desc">Área restrita para acompanhar pedidos, atualizar status e rastreio e copiar o resumo formatado para a YouDraw. Exige login.</p>
+        </div>
+        <div class="card-action">
+          Visualizar página
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </a>
+    </div>
+
+    <footer class="footer">
+      GRACIOU © 2026 — Streetwear Premium
+    </footer>
+  </div>
+
+</body>
+</html>

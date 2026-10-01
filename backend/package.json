@@ -1,0 +1,21 @@
+{
+  "name": "graciou-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API local da GRACIOU — pedidos, Checkout Pro e SQLite",
+  "type": "commonjs",
+  "main": "servidor.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "dev": "node --watch --no-warnings servidor.js",
+    "start": "node --no-warnings servidor.js",
+    "testar": "node --no-warnings ../scripts/testar-backend.mjs",
+    "testar:pagamentos": "node --no-warnings ../scripts/testar-pagamentos.mjs",
+    "testar:pagamentos:integracao": "node --no-warnings ../scripts/testar-pagamentos-integracao.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

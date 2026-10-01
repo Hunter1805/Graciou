@@ -1,0 +1,263 @@
+{% comment %}
+  ============================================================
+  Seção: main-product.liquid
+  Marca: GRACIOU
+  Descrição: Página de produto completa com:
+    - Galeria de imagens com thumbnails
+    - Selector de variantes (tamanho/cor)
+    - Form de add-to-cart nativo Shopify
+    - Accordion de detalhes e cuidados
+    - Trust badges
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign current_variant = product.selected_or_first_available_variant
+  assign product_form_id = 'graciou-product-form-' | append: product.id
+-%}
+
+<section
+  id="main-product"
+  class="main-product py-12 md:py-20"
+  aria-label="{{ product.title }}"
+>
+  <div class="container mx-auto px-6 md:px-12 lg:px-16">
+    <div class="main-product__inner grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-20">
+
+      <!-- Galeria -->
+      <div class="main-product__gallery" id="product-gallery">
+        <!-- Imagem principal -->
+        <div class="product-gallery__main relative overflow-hidden bg-moss-green/5 aspect-[3/4]">
+          {%- if product.featured_image != blank -%}
+            {{
+              product.featured_image
+              | image_url: width: 900
+              | image_tag:
+                class: 'product-gallery__main-img object-cover w-full h-full transition-transform duration-500 hover:scale-105',
+                alt: product.featured_image.alt | escape,
+                id: 'main-product-image',
+                loading: 'eager',
+                width: 900,
+                height: 1200
+            }}
+          {%- endif -%}
+        </div>
+
+        <!-- Thumbnails -->
+        {%- if product.images.size > 1 -%}
+          <div class="product-gallery__thumbs grid grid-cols-4 gap-3 mt-3" role="list" aria-label="Galeria de imagens do produto">
+            {%- for image in product.images limit: 8 -%}
+              <button
+                class="product-gallery__thumb aspect-square overflow-hidden bg-moss-green/5 {% if forloop.first %}is-active{% endif %}"
+                data-image-src="{{ image | image_url: width: 900 }}"
+                data-thumb-index="{{ forloop.index0 }}"
+                aria-label="Imagem {{ forloop.index }} de {{ product.images | size }}"
+                aria-pressed="{{ forloop.first | default: false }}"
+                type="button"
+              >
+                {{
+                  image
+                  | image_url: width: 200
+                  | image_tag:
+                    class: 'w-full h-full object-cover',
+                    alt: image.alt | escape,
+                    loading: 'lazy',
+                    width: 200,
+                    height: 200
+                }}
+              </button>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+      </div>
+
+      <!-- Informações do Produto -->
+      <div class="main-product__info">
+
+        <!-- Vendor / Coleção -->
+        {%- if product.vendor != blank -%}
+          <p class="product-info__vendor text-xs tracking-widest uppercase text-moss-green mb-2 font-body">
+            {{ product.vendor }}
+          </p>
+        {%- endif -%}
+
+        <!-- Título -->
+        <h1 class="product-info__title font-heading text-4xl md:text-5xl uppercase leading-tight mb-4">
+          {{ product.title }}
+        </h1>
+
+        <!-- Preço -->
+        <div class="product-info__price mb-8" id="product-price">
+          {%- if current_variant.compare_at_price > current_variant.price -%}
+            <span class="product-info__price-compare text-sm text-navy/40 line-through mr-2">
+              {{ current_variant.compare_at_price | money }}
+            </span>
+          {%- endif -%}
+          <span class="product-info__price-current text-2xl font-heading font-bold">
+            {{ current_variant.price | money }}
+          </span>
+          {%- if current_variant.compare_at_price > current_variant.price -%}
+            <span class="product-info__badge-sale ml-2 px-2 py-0.5 bg-moss-green text-ecru text-xs tracking-wider uppercase">
+              Sale
+            </span>
+          {%- endif -%}
+        </div>
+
+        <!-- Formulário de Produto -->
+        {%- form 'product', product, id: product_form_id, novalidate: true, data-type: 'add-to-cart-form' -%}
+          <input type="hidden" name="id" value="{{ current_variant.id }}" />
+
+          <!-- Selectors de variantes -->
+          {%- for option in product.options_with_values -%}
+            <fieldset class="product-option mb-6" data-option-name="{{ option.name | escape }}">
+              <legend class="product-option__label text-xs tracking-widest uppercase font-body font-medium mb-3">
+                {{ option.name }}:
+                <span class="product-option__selected text-moss-green" id="option-selected-{{ option.position }}">
+                  {{ option.selected_value }}
+                </span>
+              </legend>
+              <div class="product-option__values flex flex-wrap gap-2" role="group" aria-label="Selecione {{ option.name }}">
+                {%- for value in option.values -%}
+                  {%- liquid
+                    assign variant_option = 'option' | append: option.position
+                    assign is_selected = false
+                    if option.selected_value == value
+                      assign is_selected = true
+                    endif
+                  -%}
+                  <label
+                    class="product-option__swatch {% if option.name == 'Cor' or option.name == 'Color' %}product-option__swatch--color{% else %}product-option__swatch--size{% endif %} {% if is_selected %}is-selected{% endif %}"
+                    for="option-{{ option.position }}-{{ value | handleize }}"
+                  >
+                    <input
+                      type="radio"
+                      id="option-{{ option.position }}-{{ value | handleize }}"
+                      name="{{ variant_option }}"
+                      value="{{ value | escape }}"
+                      {% if is_selected %}checked{% endif %}
+                      class="sr-only"
+                      data-option-position="{{ option.position }}"
+                    />
+                    {{ value }}
+                  </label>
+                {%- endfor -%}
+              </div>
+            </fieldset>
+          {%- endfor -%}
+
+          <!-- Disponibilidade -->
+          <p class="product-info__availability text-xs tracking-wider mb-6 {% if current_variant.available %}text-moss-green{% else %}text-red-600{% endif %}" id="product-availability">
+            {%- if current_variant.available -%}
+              ✓ Em estoque — pronto para envio
+            {%- else -%}
+              × Indisponível no momento
+            {%- endif -%}
+          </p>
+
+          <!-- Botão Add to Cart -->
+          <button
+            type="submit"
+            name="add"
+            class="btn btn--primary btn--full mb-4"
+            id="product-add-to-cart"
+            {% unless current_variant.available %}disabled{% endunless %}
+            aria-label="Adicionar {{ product.title }} ao carrinho"
+          >
+            {%- if current_variant.available -%}
+              ADICIONAR AO CARRINHO
+            {%- else -%}
+              ESGOTADO
+            {%- endif -%}
+          </button>
+
+          <!-- Comprar agora -->
+          {{
+            form
+            | payment_button
+          }}
+
+        {%- endform -%}
+
+        <!-- Trust badges -->
+        <div class="product-trust-badges flex flex-col gap-2 mt-8 pt-8 border-t border-navy/10">
+          <div class="trust-badge flex items-center gap-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5D3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span class="text-xs tracking-wider font-light">Compra 100% segura</span>
+          </div>
+          <div class="trust-badge flex items-center gap-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5D3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span class="text-xs tracking-wider font-light">Envio para todo o Brasil</span>
+          </div>
+          <div class="trust-badge flex items-center gap-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4F5D3A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            <span class="text-xs tracking-wider font-light">Troca e devolução em 30 dias</span>
+          </div>
+        </div>
+
+        <!-- Acordeão de detalhes -->
+        <div class="product-accordions mt-8" id="product-accordions">
+
+          {%- if product.description != blank -%}
+            <details class="product-accordion" id="accordion-description">
+              <summary class="product-accordion__trigger">
+                <span>Descrição</span>
+                <svg class="accordion-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+              </summary>
+              <div class="product-accordion__content prose">
+                {{ product.description }}
+              </div>
+            </details>
+          {%- endif -%}
+
+          <details class="product-accordion" id="accordion-sizing">
+            <summary class="product-accordion__trigger">
+              <span>Guia de Tamanhos</span>
+              <svg class="accordion-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="product-accordion__content">
+              {% render 'sizing-guide' %}
+            </div>
+          </details>
+
+          <details class="product-accordion" id="accordion-shipping">
+            <summary class="product-accordion__trigger">
+              <span>Envio & Devoluções</span>
+              <svg class="accordion-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            </summary>
+            <div class="product-accordion__content">
+              <p class="text-sm font-light leading-relaxed">Processamento em até 2 dias úteis. Entrega via Correios ou transportadora parceira. Trocas e devoluções em até 30 dias após o recebimento.</p>
+            </div>
+          </details>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Produto Principal",
+  "tag": "section",
+  "class": "section-main-product",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "default": true,
+      "label": "Mostrar vendor / marca"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_dynamic_checkout",
+      "default": true,
+      "label": "Mostrar botão de checkout dinâmico"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Produto Principal"
+    }
+  ]
+}
+{% endschema %}

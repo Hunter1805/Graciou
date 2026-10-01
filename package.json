@@ -1,0 +1,12 @@
+{
+  "name": "graciou-theme-preview",
+  "version": "1.0.0",
+  "description": "Preview environment for GRACIOU storefront prototypes",
+  "scripts": {
+    "dev": "vite --open --port 3000",
+    "verificar:catalogo": "node scripts/verificar-catalogo.js"
+  },
+  "devDependencies": {
+    "vite": "^5.2.0"
+  }
+}

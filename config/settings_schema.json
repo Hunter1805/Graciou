@@ -1,0 +1,131 @@
+{
+  "current_version": "1.0.0",
+  "name": "GRACIOU",
+  "role": "main",
+  "handle": "graciou",
+  "settings": [
+    {
+      "name": "Identidade Visual",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "logo",
+          "label": "Logo principal"
+        },
+        {
+          "type": "image_picker",
+          "id": "logo_dark",
+          "label": "Logo versão escura (para footer)"
+        },
+        {
+          "type": "image_picker",
+          "id": "favicon",
+          "label": "Favicon (ícone da aba)"
+        },
+        {
+          "type": "image_picker",
+          "id": "share_image",
+          "label": "Imagem de compartilhamento (OG Image)"
+        }
+      ]
+    },
+    {
+      "name": "Cores",
+      "settings": [
+        {
+          "type": "color",
+          "id": "color_ecru",
+          "label": "Cor: Fundo Ecru / Off-white",
+          "default": "#FDFDD0"
+        },
+        {
+          "type": "color",
+          "id": "color_moss_green",
+          "label": "Cor: Verde Musgo (Acento)",
+          "default": "#4F5D3A"
+        },
+        {
+          "type": "color",
+          "id": "color_navy",
+          "label": "Cor: Tipografia / CTA (Dark)",
+          "default": "#1A1A1A"
+        }
+      ]
+    },
+    {
+      "name": "Tipografia",
+      "settings": [
+        {
+          "type": "font_picker",
+          "id": "font_heading",
+          "label": "Fonte: Títulos",
+          "default": "barlow_condensed_n7"
+        },
+        {
+          "type": "font_picker",
+          "id": "font_body",
+          "label": "Fonte: Corpo",
+          "default": "dm_sans_n4"
+        },
+        {
+          "type": "range",
+          "id": "font_body_size",
+          "min": 14,
+          "max": 18,
+          "step": 1,
+          "default": 16,
+          "unit": "px",
+          "label": "Tamanho base da fonte"
+        }
+      ]
+    },
+    {
+      "name": "Redes Sociais",
+      "settings": [
+        {
+          "type": "url",
+          "id": "social_instagram",
+          "label": "URL Instagram"
+        },
+        {
+          "type": "url",
+          "id": "social_tiktok",
+          "label": "URL TikTok"
+        },
+        {
+          "type": "url",
+          "id": "social_twitter",
+          "label": "URL X (Twitter)"
+        },
+        {
+          "type": "url",
+          "id": "social_youtube",
+          "label": "URL YouTube"
+        }
+      ]
+    },
+    {
+      "name": "Checkout",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "enable_dynamic_checkout",
+          "label": "Ativar botões de checkout dinâmico (Pay Now etc.)",
+          "default": true
+        }
+      ]
+    },
+    {
+      "name": "Performance",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "lazy_images",
+          "label": "Imagens com carregamento lazy",
+          "default": true,
+          "info": "Melhora o tempo de carregamento inicial"
+        }
+      ]
+    }
+  ]
+}

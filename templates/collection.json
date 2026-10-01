@@ -1,0 +1,12 @@
+{
+  "sections": {
+    "main": {
+      "type": "main-collection",
+      "settings": {
+        "products_per_page": 12,
+        "sort_by": "created-descending"
+      }
+    }
+  },
+  "order": ["main"]
+}

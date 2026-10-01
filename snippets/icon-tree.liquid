@@ -1,0 +1,65 @@
+{% comment %}
+  ============================================================
+  Snippet: icon-tree.liquid
+  Parâmetros:
+    - width {Number}  — largura em px (default: 48)
+    - color {String}  — cor hex/rgba (default: currentColor)
+  Uso: {% render 'icon-tree', width: 40, color: '#4F5D3A' %}
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign icon_width = width | default: 48
+  assign icon_color = color | default: 'currentColor'
+-%}
+
+<svg
+  width="{{ icon_width }}"
+  height="{{ icon_width | times: 1.25 | round }}"
+  viewBox="0 0 400 500"
+  fill="none"
+  xmlns="http://www.w3.org/2000/svg"
+  class="icon-tree"
+  aria-hidden="true"
+  focusable="false"
+>
+  <!-- Raízes -->
+  <path d="M200 420 Q185 440 165 455 Q150 465 140 480" stroke="{{ icon_color }}" stroke-width="3" stroke-linecap="round"/>
+  <path d="M200 420 Q215 440 235 455 Q250 465 260 480" stroke="{{ icon_color }}" stroke-width="3" stroke-linecap="round"/>
+  <path d="M200 420 Q200 445 200 470" stroke="{{ icon_color }}" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Tronco -->
+  <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="{{ icon_color }}" stroke-width="14" stroke-linecap="round"/>
+  <path d="M205 420 C207 380 210 340 208 300 C207 270 204 240 200 220" stroke="{{ icon_color }}" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Galhos principais -->
+  <path d="M198 300 C185 285 165 270 140 260" stroke="{{ icon_color }}" stroke-width="7" stroke-linecap="round"/>
+  <path d="M202 300 C215 285 235 270 260 260" stroke="{{ icon_color }}" stroke-width="7" stroke-linecap="round"/>
+
+  <!-- Galhos secundários -->
+  <path d="M140 260 C120 250 100 245 75 248" stroke="{{ icon_color }}" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M140 260 C130 240 125 220 120 200" stroke="{{ icon_color }}" stroke-width="4" stroke-linecap="round"/>
+  <path d="M165 270 C160 250 155 228 150 205" stroke="{{ icon_color }}" stroke-width="3.5" stroke-linecap="round"/>
+  <path d="M260 260 C280 250 300 245 325 248" stroke="{{ icon_color }}" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M260 260 C270 240 275 220 280 200" stroke="{{ icon_color }}" stroke-width="4" stroke-linecap="round"/>
+  <path d="M235 270 C240 250 245 228 250 205" stroke="{{ icon_color }}" stroke-width="3.5" stroke-linecap="round"/>
+
+  <!-- Galhos superiores centrais -->
+  <path d="M200 220 C195 200 188 178 175 155" stroke="{{ icon_color }}" stroke-width="5" stroke-linecap="round"/>
+  <path d="M200 220 C205 200 212 178 225 155" stroke="{{ icon_color }}" stroke-width="5" stroke-linecap="round"/>
+  <path d="M200 220 C200 198 200 175 200 150" stroke="{{ icon_color }}" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Galhos terciários -->
+  <path d="M175 155 C165 140 152 128 140 118" stroke="{{ icon_color }}" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M175 155 C168 138 160 122 152 108" stroke="{{ icon_color }}" stroke-width="2" stroke-linecap="round"/>
+  <path d="M200 150 C196 132 192 112 188 90" stroke="{{ icon_color }}" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M200 150 C204 132 208 112 212 90" stroke="{{ icon_color }}" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M225 155 C235 140 248 128 260 118" stroke="{{ icon_color }}" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M225 155 C232 138 240 122 248 108" stroke="{{ icon_color }}" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Galhos finos -->
+  <path d="M75 248 C62 242 50 238 38 240" stroke="{{ icon_color }}" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M120 200 C112 184 105 168 100 150" stroke="{{ icon_color }}" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M325 248 C338 242 350 238 362 240" stroke="{{ icon_color }}" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M280 200 C288 184 295 168 300 150" stroke="{{ icon_color }}" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

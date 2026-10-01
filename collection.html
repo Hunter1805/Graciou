@@ -1,0 +1,2208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="GRACIOU Drop 01 — Coleção completa. Streetwear elevado com propósito." />
+  <title>Drop 01 — GRACIOU</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ════════════════════════════════════
+       TOKENS
+    ════════════════════════════════════ */
+    :root {
+      --ecru:       #FDFDD0;
+      --moss:       #4F5D3A;
+      --moss-light: #6B7A50;
+      --moss-dark:  #3A4529;
+      --navy:       #1A1A1A;
+      --ecru-70:    rgba(253,253,208,0.7);
+      --ecru-40:    rgba(253,253,208,0.4);
+      --navy-10:    rgba(26,26,26,0.10);
+      --navy-06:    rgba(26,26,26,0.06);
+      --moss-10:    rgba(79,93,58,0.10);
+      --f-head:     'Barlow Condensed', sans-serif;
+      --f-body:     'DM Sans', sans-serif;
+      --ease:       cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ════════════════════════════════════
+       RESET
+    ════════════════════════════════════ */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:var(--f-body);
+      background:var(--ecru);
+      color:var(--navy);
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    img { max-width:100%; display:block; }
+    a   { color:inherit; text-decoration:none; }
+    ul  { list-style:none; }
+    h1,h2,h3 { font-family:var(--f-head); font-weight:800; line-height:1; }
+    button { cursor:pointer; font-family:inherit; background:none; border:none; }
+
+    /* ════════════════════════════════════
+       HEADER
+    ════════════════════════════════════ */
+    .header {
+      position:sticky; top:0; z-index:100;
+      background:var(--ecru);
+      border-bottom:1px solid var(--navy-10);
+      transition:box-shadow .3s;
+    }
+    .header.scrolled { box-shadow:0 4px 24px rgba(0,0,0,0.09); }
+    .header__inner {
+      max-width:1400px; margin:0 auto;
+      padding:0 3rem; height:72px;
+      display:flex; align-items:center; justify-content:space-between; gap:2rem;
+    }
+    .header__logo { display:flex; align-items:center; gap:.6rem; }
+    .header__logo-text {
+      font-family:'Oswald', sans-serif; font-size:1.6rem; font-weight:600;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--moss);
+      transform: scaleY(1.1); transform-origin: bottom;
+    }
+    .header__nav { display:flex; align-items:center; gap:2.5rem; }
+    .header__nav a {
+      font-size:.75rem; font-weight:500; letter-spacing:.14em;
+      text-transform:uppercase; position:relative; padding-bottom:2px; transition:color .2s;
+    }
+    .header__nav a::after {
+      content:''; position:absolute; bottom:-1px; left:0; right:0;
+      height:1px; background:var(--moss);
+      transform:scaleX(0); transform-origin:left; transition:transform .3s;
+    }
+    .header__nav a:hover { color:var(--moss); }
+    .header__nav a:hover::after,
+    .header__nav a.active::after { transform:scaleX(1); }
+    .header__nav a.active { color:var(--moss); }
+    .header__actions { display:flex; align-items:center; gap:.75rem; }
+    .header__icon-btn {
+      width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+      color:var(--navy); border-radius:2px; transition:color .2s, background .2s;
+    }
+    .header__icon-btn:hover { color:var(--moss); background:var(--moss-10); }
+    .cart-badge { position:relative; }
+    .cart-badge__count {
+      position:absolute; top:-5px; right:-5px;
+      min-width:18px; height:18px; background:var(--moss); color:var(--ecru);
+      font-size:.6rem; font-weight:700; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      max-width:1400px; margin:0 auto;
+      padding:.875rem 3rem;
+      border-bottom:1px solid var(--navy-06);
+      display:flex; align-items:center; gap:.5rem;
+    }
+    .breadcrumb a, .breadcrumb span {
+      font-size:.68rem; letter-spacing:.12em;
+      text-transform:uppercase; color:rgba(26,26,26,.4);
+      transition:color .2s;
+    }
+    .breadcrumb a:hover { color:var(--moss); }
+    .breadcrumb__sep { color:rgba(26,26,26,.2); }
+    .breadcrumb__current { color:var(--navy); }
+
+    /* ════════════════════════════════════
+       COLLECTION HERO (mini)
+    ════════════════════════════════════ */
+    .col-hero {
+      background:var(--moss-dark);
+      padding:4rem 3rem 3.5rem;
+      position:relative; overflow:hidden;
+    }
+    .col-hero__inner { max-width:1400px; margin:0 auto; position:relative; z-index:1; }
+    .col-hero__tree-bg {
+      position:absolute; right:-15%; bottom:-25%;
+      width:75vw; max-width:1100px;
+      opacity:.055; pointer-events:none;
+    }
+    .col-hero__eyebrow {
+      font-size:.65rem; letter-spacing:.28em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:.875rem;
+    }
+    .col-hero__title {
+      font-size:clamp(3rem,7vw,6.5rem);
+      text-transform:uppercase; color:var(--ecru); line-height:.92;
+      margin-bottom:1rem;
+    }
+    .col-hero__title sup {
+      font-size:.38em; letter-spacing:.15em;
+      color:var(--moss-light); vertical-align:super; margin-left:.3em;
+    }
+    .col-hero__desc {
+      font-size:.9rem; font-weight:300; line-height:1.7;
+      color:var(--ecru-70); max-width:52ch; margin-bottom:1.5rem;
+      letter-spacing:.02em;
+    }
+    .col-hero__meta {
+      display:flex; align-items:center; gap:2rem; flex-wrap:wrap;
+    }
+    .col-hero__count {
+      font-size:.68rem; letter-spacing:.18em;
+      text-transform:uppercase; color:var(--moss-light);
+    }
+    .col-hero__tags { display:flex; gap:.5rem; }
+    .col-hero__tag {
+      display:inline-block;
+      padding:.25rem .75rem;
+      font-size:.6rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase;
+      border:1px solid var(--ecru-40); color:var(--ecru-70);
+      transition:background .2s, color .2s;
+    }
+    .col-hero__tag:hover,
+    .col-hero__tag.is-active { background:var(--ecru); color:var(--navy); }
+
+    /* ════════════════════════════════════
+       TOOLBAR
+    ════════════════════════════════════ */
+    .toolbar {
+      position:sticky; top:72px; z-index:50;
+      background:var(--ecru);
+      border-bottom:1px solid var(--navy-10);
+    }
+    .toolbar__inner {
+      max-width:1400px; margin:0 auto;
+      padding:.875rem 3rem;
+      display:flex; align-items:center; justify-content:space-between; gap:1.5rem;
+      flex-wrap:wrap;
+    }
+
+    /* Filtros */
+    .filters { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+    .filter-btn {
+      display:inline-flex; align-items:center; gap:.4rem;
+      padding:.45rem 1rem;
+      font-size:.68rem; font-weight:500; letter-spacing:.12em; text-transform:uppercase;
+      border:1px solid var(--navy-10); color:rgba(26,26,26,.5);
+      background:transparent;
+      transition:all .2s; cursor:pointer;
+    }
+    .filter-btn:hover { border-color:var(--navy); color:var(--navy); }
+    .filter-btn.is-active {
+      background:var(--navy); color:var(--ecru); border-color:var(--navy);
+    }
+    .filter-btn__count {
+      font-size:.58rem; opacity:.6;
+    }
+    .filter-clear {
+      font-size:.65rem; letter-spacing:.12em; text-transform:uppercase;
+      color:var(--moss); text-decoration:underline; text-underline-offset:3px;
+      cursor:pointer; display:none;
+    }
+    .filter-clear.visible { display:inline; }
+
+    /* Ordenação + Layout Toggle */
+    .toolbar__right { display:flex; align-items:center; gap:1rem; }
+    .sort-select {
+      font-family:var(--f-body); font-size:.72rem; letter-spacing:.1em;
+      color:var(--navy); background:transparent; border:none;
+      border-bottom:1px solid var(--navy-10); padding:.3rem 1.5rem .3rem 0;
+      appearance:none; cursor:pointer; outline:none;
+    }
+    .layout-toggle { display:flex; align-items:center; gap:.25rem; }
+    .layout-btn {
+      width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+      border:1px solid transparent; transition:all .2s; cursor:pointer; color:rgba(26,26,26,.35);
+    }
+    .layout-btn.is-active { border-color:var(--navy-10); color:var(--navy); }
+    .layout-btn:hover { color:var(--navy); }
+
+    /* Results count */
+    .toolbar__count {
+      font-size:.68rem; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(26,26,26,.35); white-space:nowrap;
+    }
+
+    /* ════════════════════════════════════
+       MAIN LAYOUT
+    ════════════════════════════════════ */
+    .collection-page {
+      max-width:1400px; margin:0 auto;
+      padding:2.5rem 3rem 6rem;
+    }
+
+    /* ════════════════════════════════════
+       PRODUTO GRID
+    ════════════════════════════════════ */
+    .products-grid {
+      display:grid;
+      gap:1.5rem 1.25rem;
+      grid-template-columns:repeat(3,1fr);
+      transition:opacity .3s;
+    }
+    .products-grid.layout-2 { grid-template-columns:repeat(2,1fr); }
+    .products-grid.layout-4 { grid-template-columns:repeat(4,1fr); }
+    .products-grid.is-filtering { opacity:.4; pointer-events:none; }
+
+    /* Card */
+    .p-card { position:relative; }
+    .p-card__img {
+      position:relative; overflow:hidden;
+      background:var(--navy-06); aspect-ratio:3/4;
+      cursor:pointer;
+    }
+    .p-card__img-ph {
+      width:100%; height:100%;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:.875rem; padding:1.5rem;
+    }
+    .p-card__img-ph svg { opacity:.18; }
+    .p-card__img-label {
+      font-family:var(--f-head); font-size:.95rem; font-weight:700;
+      letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(26,26,26,.22); text-align:center; line-height:1.3;
+    }
+
+    /* Hover scale */
+    .p-card__img:hover .p-card__img-ph svg { opacity:.28; }
+
+    /* Quick-add overlay */
+    .p-card__qa {
+      position:absolute; bottom:0; left:0; right:0;
+      background:linear-gradient(to top, rgba(26,26,26,0.72), transparent);
+      padding:1rem;
+      transform:translateY(100%); transition:transform .3s var(--ease);
+    }
+    .p-card__img:hover .p-card__qa { transform:translateY(0); }
+    .p-card__qa-btn {
+      width:100%; padding:.55rem;
+      background:var(--ecru); color:var(--navy);
+      font-family:var(--f-head); font-size:.7rem; font-weight:700;
+      letter-spacing:.18em; text-transform:uppercase;
+      border:none; cursor:pointer; transition:background .2s, color .2s;
+    }
+    .p-card__qa-btn:hover { background:var(--moss); color:var(--ecru); }
+
+    /* Badges */
+    .p-card__badges { position:absolute; top:.75rem; left:.75rem; z-index:2; display:flex; flex-direction:column; gap:.35rem; }
+    .p-card__badge {
+      display:inline-block; padding:.22rem .55rem;
+      font-size:.56rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    }
+    .p-card__badge--sale  { background:var(--navy);  color:var(--ecru); }
+    .p-card__badge--new   { background:var(--moss);  color:var(--ecru); }
+    .p-card__badge--limit { background:rgba(255,200,50,.9); color:var(--navy); }
+
+    /* Wishlist */
+    .p-card__wish {
+      position:absolute; top:.75rem; right:.75rem; z-index:2;
+      width:34px; height:34px;
+      display:flex; align-items:center; justify-content:center;
+      background:rgba(253,253,208,.85); color:var(--navy);
+      border-radius:50%; opacity:0;
+      transition:opacity .2s, background .2s, color .2s;
+    }
+    .p-card__img:hover .p-card__wish { opacity:1; }
+    .p-card__wish:hover { background:var(--moss); color:var(--ecru); }
+    .p-card__wish.wishlisted { opacity:1; color:var(--moss); }
+    .p-card__wish.wishlisted:hover { background:var(--moss); color:var(--ecru); }
+
+    /* Info */
+    .p-card__info { margin-top:.875rem; }
+    .p-card__cat {
+      font-size:.58rem; letter-spacing:.2em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:.3rem;
+    }
+    .p-card__name {
+      font-size:.875rem; font-weight:400; letter-spacing:.03em;
+      color:var(--navy); margin-bottom:.4rem; line-height:1.35;
+    }
+    .p-card__name a:hover { color:var(--moss); }
+    .p-card__colors { display:flex; gap:.4rem; margin-bottom:.5rem; }
+    .p-card__color-dot {
+      width:12px; height:12px; border-radius:50%;
+      border:1.5px solid transparent; cursor:pointer; transition:border-color .15s;
+    }
+    .p-card__color-dot:hover,
+    .p-card__color-dot.active { border-color:var(--navy); }
+    .p-card__price { font-size:.82rem; color:rgba(26,26,26,.6); font-weight:300; }
+    .p-card__price strong { color:var(--navy); font-weight:500; }
+    .p-card__price s { margin-right:.4rem; }
+
+    /* Preço ainda não confirmado pela YouDraw.
+       A interface nunca inventa valor: mostra este rótulo.
+       Controlado por META.avisoPreco em dados/catalogo.js. */
+    .p-card__price--pendente {
+      display:inline-block;
+      font-family:var(--f-head); font-size:.68rem; font-weight:700;
+      letter-spacing:.16em; text-transform:uppercase;
+      color:var(--moss);
+      border:1px solid rgba(79,93,58,.35);
+      padding:.2rem .5rem;
+    }
+
+    /* Faixa de status do catálogo central (etapa de organização).
+       Prova visível de que os produtos vêm de dados/catalogo.js. */
+    .catalogo-status {
+      margin-top:2.5rem; padding-top:1.25rem;
+      border-top:1px solid var(--navy-10);
+      font-size:.62rem; letter-spacing:.16em; text-transform:uppercase;
+      color:rgba(26,26,26,.38);
+      border-left:2px solid rgba(79,93,58,.45);
+      padding-left:.75rem;
+    }
+
+    /* ── Cores por produto (geradas a partir de dados/catalogo.js) ──
+       Cada regra usa uma cor de META.paleta do catálogo central:
+       creme #FDFDD0 · verde-musgo #4F5D3A · verde-musgo-claro #6B7A50
+       verde-musgo-escuro #3A4529 · preto #1A1A1A · off-white #F2F0E4
+       marrom #8B7355 · verde-militar #4A5D3A (usado por identificação) */
+    .p-card__img--creme            { background:linear-gradient(145deg,#FDFDD0,#EAE7C2); }
+    .p-card__img--off-white        { background:linear-gradient(145deg,#F2F0E4,#DEDBC8); }
+    .p-card__img--preto            { background:linear-gradient(145deg,#1A1A1A,#2E2E2E); }
+    .p-card__img--verde-musgo      { background:linear-gradient(145deg,#2A3520,#1E2916); }
+    .p-card__img--verde-musgo-claro{ background:linear-gradient(145deg,#4F5D3A,#3A4529); }
+    .p-card__img--verde-musgo-escuro{ background:linear-gradient(145deg,#3A4529,#2E3820); }
+    .p-card__img--marrom           { background:linear-gradient(145deg,#8B7355,#6F5A42); }
+    .p-card__img--verde-militar    { background:linear-gradient(145deg,#4A5D3A,#38472C); }
+
+    /* Cor padrão (fallback) quando o produto não traz cor reconhecida */
+    .p-card__img--padrao           { background:linear-gradient(145deg,#3A4529,#1A1A1A); }
+
+    /* Cor do glifo da árvore dentro do placeholder */
+    .p-card__img-ph[data-invert]        { color:#FDFDD0; }
+    .p-card__img-ph[data-invert] .p-card__img-label { color:rgba(253,253,208,.22); }
+    .p-card__img-ph:not([data-invert])  { color:#4F5D3A; }
+    .p-card__img-ph:not([data-invert]) .p-card__img-label { color:rgba(26,26,26,.22); }
+
+    /* Sizes hover strip */
+    .p-card__sizes {
+      display:flex; gap:.3rem; margin-top:.5rem;
+      max-height:0; overflow:hidden;
+      transition:max-height .3s var(--ease), opacity .3s;
+      opacity:0;
+    }
+    .p-card:hover .p-card__sizes { max-height:40px; opacity:1; }
+    .p-card__size-chip {
+      padding:.25rem .55rem;
+      font-size:.6rem; letter-spacing:.08em;
+      border:1px solid var(--navy-10); color:rgba(26,26,26,.5);
+      cursor:pointer; transition:all .15s;
+    }
+    .p-card__size-chip:hover { border-color:var(--navy); color:var(--navy); }
+    .p-card__size-chip.sold { opacity:.3; text-decoration:line-through; cursor:not-allowed; }
+
+    /* ════════════════════════════════════
+       EMPTY STATE
+    ════════════════════════════════════ */
+    .empty-state {
+      grid-column:1/-1;
+      display:none; flex-direction:column; align-items:center;
+      padding:6rem 2rem; text-align:center;
+    }
+    .empty-state.visible { display:flex; }
+    .empty-state__icon { margin-bottom:1.5rem; opacity:.2; }
+    .empty-state__title {
+      font-size:2rem; text-transform:uppercase; color:var(--navy); margin-bottom:.75rem;
+    }
+    .empty-state__sub {
+      font-size:.85rem; font-weight:300; color:rgba(26,26,26,.5);
+      letter-spacing:.04em; margin-bottom:2rem;
+    }
+
+    /* ════════════════════════════════════
+       LOAD MORE
+    ════════════════════════════════════ */
+    .load-more-wrap {
+      display:flex; flex-direction:column; align-items:center;
+      margin-top:4rem; gap:1.25rem;
+    }
+    .load-progress {
+      width:100%; max-width:280px; height:1px;
+      background:var(--navy-10); position:relative; overflow:hidden;
+    }
+    .load-progress__bar {
+      position:absolute; left:0; top:0; bottom:0;
+      background:var(--moss);
+      transition:width .6s var(--ease);
+    }
+    .load-progress__label {
+      font-size:.65rem; letter-spacing:.18em; text-transform:uppercase;
+      color:rgba(26,26,26,.35);
+    }
+
+    /* ════════════════════════════════════
+       BOTÕES
+    ════════════════════════════════════ */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+      padding:.875rem 2.25rem;
+      font-family:var(--f-head); font-size:.78rem; font-weight:700;
+      letter-spacing:.2em; text-transform:uppercase;
+      border:1.5px solid transparent; cursor:pointer;
+      transition:all .25s; white-space:nowrap;
+    }
+    .btn--outline { background:transparent; color:var(--moss); border-color:var(--moss); }
+    .btn--outline:hover { background:var(--moss); color:var(--ecru); }
+    .btn--primary { background:var(--navy); color:var(--ecru); border-color:var(--navy); }
+    .btn--primary:hover { background:var(--moss); border-color:var(--moss); }
+    .btn--ghost-dark {
+      background:transparent; color:rgba(26,26,26,.5);
+      border-color:var(--navy-10);
+    }
+    .btn--ghost-dark:hover { color:var(--navy); border-color:var(--navy); }
+
+    /* ════════════════════════════════════
+       FILTER DRAWER (mobile / desktop slide)
+    ════════════════════════════════════ */
+    .filter-panel {
+      background:var(--ecru);
+      border-right:1px solid var(--navy-10);
+      overflow-y:auto;
+      position:fixed; top:72px; left:0; bottom:0;
+      width:280px;
+      transform:translateX(-100%);
+      transition:transform .4s var(--ease);
+      z-index:80;
+      padding:2rem 1.5rem;
+    }
+    .filter-panel.open { transform:translateX(0); }
+    .filter-panel__overlay {
+      position:fixed; inset:0; background:rgba(26,26,26,.35);
+      z-index:79; opacity:0; pointer-events:none;
+      transition:opacity .3s; backdrop-filter:blur(4px);
+    }
+    .filter-panel__overlay.open { opacity:1; pointer-events:all; }
+    .filter-panel__heading {
+      font-size:1.4rem; text-transform:uppercase;
+      margin-bottom:1.5rem; padding-bottom:1rem;
+      border-bottom:1px solid var(--navy-10);
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .filter-panel__close { font-size:1.2rem; cursor:pointer; opacity:.4; transition:opacity .2s; }
+    .filter-panel__close:hover { opacity:1; }
+    .filter-group { margin-bottom:1.75rem; }
+    .filter-group__title {
+      font-size:.65rem; letter-spacing:.2em; text-transform:uppercase;
+      color:rgba(26,26,26,.4); margin-bottom:.875rem; font-weight:600;
+    }
+    .filter-group__opts { display:flex; flex-wrap:wrap; gap:.4rem; }
+    .filter-opt {
+      padding:.35rem .8rem;
+      font-size:.68rem; letter-spacing:.1em; text-transform:uppercase;
+      border:1px solid var(--navy-10); color:rgba(26,26,26,.5);
+      cursor:pointer; transition:all .15s;
+    }
+    .filter-opt:hover { border-color:var(--navy); color:var(--navy); }
+    .filter-opt.active { background:var(--navy); color:var(--ecru); border-color:var(--navy); }
+    .price-range { display:flex; flex-direction:column; gap:.5rem; }
+    .price-range input[type="range"] {
+      width:100%; accent-color:var(--moss);
+    }
+    .price-range__vals {
+      display:flex; justify-content:space-between;
+      font-size:.7rem; color:rgba(26,26,26,.5);
+    }
+
+    /* ════════════════════════════════════
+       TICKER BOTTOM
+    ════════════════════════════════════ */
+    .ticker {
+      background:var(--moss); overflow:hidden;
+      padding:.75rem 0; white-space:nowrap;
+    }
+    .ticker__track { display:inline-flex; animation:ticker 25s linear infinite; }
+    .ticker__item {
+      font-family:var(--f-head); font-size:.75rem; font-weight:700;
+      letter-spacing:.18em; text-transform:uppercase;
+      color:var(--ecru-70); padding:0 2.5rem;
+    }
+    .ticker__item span { color:var(--ecru); }
+    @keyframes ticker {
+      from { transform:translateX(0); }
+      to   { transform:translateX(-50%); }
+    }
+
+    /* ════════════════════════════════════
+       REVEAL ANIMATION
+    ════════════════════════════════════ */
+    [data-reveal] {
+      opacity:0; transform:translateY(20px);
+      transition:opacity .65s var(--ease), transform .65s var(--ease);
+    }
+    [data-reveal].revealed { opacity:1; transform:translateY(0); }
+    [data-reveal-delay="1"].revealed { transition-delay:.08s; }
+    [data-reveal-delay="2"].revealed { transition-delay:.16s; }
+    [data-reveal-delay="3"].revealed { transition-delay:.24s; }
+    [data-reveal-delay="4"].revealed { transition-delay:.32s; }
+    [data-reveal-delay="5"].revealed { transition-delay:.40s; }
+    [data-reveal-delay="6"].revealed { transition-delay:.48s; }
+
+    /* ════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════ */
+    @media(max-width:1024px){
+      .products-grid { grid-template-columns:repeat(3,1fr); }
+      .products-grid.layout-4 { grid-template-columns:repeat(3,1fr); }
+    }
+    @media(max-width:768px){
+      .header__inner, .breadcrumb, .col-hero,
+      .toolbar__inner, .collection-page { padding-left:1.25rem; padding-right:1.25rem; }
+      .header__nav { display:none; }
+      .products-grid,
+      .products-grid.layout-2,
+      .products-grid.layout-4 { grid-template-columns:repeat(2,1fr); gap:1rem .75rem; }
+      .layout-toggle { display:none; }
+    }
+    @media(max-width:480px){
+      .products-grid { grid-template-columns:1fr; }
+    }
+
+    /* ════════════════════════════════════
+       SELETOR DE TAMANHO (carrinho)
+       Painel criado em runtime ao adicionar
+       um produto que exige escolha de tamanho.
+       Usa SOMENTE os tokens e as classes que
+       já existem nesta página — nenhuma regra
+       de estilo anterior é alterada.
+    ════════════════════════════════════ */
+    .tamanho-painel {
+      position:fixed; inset:0; z-index:120;
+      background:rgba(26,26,26,.35);
+      backdrop-filter:blur(4px);
+      display:flex; align-items:center; justify-content:center;
+      padding:1.25rem;
+    }
+    .tamanho-painel__caixa {
+      background:var(--ecru);
+      border:1px solid var(--navy-10);
+      padding:1.75rem;
+      width:100%; max-width:360px;
+      text-align:center;
+      box-shadow:0 18px 48px rgba(0,0,0,.18);
+    }
+    .tamanho-painel__rotulo {
+      font-size:.65rem; letter-spacing:.22em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:.4rem;
+    }
+    .tamanho-painel__produto {
+      font-family:var(--f-head); font-size:1.15rem; font-weight:700;
+      letter-spacing:.04em; text-transform:uppercase;
+      color:var(--navy); margin-bottom:1.25rem; line-height:1.2;
+    }
+    .tamanho-painel__opcoes {
+      display:flex; flex-wrap:wrap; gap:.45rem; justify-content:center;
+      margin-bottom:1.5rem;
+    }
+    .tamanho-painel__chip {
+      min-width:48px; padding:.5rem .7rem;
+      font-size:.7rem; letter-spacing:.1em;
+      background:transparent; cursor:pointer;
+    }
+    .tamanho-painel__chip:hover { border-color:var(--navy); color:var(--navy); }
+    .tamanho-painel__cancelar { width:100%; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     HEADER
+══════════════════════════════════════ -->
+<header class="header" id="site-header">
+  <div class="header__inner">
+    <a href="preview.html" class="header__logo" aria-label="GRACIOU — voltar ao início">
+      <img src="assets/tree-icon.png" alt="Tree" style="height:48px; width:auto; mix-blend-mode:multiply; margin-right:-4px; margin-top:-2px;" aria-hidden="true" />
+      <span class="header__logo-text">GRACIOU</span>
+    </a>
+    <nav class="header__nav">
+      <a href="preview.html">Loja</a>
+      <a href="collection.html" class="active">Drops</a>
+      <a href="preview.html#philosophy">Missão</a>
+      <a href="#">Lookbook</a>
+    </nav>
+    <div class="header__actions">
+      <button class="header__icon-btn" aria-label="Buscar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <a href="cart.html" class="header__icon-btn cart-badge" aria-label="Carrinho">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-badge__count" data-graciou-cart-count>0</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="preview.html">Início</a>
+  <span class="breadcrumb__sep" aria-hidden="true">/</span>
+  <a href="#">Coleções</a>
+  <span class="breadcrumb__sep" aria-hidden="true">/</span>
+  <span class="breadcrumb__current">Drop 01</span>
+</nav>
+
+
+<!-- ══════════════════════════════════════
+     HERO DA COLEÇÃO
+══════════════════════════════════════ -->
+<section class="col-hero">
+  <!-- Árvore decorativa -->
+  <div class="col-hero__tree-bg" aria-hidden="true">
+    <img src="assets/tree-icon.png" alt="" style="width:100%; height:100%; object-fit:contain; opacity:0.1; filter:contrast(200%) grayscale(100%) invert(100%); mix-blend-mode:screen;" />
+  </div>
+
+  <div class="col-hero__inner">
+    <p class="col-hero__eyebrow">Coleção — Drop 01</p>
+    <h1 class="col-hero__title">DROP<sup>01</sup></h1>
+    <p class="col-hero__desc">
+      Cada peça desta coleção é um manifesto. Silhuetas oversized, materiais de origem consciente e uma paleta que nasce da terra. Frente limpa com GRACIOU centralizado — as estampas ficam nas costas.
+    </p>
+    <div class="col-hero__meta">
+      <span class="col-hero__count" id="total-count">— produtos</span>
+      <div class="col-hero__tags" role="list" aria-label="Categorias rápidas">
+        <button class="col-hero__tag is-active" data-cat="all" role="listitem">Tudo</button>
+        <button class="col-hero__tag" data-cat="drop-01" role="listitem">Drop 01</button>
+        <button class="col-hero__tag" data-cat="graciou-move" role="listitem">GRACIOU Move</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════
+     TOOLBAR
+══════════════════════════════════════ -->
+<div class="toolbar" role="toolbar" aria-label="Filtros e ordenação">
+  <div class="toolbar__inner">
+    <!-- Filtros rápidos -->
+    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+      <button class="filter-btn is-active" data-filter="all" id="filter-all">
+        Todos <span class="filter-btn__count" data-count-all></span>
+      </button>
+      <button class="filter-btn" data-filter="drop-01" id="filter-drop01">
+        Drop 01 <span class="filter-btn__count" data-count-drop-01></span>
+      </button>
+      <button class="filter-btn" data-filter="graciou-move" id="filter-move">
+        GRACIOU Move <span class="filter-btn__count" data-count-graciou-move></span>
+      </button>
+      <span class="filter-clear" id="filter-clear">Limpar filtros</span>
+    </div>
+
+    <div class="toolbar__right">
+      <span class="toolbar__count" id="results-count">Carregando catálogo…</span>
+
+      <!-- Ordenação -->
+      <div style="position:relative;">
+        <select class="sort-select" id="sort-select" aria-label="Ordenar produtos">
+          <option value="featured">Destaque</option>
+          <option value="price-asc" disabled>Menor preço (em breve)</option>
+          <option value="price-desc" disabled>Maior preço (em breve)</option>
+          <option value="alpha">A–Z</option>
+        </select>
+        <svg style="position:absolute;right:0;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4;" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </div>
+
+      <!-- Layout toggle -->
+      <div class="layout-toggle">
+        <button class="layout-btn" data-layout="2" aria-label="2 colunas">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="0" width="7" height="7"/><rect x="9" y="0" width="7" height="7"/><rect x="0" y="9" width="7" height="7"/><rect x="9" y="9" width="7" height="7"/></svg>
+        </button>
+        <button class="layout-btn is-active" data-layout="3" aria-label="3 colunas">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="0" width="4" height="7"/><rect x="6" y="0" width="4" height="7"/><rect x="12" y="0" width="4" height="7"/><rect x="0" y="9" width="4" height="7"/><rect x="6" y="9" width="4" height="7"/><rect x="12" y="9" width="4" height="7"/></svg>
+        </button>
+        <button class="layout-btn" data-layout="4" aria-label="4 colunas">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><rect x="0" y="0" width="3" height="7"/><rect x="4.3" y="0" width="3" height="7"/><rect x="8.7" y="0" width="3" height="7"/><rect x="13" y="0" width="3" height="7"/><rect x="0" y="9" width="3" height="7"/><rect x="4.3" y="9" width="3" height="7"/><rect x="8.7" y="9" width="3" height="7"/><rect x="13" y="9" width="3" height="7"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════
+     PRODUTOS GRID
+══════════════════════════════════════ -->
+<main class="collection-page" id="collection-main">
+  <!-- Este é o grid existente. Mantém as classes atuais (products-grid)
+       e ganhou data-product-grid apenas como identificador, para o script
+       de renderização achá-lo sem depender de id/classe. -->
+  <div class="products-grid" id="products-grid" data-product-grid aria-live="polite" aria-label="Produtos">
+
+    <!-- Padrão de marca usado como placeholder de imagem.
+         O produto não tem foto real ainda (imagemFrente/imagemCostas = null
+         em dados/catalogo.js). Este SVG preserva o design sem inventar fotos.
+         A COR do produto é aplicada em runtime pelo catálogo central. -->
+    <template id="graciou-ph-svg">
+      <svg width="60" height="75" viewBox="0 0 400 500" fill="none" aria-hidden="true">
+        <path d="M200 420 Q200 445 200 470" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>
+        <path d="M198 300 C185 285 165 270 140 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+        <path d="M202 300 C215 285 235 270 260 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>
+        <path d="M200 220 C195 200 188 178 175 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        <path d="M200 220 C205 200 212 178 225 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+    </template>
+
+    <!-- Produtos do Drop 01: RENDERIZADOS pelo catálogo central.
+         Não escrever produtos à mão neste arquivo.
+         O markup gerado é idêntico ao dos cards antigos, por isso o design
+         e todo o JS de filtro/ordenação continuam funcionando igual.
+         As classes de cor de cada produto estão no bloco de estilos acima. -->
+
+    <!-- Produtos antigos (12 fictícios) DESATIVADOS.
+         Não faziam parte do Drop 01 e divergiam do catálogo oficial:
+         Hoodie, Cargo Pant, Coach Jacket, Bucket Hat, Long Sleeve,
+         Sweatpant, Meia, Zip Hoodie, Graphic Tee, Shoulder Bag, Wide Leg.
+         Mantidos abaixo, ocultos, como registro. NÃO apagar (histórico). -->
+    <div class="p-card-legado" hidden aria-hidden="true">
+
+    <!-- PRODUTO 1 -->
+    <article class="p-card" data-tags="novo moletom" data-price="389" data-name="Hoodie Oversized Raízes">
+      <div class="p-card__img">
+        <div class="p-card__badges">
+          <span class="p-card__badge p-card__badge--new">Novo</span>
+        </div>
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#2a3520,#1e2916)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="#FDFDD0" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#FDFDD0" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="#FDFDD0" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="#FDFDD0" stroke-width="7" stroke-linecap="round"/>
+            <path d="M200 220 C195 200 188 178 175 155" stroke="#FDFDD0" stroke-width="5" stroke-linecap="round"/>
+            <path d="M200 220 C205 200 212 178 225 155" stroke="#FDFDD0" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label">Hoodie Oversized<br>Moss Green</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Moletom</p>
+        <p class="p-card__name"><a href="#">Hoodie Oversized "Raízes"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#4F5D3A" title="Moss Green"></div>
+          <div class="p-card__color-dot" style="background:#1A1A1A" title="Black"></div>
+          <div class="p-card__color-dot" style="background:#FDFDD0;border-color:rgba(0,0,0,.15)" title="Ecru"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 389,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">P</span>
+          <span class="p-card__size-chip">M</span>
+          <span class="p-card__size-chip">G</span>
+          <span class="p-card__size-chip sold">GG</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 2 -->
+    <article class="p-card" data-tags="sale camiseta" data-price="149" data-name="Tee Essential Ecru" data-reveal data-reveal-delay="2">
+      <div class="p-card__img">
+        <div class="p-card__badges">
+          <span class="p-card__badge p-card__badge--sale">Sale</span>
+        </div>
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#e8e4d0,#cfc9b2)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="#4F5D3A" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#4F5D3A" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="#4F5D3A" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="#4F5D3A" stroke-width="7" stroke-linecap="round"/>
+            <path d="M200 220 C200 198 200 175 200 150" stroke="#4F5D3A" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label" style="color:rgba(26,26,26,.25)">Tee Essential<br>Off-White</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Camiseta</p>
+        <p class="p-card__name"><a href="#">Tee Essential "Ecru"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#FDFDD0;border-color:rgba(0,0,0,.15)" title="Ecru"></div>
+          <div class="p-card__color-dot" style="background:#4F5D3A" title="Moss"></div>
+        </div>
+        <p class="p-card__price"><s style="opacity:.4">R$ 189,00</s><strong style="color:#6B7A50">R$ 149,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">P</span>
+          <span class="p-card__size-chip">M</span>
+          <span class="p-card__size-chip">G</span>
+          <span class="p-card__size-chip">GG</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 3 -->
+    <article class="p-card" data-tags="novo calcas" data-price="449" data-name="Cargo Pant Shadow" data-reveal data-reveal-delay="3">
+      <div class="p-card__img">
+        <div class="p-card__badges">
+          <span class="p-card__badge p-card__badge--new">Novo</span>
+        </div>
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#1a1a1a,#2e2e2e)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="#6B7A50" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#6B7A50" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="#6B7A50" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="#6B7A50" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label" style="color:rgba(253,253,208,.18)">Cargo Pant<br>Shadow Black</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Calças</p>
+        <p class="p-card__name"><a href="#">Cargo Pant "Shadow"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#1A1A1A" title="Black"></div>
+          <div class="p-card__color-dot" style="background:#4F5D3A" title="Moss"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 449,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">36</span>
+          <span class="p-card__size-chip">38</span>
+          <span class="p-card__size-chip">40</span>
+          <span class="p-card__size-chip">42</span>
+          <span class="p-card__size-chip sold">44</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 4 -->
+    <article class="p-card" data-tags="novo moletom" data-price="679" data-name="Coach Jacket Floresta" data-reveal data-reveal-delay="4">
+      <div class="p-card__img">
+        <div class="p-card__badges">
+          <span class="p-card__badge p-card__badge--new">Drop 01</span>
+          <span class="p-card__badge p-card__badge--limit">Limitado</span>
+        </div>
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#3a4529,#4f5d3a)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="rgba(253,253,208,.5)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="rgba(253,253,208,.5)" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="rgba(253,253,208,.5)" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="rgba(253,253,208,.5)" stroke-width="7" stroke-linecap="round"/>
+            <path d="M140 260 C120 250 100 245 75 248" stroke="rgba(253,253,208,.5)" stroke-width="4.5" stroke-linecap="round"/>
+            <path d="M260 260 C280 250 300 245 325 248" stroke="rgba(253,253,208,.5)" stroke-width="4.5" stroke-linecap="round"/>
+            <path d="M200 220 C195 200 188 178 175 155" stroke="rgba(253,253,208,.5)" stroke-width="5" stroke-linecap="round"/>
+            <path d="M200 220 C205 200 212 178 225 155" stroke="rgba(253,253,208,.5)" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label">Coach Jacket<br>Moss Edition</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Jaqueta</p>
+        <p class="p-card__name"><a href="#">Coach Jacket "Floresta"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#4F5D3A" title="Moss"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 679,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">P</span>
+          <span class="p-card__size-chip">M</span>
+          <span class="p-card__size-chip sold">G</span>
+          <span class="p-card__size-chip sold">GG</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 5 -->
+    <article class="p-card" data-tags="sale acessorios" data-price="119" data-name="Bucket Hat Terra" data-reveal data-reveal-delay="5">
+      <div class="p-card__img">
+        <div class="p-card__badges">
+          <span class="p-card__badge p-card__badge--sale">Sale</span>
+        </div>
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#8B7355,#a08060)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="rgba(253,253,208,.6)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="rgba(253,253,208,.6)" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="rgba(253,253,208,.6)" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="rgba(253,253,208,.6)" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label" style="color:rgba(253,253,208,.4)">Bucket Hat<br>Terra</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Acessório</p>
+        <p class="p-card__name"><a href="#">Bucket Hat "Terra"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#8B7355" title="Terra"></div>
+          <div class="p-card__color-dot" style="background:#1A1A1A" title="Black"></div>
+        </div>
+        <p class="p-card__price"><s style="opacity:.4">R$ 159,00</s><strong style="color:#6B7A50">R$ 119,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">Único</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 6 -->
+    <article class="p-card" data-tags="disponivel camiseta" data-price="229" data-name="Long Sleeve Raiz" data-reveal data-reveal-delay="6">
+      <div class="p-card__img">
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#d4cdb0,#c4bda0)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="#4F5D3A" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#4F5D3A" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="#4F5D3A" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="#4F5D3A" stroke-width="7" stroke-linecap="round"/>
+            <path d="M200 220 C195 200 188 178 175 155" stroke="#4F5D3A" stroke-width="5" stroke-linecap="round"/>
+            <path d="M200 220 C205 200 212 178 225 155" stroke="#4F5D3A" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label" style="color:rgba(26,26,26,.22)">Long Sleeve<br>Natural</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Camiseta</p>
+        <p class="p-card__name"><a href="#">Long Sleeve "Raiz"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#D4CDB0;border-color:rgba(0,0,0,.15)" title="Natural"></div>
+          <div class="p-card__color-dot" style="background:#4F5D3A" title="Moss"></div>
+          <div class="p-card__color-dot" style="background:#1A1A1A" title="Black"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 229,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">P</span>
+          <span class="p-card__size-chip">M</span>
+          <span class="p-card__size-chip">G</span>
+          <span class="p-card__size-chip">GG</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 7 -->
+    <article class="p-card" data-tags="novo sale calcas" data-price="299" data-name="Sweatpant Bosque" data-reveal data-reveal-delay="1">
+      <div class="p-card__img">
+        <div class="p-card__badges">
+          <span class="p-card__badge p-card__badge--new">Novo</span>
+          <span class="p-card__badge p-card__badge--sale">Sale</span>
+        </div>
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#3a4529,#2e3820)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="rgba(253,253,208,.4)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="rgba(253,253,208,.4)" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="rgba(253,253,208,.4)" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="rgba(253,253,208,.4)" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label">Sweatpant<br>Bosque</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Calças</p>
+        <p class="p-card__name"><a href="#">Sweatpant "Bosque"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#3a4529" title="Moss Dark"></div>
+        </div>
+        <p class="p-card__price"><s style="opacity:.4">R$ 349,00</s><strong style="color:#6B7A50">R$ 299,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">P</span>
+          <span class="p-card__size-chip">M</span>
+          <span class="p-card__size-chip">G</span>
+          <span class="p-card__size-chip">GG</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 8 -->
+    <article class="p-card" data-tags="disponivel acessorios" data-price="89" data-name="Meia Árvore" data-reveal data-reveal-delay="2">
+      <div class="p-card__img">
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#f5f2e4,#e8e5d8)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="#4F5D3A" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#4F5D3A" stroke-width="14" stroke-linecap="round"/>
+            <path d="M200 220 C200 198 200 175 200 150" stroke="#4F5D3A" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label" style="color:rgba(26,26,26,.2)">Meia<br>Árvore</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Acessório</p>
+        <p class="p-card__name"><a href="#">Meia "Árvore" — Pack 3</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#FDFDD0;border-color:rgba(0,0,0,.15)" title="Ecru"></div>
+          <div class="p-card__color-dot" style="background:#4F5D3A" title="Moss"></div>
+          <div class="p-card__color-dot" style="background:#1A1A1A" title="Black"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 89,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">35-38</span>
+          <span class="p-card__size-chip">39-42</span>
+          <span class="p-card__size-chip">43-46</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 9 -->
+    <article class="p-card" data-tags="novo disponivel moletom" data-price="549" data-name="Zip Hoodie Canopy" data-reveal data-reveal-delay="3">
+      <div class="p-card__img">
+        <div class="p-card__badges">
+          <span class="p-card__badge p-card__badge--new">Novo</span>
+        </div>
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#222e18,#1a2412)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="rgba(253,253,208,.45)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="rgba(253,253,208,.45)" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="rgba(253,253,208,.45)" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="rgba(253,253,208,.45)" stroke-width="7" stroke-linecap="round"/>
+            <path d="M200 220 C195 200 188 178 175 155" stroke="rgba(253,253,208,.45)" stroke-width="5" stroke-linecap="round"/>
+            <path d="M200 220 C205 200 212 178 225 155" stroke="rgba(253,253,208,.45)" stroke-width="5" stroke-linecap="round"/>
+            <path d="M175 155 C165 140 152 128 140 118" stroke="rgba(253,253,208,.45)" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M225 155 C235 140 248 128 260 118" stroke="rgba(253,253,208,.45)" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label">Zip Hoodie<br>Canopy</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Moletom</p>
+        <p class="p-card__name"><a href="#">Zip Hoodie "Canopy"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#222e18" title="Forest"></div>
+          <div class="p-card__color-dot" style="background:#1A1A1A" title="Black"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 549,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">P</span>
+          <span class="p-card__size-chip">M</span>
+          <span class="p-card__size-chip">G</span>
+          <span class="p-card__size-chip sold">GG</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 10 -->
+    <article class="p-card" data-tags="disponivel camiseta" data-price="179" data-name="Graphic Tee Raízes" data-reveal data-reveal-delay="4">
+      <div class="p-card__img">
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#1A1A1A,#2a2a2a)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="#6B7A50" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#6B7A50" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="#6B7A50" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="#6B7A50" stroke-width="7" stroke-linecap="round"/>
+            <path d="M200 220 C195 200 188 178 175 155" stroke="#6B7A50" stroke-width="5" stroke-linecap="round"/>
+            <path d="M200 220 C205 200 212 178 225 155" stroke="#6B7A50" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label" style="color:rgba(253,253,208,.18)">Graphic Tee<br>Raízes Print</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Camiseta</p>
+        <p class="p-card__name"><a href="#">Graphic Tee "Raízes"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#1A1A1A" title="Black"></div>
+          <div class="p-card__color-dot" style="background:#FDFDD0;border-color:rgba(0,0,0,.15)" title="Ecru"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 179,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">P</span>
+          <span class="p-card__size-chip">M</span>
+          <span class="p-card__size-chip">G</span>
+          <span class="p-card__size-chip">GG</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 11 -->
+    <article class="p-card" data-tags="disponivel acessorios" data-price="259" data-name="Shoulder Bag Terra" data-reveal data-reveal-delay="5">
+      <div class="p-card__img">
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#6b5840,#5a4a34)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="rgba(253,253,208,.5)" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300" stroke="rgba(253,253,208,.5)" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="rgba(253,253,208,.5)" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="rgba(253,253,208,.5)" stroke-width="7" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label" style="color:rgba(253,253,208,.3)">Shoulder Bag<br>Terra</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Acessório</p>
+        <p class="p-card__name"><a href="#">Shoulder Bag "Terra"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#6b5840" title="Terra"></div>
+          <div class="p-card__color-dot" style="background:#1A1A1A" title="Black"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 259,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">Único</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- PRODUTO 12 -->
+    <article class="p-card" data-tags="novo disponivel calcas" data-price="319" data-name="Wide Leg Pant Ecru" data-reveal data-reveal-delay="6">
+      <div class="p-card__img">
+        <div class="p-card__badges">
+          <span class="p-card__badge p-card__badge--new">Novo</span>
+        </div>
+        <button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </button>
+        <div class="p-card__img-ph" style="background:linear-gradient(145deg,#f0edd8,#e0dcc8)">
+          <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+            <path d="M200 420 Q200 445 200 470" stroke="#4F5D3A" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#4F5D3A" stroke-width="14" stroke-linecap="round"/>
+            <path d="M198 300 C185 285 165 270 140 260" stroke="#4F5D3A" stroke-width="7" stroke-linecap="round"/>
+            <path d="M202 300 C215 285 235 270 260 260" stroke="#4F5D3A" stroke-width="7" stroke-linecap="round"/>
+            <path d="M200 220 C200 198 200 175 200 150" stroke="#4F5D3A" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+          <p class="p-card__img-label" style="color:rgba(26,26,26,.2)">Wide Leg<br>Ecru</p>
+        </div>
+        <div class="p-card__qa">
+          <button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>
+        </div>
+      </div>
+      <div class="p-card__info">
+        <p class="p-card__cat">Calças</p>
+        <p class="p-card__name"><a href="#">Wide Leg Pant "Ecru"</a></p>
+        <div class="p-card__colors">
+          <div class="p-card__color-dot active" style="background:#FDFDD0;border-color:rgba(0,0,0,.15)" title="Ecru"></div>
+          <div class="p-card__color-dot" style="background:#4F5D3A" title="Moss"></div>
+        </div>
+        <p class="p-card__price"><strong>R$ 319,00</strong></p>
+        <div class="p-card__sizes">
+          <span class="p-card__size-chip">36</span>
+          <span class="p-card__size-chip">38</span>
+          <span class="p-card__size-chip">40</span>
+          <span class="p-card__size-chip">42</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- /PRODUTO 12 — fim dos cards antigos: todos os 12 estão DENTRO
+         deste bloco .p-card-legado[hidden]. Nenhum card antigo fica solto
+         dentro de #products-grid; o grid exibe apenas os 8 produtos do
+         catálogo central (dados/catalogo.js). -->
+    </div>
+    <!-- /Produtos antigos desativados -->
+
+    <!-- Estilo de segurança (NÃO é design novo, NÃO altera o CSS acima):
+         garante que o bloco legado fique fora do fluxo do grid,
+         independentemente de qualquer folha externa ou do [hidden]. -->
+    <style>
+      .p-card-legado[hidden] { display:none !important; }
+    </style>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="empty-state" role="status" aria-live="polite">
+      <div class="empty-state__icon">
+        <svg width="48" height="60" viewBox="0 0 400 500" fill="none">
+          <path d="M200 420 Q200 445 200 470" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#1A1A1A" stroke-width="14" stroke-linecap="round"/>
+          <path d="M198 300 C185 285 165 270 140 260" stroke="#1A1A1A" stroke-width="7" stroke-linecap="round"/>
+          <path d="M202 300 C215 285 235 270 260 260" stroke="#1A1A1A" stroke-width="7" stroke-linecap="round"/>
+          <path d="M200 220 C195 200 188 178 175 155" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round"/>
+          <path d="M200 220 C205 200 212 178 225 155" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h3 class="empty-state__title">Sem resultados</h3>
+      <p class="empty-state__sub">Nenhum produto corresponde a este filtro.</p>
+      <button class="btn btn--outline" onclick="resetFilters()">Limpar filtros</button>
+    </div>
+  </div>
+
+  <!-- Prova de carregamento: confirma na própria página que os produtos vêm
+       do catálogo central (e não de uma lista escrita à mão aqui).
+       Preenchida por script; se o catálogo falhar, fica vermelha. -->
+  <p class="catalogo-status" id="catalogo-status">Catálogo central: verificando…</p>
+
+  <!-- Load more -->
+  <div class="load-more-wrap" id="load-more-wrap">
+    <span class="load-progress__label" id="progress-label">Carregando catálogo…</span>
+    <div class="load-progress">
+      <div class="load-progress__bar" id="progress-bar" style="width:100%"></div>
+    </div>
+    <button class="btn btn--ghost-dark" id="load-more-btn" style="display:none">
+      CARREGAR MAIS
+    </button>
+  </div>
+</main>
+
+
+<!-- Ticker -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker__track">
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Drop 01 — 8 peças oficiais</span>
+    <span class="ticker__item">Apenas <span>120 unidades</span></span>
+    <span class="ticker__item">✦ Coleção Drop 01</span>
+    <span class="ticker__item">Streetwear com <span>propósito</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Drop 01 — 8 peças oficiais</span>
+    <span class="ticker__item">Apenas <span>120 unidades</span></span>
+    <span class="ticker__item">✦ Coleção Drop 01</span>
+    <span class="ticker__item">Streetwear com <span>propósito</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+  </div>
+</div>
+
+
+<script>
+'use strict';
+
+/* ── Header scroll ── */
+const header = document.getElementById('site-header');
+window.addEventListener('scroll', () => {
+  header.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+/* ── Reveal ──
+   Exposto no window (__GRACIOU_ATIVAR_REVEAL__) porque os cards do
+   catálogo são inseridos DEPOIS e chegam com [data-reveal] (opacity: 0).
+   Sem reaplicar, tudo abaixo da dobra ficaria invisível para sempre. */
+const revObs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); revObs.unobserve(e.target); } });
+}, { threshold: 0.08 });
+function ativarReveal() {
+  document.querySelectorAll('[data-reveal]:not(.revealed)').forEach(el => revObs.observe(el));
+}
+window.__GRACIOU_ATIVAR_REVEAL__ = ativarReveal;
+
+/* ── FONTE ÚNICA DE CATÁLOGO ──
+   Os produtos NÃO são mais escritos à mão neste HTML.
+   Eles vêm de dados/catalogo.js e são renderizados abaixo,
+   reaproveitando o mesmo markup que o design já usava. */
+
+/* Aviso visível se o catálogo central não carregar.
+   Melhor falhar alto do que exibir uma grade vazia em silêncio. */
+function avisoCatalogoAusente() {
+  const resultados = document.getElementById('results-count');
+  const total = document.getElementById('total-count');
+  if (resultados) resultados.textContent = 'Catálogo indisponível';
+  if (total) total.textContent = '0 produtos';
+}
+
+/* Mapeia o nome da cor do catálogo para a classe CSS de fundo.
+   Evita depender de grafia exata do nome. */
+function classeCor(nomeCor) {
+  const mapa = {
+    'verde-musgo': 'verde-musgo',
+    'verde musgo': 'verde-musgo',
+    'verde-militar': 'verde-militar',
+    'verde militar': 'verde-militar',
+    'off-white': 'off-white',
+    'off white': 'off-white',
+    'creme': 'creme',
+    'ecru': 'creme',
+    'preto': 'preto',
+    'black': 'preto',
+    'marrom': 'marrom'
+  };
+  const chave = String(nomeCor || '').trim().toLowerCase();
+  return mapa[chave] || 'padrao';
+}
+
+/* Cores escuras precisam de glifo ecru; cores claras, de glifo musgo. */
+const CORES_ESCURAS = ['preto', 'verde-musgo', 'verde-militar', 'marrom', 'verde-musgo-escuro'];
+
+/* Rótulo de categoria exibido no card */
+function rotuloCategoria(produto) {
+  if (produto.categoriaId === 'graciou-move') return 'GRACIOU Move';
+  return produto.categoria;
+}
+
+/* Bloco de preço — nunca inventa valor.
+   Enquanto precoConfirmado for false, mostra o aviso do catálogo. */
+function blocoPreco(produto) {
+  if (produto.precoConfirmado && produto.precoVenda !== null) {
+    const formatado = GRACIOU_CATALOGO.formatarPreco(produto.precoVenda);
+    return '<p class="p-card__price"><strong>' + formatado + '</strong></p>';
+  }
+  return '<p class="p-card__price"><span class="p-card__price--pendente">' +
+         GRACIOU_CATALOGO.META.avisoPreco + '</span></p>';
+}
+
+/* Constrói UM card de produto exatamente com a estrutura de design atual. */
+function construirCard(produto, indice) {
+  const cor = classeCor(produto.corPrincipal);
+  const escura = CORES_ESCURAS.indexOf(cor) !== -1;
+  const tpl = document.getElementById('graciou-ph-svg');
+  const svg = tpl ? tpl.innerHTML.trim() : '';
+  const tamanhos = GRACIOU_CATALOGO.ordenarTamanhos(produto.tamanhos);
+
+  const dots = produto.cores.map(function (c, i) {
+    const ativo = i === 0 ? ' active' : '';
+    return '<div class="p-card__color-dot' + ativo + '" style="background:' + c.hex +
+           '" title="' + c.nome + '"></div>';
+  }).join('');
+
+  const chips = tamanhos.map(function (t) {
+    return '<span class="p-card__size-chip">' + t + '</span>';
+  }).join('');
+
+  const delay = (indice % 6) + 1;
+
+  return [
+    '<article class="p-card"',
+      ' data-produto-id="' + produto.id + '"',
+      ' data-tags="' + produto.categoriaId + '"',
+      ' data-name="' + produto.nome.replace(/"/g, '&quot;') + '"',
+      ' data-preco-confirmado="' + (produto.precoConfirmado ? 'true' : 'false') + '"',
+      ' data-reveal data-reveal-delay="' + delay + '">',
+      '<div class="p-card__img">',
+        '<button class="p-card__wish" aria-label="Salvar nos favoritos" onclick="toggleWish(this)">',
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+        '</button>',
+        '<div class="p-card__img-ph p-card__img--' + cor + '"' + (escura ? ' data-invert' : '') + '>',
+          svg,
+          '<p class="p-card__img-label">' + produto.nome + '</p>',
+        '</div>',
+        '<div class="p-card__qa">',
+          '<button class="p-card__qa-btn" onclick="addToCart(this)">+ ADICIONAR AO CARRINHO</button>',
+        '</div>',
+      '</div>',
+      '<div class="p-card__info">',
+        '<p class="p-card__cat">' + rotuloCategoria(produto) + '</p>',
+        '<p class="p-card__name"><a href="#">' + produto.nome + '</a></p>',
+        '<div class="p-card__colors">' + dots + '</div>',
+        blocoPreco(produto),
+        '<div class="p-card__sizes">' + chips + '</div>',
+      '</div>',
+    '</article>'
+  ].join('');
+}
+
+/* Renderiza todo o catálogo ativo dentro da grade.
+   ⚠️ DESATIVADO nesta etapa.
+   Esta função montava os cards lendo direto de GRACIOU_CATALOGO.lista(),
+   o que duplicava os produtos e não passava por window.GRACIOU_STORE.
+   A renderização do grid agora é feita por UM único script, no fim da
+   página (bloco "RENDERIZAÇÃO DO GRID DE PRODUTOS"), que lê
+   window.GRACIOU_STORE.products — exatamente como a tarefa pede.
+   Mantida aqui apenas como registro; não é mais chamada. */
+function renderizarCatalogo() {
+  return false;
+}
+
+/* ⚠️ DESATIVADO nesta etapa — ver comentário de renderizarCatalogo().
+   O polling abaixo servia para a renderização antiga (que lia direto de
+   GRACIOU_CATALOGO). Agora quem renderiza o grid é o script do fim da
+   página, lendo window.GRACIOU_STORE.products. Mantido como registro;
+   não executa para não disputar com o novo renderizador. */
+function iniciarCatalogo() {
+  return false;
+}
+
+/* Rede de segurança do reveal.
+   Os cards renderizados começam com opacity: 0 (regra [data-reveal] que
+   JÁ EXISTIA) e só aparecem quando o IntersectionObserver os vê.
+   Se algum ficar pendente, forçamos a revelação dos que estão na viewport.
+   Nenhuma regra de animação foi alterada — isto apenas reaproveita a
+   classe .revealed que o próprio CSS já define. */
+function revelarPendentesVisiveis() {
+  document.querySelectorAll('[data-reveal]:not(.revealed)').forEach(function (el) {
+    if (el.getBoundingClientRect().top < window.innerHeight) {
+      el.classList.add('revealed');
+    }
+  });
+}
+window.addEventListener('load', revelarPendentesVisiveis);
+setTimeout(revelarPendentesVisiveis, 1500);
+
+/* Preços oficiais da YouDraw ainda não recebidos.
+   Enquanto false, a ordenação por preço fica desabilitada —
+   o catálogo central nunca fornece um valor inventado. */
+const PRECOS_CONFIRMADOS = (typeof GRACIOU_CATALOGO !== 'undefined' && GRACIOU_CATALOGO)
+  ? GRACIOU_CATALOGO.META.precosConfirmados === true
+  : false;
+
+/* ── DADOS dos produtos (agora vindos do catálogo central) ──
+   IMPORTANTE: o catálogo pode renderizar DEPOIS deste ponto (o navegador
+   reordena o script src, e o Vite injeta wrapper). Por isso este array
+   NÃO é copiado aqui: é preenchido por sincronizarCards(), chamada logo
+   após cada render. Escopado em #products-grid e filtrado por
+   data-produto-id para ignorar os cards de .p-card-legado[hidden]. */
+const ALL_CARDS = [];
+let activeFilters = new Set(['all']);
+
+function sincronizarCards() {
+  ALL_CARDS.length = 0;
+  Array.prototype.push.apply(
+    ALL_CARDS,
+    document.querySelectorAll('#products-grid > .p-card[data-produto-id]')
+  );
+  return ALL_CARDS.length;
+}
+
+/* ── Preenche os textos de contagem com o total real do catálogo ──
+   Antes eram números fixos no HTML ("12 produtos"), que mentiam.
+   Exposto no window porque o catálogo pode chegar depois deste bloco. */
+function atualizarContadoresBase() {
+  /* Conta direto do catálogo e garante que ALL_CARDS esteja sincronizado. */
+  sincronizarCards();
+  const total = ALL_CARDS.length ||
+    ((typeof GRACIOU_CATALOGO !== 'undefined' && GRACIOU_CATALOGO)
+      ? GRACIOU_CATALOGO.lista().length : 0);
+  if (!total) return;
+  const plural = total === 1 ? 'produto' : 'produtos';
+  const resultados = document.getElementById('results-count');
+  const totalEl = document.getElementById('total-count');
+  const progresso = document.getElementById('progress-label');
+  if (resultados) resultados.textContent = 'Mostrando ' + total + ' ' + plural;
+  if (totalEl) totalEl.textContent = total + ' ' + plural;
+  if (progresso) progresso.textContent = 'Mostrando ' + total + ' de ' + total + ' ' + plural;
+}
+window.__GRACIOU_INICIAR_CONTADORES__ = atualizarContadoresBase;
+atualizarContadoresBase();
+
+/* ── Hero tags (categoria rápida) ── */
+document.querySelectorAll('.col-hero__tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    document.querySelectorAll('.col-hero__tag').forEach(t => t.classList.remove('is-active'));
+    tag.classList.add('is-active');
+    const cat = tag.dataset.cat;
+    // Sincroniza com filtro
+    if (cat === 'all') {
+      resetFilters();
+    } else {
+      applyFilter(cat);
+    }
+  });
+});
+
+/* ── Toolbar filter buttons ── */
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const f = btn.dataset.filter;
+    if (f === 'all') { resetFilters(); return; }
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('is-active'));
+    document.getElementById('filter-all').classList.remove('is-active');
+    btn.classList.add('is-active');
+    document.getElementById('filter-clear').classList.add('visible');
+    applyFilter(f);
+  });
+});
+
+document.getElementById('filter-clear').addEventListener('click', resetFilters);
+
+function applyFilter(tag) {
+  const grid = document.getElementById('products-grid');
+  grid.classList.add('is-filtering');
+  setTimeout(() => {
+    let visible = 0;
+    ALL_CARDS.forEach(card => {
+      const tags = card.dataset.tags || '';
+      const show = tags.includes(tag);
+      card.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    updateCount(visible);
+    const empty = document.getElementById('empty-state');
+    empty.classList.toggle('visible', visible === 0);
+    grid.classList.remove('is-filtering');
+  }, 280);
+}
+
+/* ── Filtro de categoria ── */
+function resetFilters() {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('is-active'));
+  document.getElementById('filter-all').classList.add('is-active');
+  document.getElementById('filter-clear').classList.remove('visible');
+  document.querySelectorAll('.col-hero__tag').forEach(t => t.classList.remove('is-active'));
+  document.querySelector('.col-hero__tag[data-cat="all"]').classList.add('is-active');
+
+  const grid = document.getElementById('products-grid');
+  grid.classList.add('is-filtering');
+  setTimeout(() => {
+    ALL_CARDS.forEach(card => card.style.display = '');
+    document.getElementById('empty-state').classList.remove('visible');
+    updateCount(ALL_CARDS.length);
+    grid.classList.remove('is-filtering');
+  }, 280);
+}
+
+function updateCount(n) {
+  const s = n === 1 ? 'produto' : 'produtos';
+  document.getElementById('results-count').textContent = `Mostrando ${n} ${s}`;
+  document.getElementById('total-count').textContent = `${n} ${s}`;
+  document.getElementById('progress-label').textContent = `Mostrando ${n} de ${n} ${s}`;
+}
+
+/* ── Sort ── */
+document.getElementById('sort-select').addEventListener('change', function() {
+  const val = this.value;
+  const grid = document.getElementById('products-grid');
+  const cards = ALL_CARDS.filter(c => c.style.display !== 'none');
+
+  cards.sort((a, b) => {
+    /* Preços ainda não confirmados: ordenar por preço não faz sentido.
+       Mantém a ordem do catálogo central (fonte única). */
+    if (!PRECOS_CONFIRMADOS && (val === 'price-asc' || val === 'price-desc')) return 0;
+    if (val === 'price-asc') return +a.dataset.price - +b.dataset.price;
+    if (val === 'price-desc') return +b.dataset.price - +a.dataset.price;
+    if (val === 'alpha') return a.dataset.name.localeCompare(b.dataset.name, 'pt-BR');
+    return 0; // featured: mantém a ordem oficial do catálogo
+  });
+
+  grid.classList.add('is-filtering');
+  setTimeout(() => {
+    cards.forEach(c => grid.appendChild(c));
+    /* Reinsere o empty state no fim da grade.
+       Antes: `appendChild(cond ? el : null)` — quando a condição era falsa
+       o appendChild(null) lançava exceção e quebrava a ordenação. */
+    const empty = document.getElementById('empty-state');
+    if (empty) grid.appendChild(empty);
+    grid.classList.remove('is-filtering');
+  }, 250);
+});
+
+/* ── Layout toggle ── */
+document.querySelectorAll('.layout-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.layout-btn').forEach(b => b.classList.remove('is-active'));
+    btn.classList.add('is-active');
+    const grid = document.getElementById('products-grid');
+    grid.className = `products-grid layout-${btn.dataset.layout}`;
+  });
+});
+
+/* ── Quick Add ──
+   Este é o botão dos cards ANTIGOS (dentro do bloco legado oculto),
+   por isso ele não é o caminho de compra da página. O caminho real são
+   os cards renderizados do catálogo, tratados mais abaixo em
+   "CARRINHO — adicionar pelo card". Mantido para os cards legados não
+   quebrarem, mas sem mexer no badge real do carrinho. */
+function addToCart(btn) {
+  const original = btn.textContent;
+  btn.textContent = '✓ ADICIONADO';
+  btn.style.background = '#4F5D3A';
+  btn.style.color = '#FDFDD0';
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.style.background = '';
+    btn.style.color = '';
+  }, 2200);
+}
+
+/* ── Wishlist ── */
+function toggleWish(btn) {
+  btn.classList.toggle('wishlisted');
+  const svg = btn.querySelector('svg');
+  if (btn.classList.contains('wishlisted')) {
+    svg.setAttribute('fill', 'currentColor');
+    btn.setAttribute('aria-label', 'Remover dos favoritos');
+  } else {
+    svg.setAttribute('fill', 'none');
+    btn.setAttribute('aria-label', 'Salvar nos favoritos');
+  }
+}  /* fecha toggleWish() */
+  </script>
+
+<!-- ORDEM OBRIGATÓRIA (item 5):
+     1) dados/catalogo.js — a fonte única dos produtos;
+     2) assets/graciou-store.js — publica GRACIOU_STORE e expõe
+        `products` como getter que lê o catálogo acima.
+     Ambos SEM defer, para executarem nesta ordem antes do grid renderizar.
+     (O getter continua funcionando mesmo se a ordem inverter, mas
+     assim a store já nasce com os 8 produtos prontos.) -->
+<script src="dados/catalogo.js"></script>
+<script src="assets/graciou-store.js"></script>
+
+<!-- Prova de carregamento do catálogo, exibida na página durante esta etapa.
+     Some sozinha quando META.precosConfirmados virar true. -->
+<script>
+  window.addEventListener('load', function () {
+    var box = document.getElementById('catalogo-status');
+    if (!box) return;
+    var c = window.GRACIOU_CATALOGO;
+    if (!c) {
+      box.textContent = 'Catálogo central: NÃO carregou (dados/catalogo.js)';
+      box.style.borderColor = 'rgba(180,60,60,.5)';
+      box.style.color = '#8B2F2F';
+      return;
+    }
+    var r = c.resumo();
+    box.textContent = 'Catálogo central · ' + r.total + ' produtos · IDs únicos: ' +
+      (r.todosIdsUnicos ? 'sim' : 'NÃO') + ' · preços: ' +
+      (r.precosConfirmados ? 'oficiais confirmados' : 'aguardando YouDraw') +
+      ' · frete grátis a partir de ' + r.freteGratisQuantidadeMinima + ' peças';
+  });
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     RENDERIZAÇÃO DO GRID DE PRODUTOS
+     Lê window.GRACIOU_STORE.products (assets/graciou-store.js)
+     e monta os cards dentro do grid existente.
+
+     Preserva o visual: usa as MESMAS classes do card atual
+     (p-card, p-card__img, p-card__info, p-card__cat, p-card__name,
+     p-card__colors, p-card__price, p-card__sizes, p-card__qa).
+     Nenhuma regra CSS foi alterada.
+
+     Sem integração com carrinho externo, Shopify, Nuvemshop ou backend.
+     ══════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  /* Nome do arquivo de dados, usado apenas para mensagens de erro. */
+  var FONTE = 'assets/graciou-store.js';
+
+  /* ── Cores do catálogo > classes CSS já existentes no bloco de estilos
+     da página. Mantidas aqui porque o catálogo é a fonte de DADOS; a
+     aparência continua sendo decidida pelas classes da própria página. ── */
+  var CLASSE_COR = {
+    'verde-musgo': 'verde-musgo',
+    'verde musgo': 'verde-musgo',
+    'verde-militar': 'verde-militar',
+    'verde militar': 'verde-militar',
+    'off-white': 'off-white',
+    'off white': 'off-white',
+    'creme': 'creme',
+    'ecru': 'creme',
+    'preto': 'preto',
+    'black': 'preto',
+    'marrom': 'marrom'
+  };
+
+  /* Cores escuras recebem glifo claro; claras, glifo musgo. */
+  var CORES_ESCURAS = ['preto', 'verde-musgo', 'verde-militar', 'marrom', 'verde-musgo-escuro'];
+
+  /* Ordem oficial dos tamanhos, para exibir a grade sempre igual. */
+  var ORDEM_TAMANHOS = ['PP', 'P', 'M', 'G', 'GG', 'XG'];
+
+  function classeDaCor(nome) {
+    var chave = String(nome || '').trim().toLowerCase();
+    return CLASSE_COR[chave] || 'padrao';
+  }
+
+  function ordenarTamanhos(tamanhos) {
+    return (tamanhos || []).slice().sort(function (a, b) {
+      var ia = ORDEM_TAMANHOS.indexOf(a);
+      var ib = ORDEM_TAMANHOS.indexOf(b);
+      if (ia === -1) ia = 999;
+      if (ib === -1) ib = 999;
+      return ia - ib;
+    });
+  }
+
+  /* Preço SOMENTE se existir de verdade:
+     - `price` precisa ser número e maior que zero;
+     - e quando houver os campos do catálogo novo, `precoConfirmado`
+       precisa ser true.
+     Caso contrário, o card simplesmente NÃO mostra preço
+     (nada de R$ 0,00 e nada de valor inventado). */
+  function valorDoPreco(produto) {
+    var bruto = (produto.price !== undefined && produto.price !== null)
+      ? produto.price
+      : produto.precoVenda;
+
+    if (typeof bruto !== 'number' || !isFinite(bruto) || bruto <= 0) return null;
+
+    /* Se o produto traz a flag do catálogo novo, ela precisa estar confirmada. */
+    if (produto.precoConfirmado === false) return null;
+
+    return bruto;
+  }
+
+  function formatarPreco(valor) {
+    /* Aceita centavos (inteiro) ou reais (decimal). Valores inteiros são
+       tratados como centavos, que é o padrão do catálogo central. */
+    var reais = Number.isInteger(valor) ? valor / 100 : valor;
+    return 'R$ ' + reais.toFixed(2).replace('.', ',');
+  }
+
+  function textoCategoria(produto) {
+    if (produto.categoriaId === 'graciou-move') return 'GRACIOU Move';
+    return produto.categoria || '';
+  }
+
+  /* Cor principal em texto, para exibir junto do card. */
+  function textoCor(produto) {
+    if (produto.corPrincipal) return produto.corPrincipal;
+    if (produto.color) return produto.color;
+    if (produto.cores && produto.cores.length) return produto.cores[0].nome;
+    return '';
+  }
+
+  function classesDoCard(produto) {
+    var cor = classeDaCor(textoCor(produto));
+    var escura = CORES_ESCURAS.indexOf(cor) !== -1;
+    return { cor: cor, escura: escura };
+  }
+
+  function blocoPreco(produto) {
+    var valor = valorDoPreco(produto);
+    if (valor === null) return '';   /* sem preço: não renderiza a linha */
+    return '<p class="p-card__price"><strong>' + formatarPreco(valor) + '</strong></p>';
+  }
+
+  function blocoCores(produto) {
+    var cores = produto.cores;
+    /* Catálogo novo: lista de {nome, hex} */
+    if (Array.isArray(cores) && cores.length) {
+      return cores.map(function (c, i) {
+        return '<div class="p-card__color-dot' + (i === 0 ? ' active' : '') +
+          '" style="background:' + c.hex + '" title="' + c.nome + '"></div>';
+      }).join('');
+    }
+    /* Catálogo antigo: cor única em texto */
+    var nome = textoCor(produto);
+    if (!nome) return '';
+    return '<div class="p-card__color-dot active" title="' + nome + '"></div>';
+  }
+
+  function blocoTamanhos(produto) {
+    var tamanhos = ordenarTamanhos(produto.tamanhos);
+    if (!tamanhos.length) return '';
+    return tamanhos.map(function (t) {
+      return '<span class="p-card__size-chip">' + t + '</span>';
+    }).join('');
+  }
+
+  /* Glifo da árvore GRACIOU — placeholder de marca, já que os produtos
+     ainda não têm foto (imagemFrente/imagemCostas = null). */
+  var ARVORE_SVG =
+    '<svg width="60" height="75" viewBox="0 0 400 500" fill="none" aria-hidden="true">' +
+      '<path d="M200 420 Q200 445 200 470" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>' +
+      '<path d="M198 300 C185 285 165 270 140 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M202 300 C215 285 235 270 260 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M200 220 C195 200 188 178 175 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+      '<path d="M200 220 C205 200 212 178 225 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>';
+
+  function escapar(texto) {
+    return String(texto === undefined || texto === null ? '' : texto)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* Monta UM card usando exatamente a estrutura/classes do card atual. */
+  function montarCard(produto, indice) {
+    var cc = classesDoCard(produto);
+    var corTexto = textoCor(produto);
+
+    return [
+      '<article class="p-card"',
+        ' data-produto-id="' + escapar(produto.id) + '"',
+        ' data-tags="' + escapar(produto.categoriaId || produto.category || '') + '"',
+        ' data-name="' + escapar(produto.nome || produto.name) + '"',
+        ' data-reveal data-reveal-delay="' + ((indice % 6) + 1) + '">',
+
+        '<div class="p-card__img">',
+          '<button class="p-card__wish" type="button" aria-label="Salvar nos favoritos">',
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+          '</button>',
+          '<div class="p-card__img-ph p-card__img--' + cc.cor + '"' +
+            (cc.escura ? ' data-invert' : '') + '>',
+            ARVORE_SVG,
+            '<p class="p-card__img-label">' + escapar(produto.nome || produto.name) + '</p>',
+          '</div>',
+            '<div class="p-card__qa">',
+              '<button class="p-card__qa-btn" type="button" data-acao="adicionar-carrinho">+ ADICIONAR AO CARRINHO</button>',
+            '</div>',
+        '</div>',
+
+        '<div class="p-card__info">',
+          '<p class="p-card__cat">' + escapar(textoCategoria(produto)) + '</p>',
+          '<p class="p-card__name"><a href="#">' + escapar(produto.nome || produto.name) + '</a></p>',
+          (corTexto ? '<p class="p-card__cat" style="margin-bottom:.4rem">Cor: ' +
+            escapar(corTexto) + '</p>' : ''),
+          '<div class="p-card__colors">' + blocoCores(produto) + '</div>',
+          blocoPreco(produto),
+          '<div class="p-card__sizes">' + blocoTamanhos(produto) + '</div>',
+        '</div>',
+
+      '</article>'
+    ].join('');
+  }
+
+  /* ── Renderiza dentro do grid existente. ──
+     Não substitui o grid: apenas insere os cards nele.
+     Os cards antigos ficam em .p-card-legado[hidden] e NÃO são removidos. ── */
+  function renderizar() {
+    var grid = document.querySelector('[data-product-grid]');
+    if (!grid) {
+      console.warn('[GRACIOU] grid com data-product-grid não encontrado.');
+      return false;
+    }
+
+    /* FONTE: window.GRACIOU_STORE.products (assets/graciou-store.js).
+       É a única fonte usada aqui. Se a store ainda não expôs a lista,
+       tentamos mais tarde pelo polling — e nunca renderizamos vazio. */
+    var store = window.GRACIOU_STORE;
+    var produtos = store && Array.isArray(store.products) ? store.products : null;
+
+    if (!produtos || !produtos.length) {
+      /* Não é erro fatal: pode ser só ordem de carregamento. */
+      return false;
+    }
+
+    /* Não renderizar duas vezes. */
+    if (grid.querySelector('.p-card[data-produto-id]')) return true;
+
+    var html = produtos.map(montarCard).join('');
+
+    /* Insere antes do card legado, para os produtos renderizados ficarem
+       na ordem do catálogo e o legado (oculto) permanecer no fim. */
+    var legado = grid.querySelector('.p-card-legado');
+    if (legado) legado.insertAdjacentHTML('beforebegin', html);
+    else grid.insertAdjacentHTML('afterbegin', html);
+
+    window.__GRACIOU_GRID_RENDERIZADO__ = produtos.length;
+
+    /* ── Rede de segurança do reveal (efeito colateral de ordem de script) ──
+       Os cards chegam com [data-reveal] (opacity: 0) e só aparecem quando
+       o IntersectionObserver os vê. Acontece que o observador é criado no
+       script inline ANTES dos dois <script src>, e quando o grid é montado
+       o documento já pode ter sido substituído pelo pipeline do servidor
+       (dev server / preview). Nesse caso o observador antigo está ligado a
+       um documento que não é mais o exibido: ele nunca dispara e os cards
+       abaixo da dobra ficam invisíveis PARA SEMPRE.
+
+       Correção mínima: se o observador da página não estiver ativo neste
+       documento, reaplica a MESMA função que a página já expõe
+       (window.__GRACIOU_ATIVAR_REVEAL__). Nenhuma regra de CSS, markup ou
+       animação muda — só a ligação do mesmo observador no documento certo.
+
+       Em servidor estático puro (sem esse pipeline) o observador da página
+       funciona normalmente e esta rede nem chega a agir. ── */
+    garantirReveal();
+
+    /* Contadores da toolbar, calculados do PRÓPRIO grid renderizado.
+       Não alteram CSS nenhum — só texto que já existia. */
+    sincronizarContadores(produtos);
+
+    return true;
+  }
+
+  /* Atualiza os números já existentes na tela (toolbar / hero / progresso)
+     com a contagem real dos produtos vindos do catálogo. */
+  function sincronizarContadores(produtos) {
+    var n = produtos.length;
+    var plural = n === 1 ? 'produto' : 'produtos';
+
+    var resultados = document.getElementById('results-count');
+    var total = document.getElementById('total-count');
+    var progresso = document.getElementById('progress-label');
+    if (resultados) resultados.textContent = 'Mostrando ' + n + ' ' + plural;
+    if (total) total.textContent = n + ' ' + plural;
+    if (progresso) progresso.textContent = 'Mostrando ' + n + ' de ' + n + ' ' + plural;
+
+    /* Contadores por categoria, se os elementos existirem. */
+    var porCategoria = {};
+    produtos.forEach(function (p) {
+      var c = p.categoriaId || p.category || 'outros';
+      porCategoria[c] = (porCategoria[c] || 0) + 1;
+    });
+    document.querySelectorAll('[data-count-all]').forEach(function (el) {
+      el.textContent = '(' + n + ')';
+    });
+    Object.keys(porCategoria).forEach(function (c) {
+      document.querySelectorAll('[data-count-' + c + ']').forEach(function (el) {
+        el.textContent = '(' + porCategoria[c] + ')';
+      });
+    });
+  }
+
+  /* ── Observador de reveal da própria página ──
+     `revObs` e `ativarReveal` foram declarados com const/function no
+     script inline e NÃO são propriedades de window, então não dá para
+     inspecioná-los. Em vez de adivinhar, MEDIMOS o resultado: quantos
+     cards de fato revelaram.
+
+     ARMADILHA (medida no navegador): o grid é montado ainda durante o
+     `loading` (t≈570ms) e o observador da página só se liga no evento
+     `load` (t≈680ms). Nesse instante ele passa a funcionar, mas o
+     IntersectionObserver NÃO emite callback para quem já estava
+     intersectando antes de observe() — então os 3 cards visíveis ficam
+     revelados pelo load e os 5 abaixo da dobra ficam invisíveis para
+     sempre, mesmo ao rolar.
+
+     Por isso a rede precisa rodar DEPOIS do `load` e conferir o estado
+     FINAL, não o instantâneo: se o total revelado for menor que o total
+     de cards, reaplica a MESMA função que a página já expõe. ── */
+  var revealReaplicado = false;
+
+  function garantirReveal() {
+    if (revealReaplicado) return;
+
+    function conferir() {
+      if (revealReaplicado) return;
+
+      var cards = document.querySelectorAll('#products-grid .p-card[data-produto-id]');
+      if (!cards.length) return;
+
+      var revelados = document.querySelectorAll('#products-grid .p-card[data-produto-id].revealed').length;
+
+      /* Observador vivo cobrindo todos os cards: nada a fazer. */
+      if (revelados >= cards.length) return;
+      if (typeof window.__GRACIOU_ATIVAR_REVEAL__ !== 'function') return;
+
+      revealReaplicado = true;
+      window.__GRACIOU_ATIVAR_REVEAL__();
+
+      /* A chamada acima só revela quem já está na viewport. Os cards
+         abaixo da dobra precisam ficar OBSERVADOS para aparecer ao rolar. */
+      observarCardsRestantes();
+
+      /* Marca só para inspeção/diagnóstico; nenhuma aparência depende disto. */
+      var grid = document.querySelector('[data-product-grid]');
+      if (grid) grid.setAttribute('data-reveal-reaplicado', 'true');
+    }
+
+    /* Depois do load (quando o observador da página já tentou se ligar)
+       e uma última conferência mais tarde, caso o grid renderize tarde. */
+    if (document.readyState === 'complete') {
+      setTimeout(conferir, 300);
+    } else {
+      window.addEventListener('load', function () { setTimeout(conferir, 300); });
+    }
+    setTimeout(conferir, 3000);
+  }
+
+  /* ── Garante que os cards renderizados sejam OBSERVADOS de verdade ──
+     `ativarReveal()` (acima) re-observa os elementos, mas o observador
+     dela já está ligado a este documento e não reage a quem já estava
+     intersectando antes do `observe()` — foi exatamente isso que deixou
+     5 cards presos em opacity: 0.
+
+     Aqui a gente liga um observador NOVO, com os MESMOS parâmetros de
+     antes (threshold 0.08) e a MESMA classe de destino (.revealed, que o
+     CSS já define). Nenhuma regra visual é criada ou alterada — só a
+     ligação que faltava. Só age se o total revelado estiver incompleto;
+     com o observador da página funcionando normalmente, não faz nada. ── */
+  var revealObservadorProprio = null;
+
+  function observarCardsRestantes() {
+    var cards = document.querySelectorAll('#products-grid .p-card[data-produto-id]:not(.revealed)');
+    if (!cards.length) return false;
+
+    if (!revealObservadorProprio) {
+      revealObservadorProprio = new IntersectionObserver(function (entradas) {
+        entradas.forEach(function (e) {
+          if (e.isIntersecting) {
+            e.target.classList.add('revealed');
+            revealObservadorProprio.unobserve(e.target);
+          }
+        });
+      }, { threshold: 0.08 });
+    }
+
+    cards.forEach(function (c) { revealObservadorProprio.observe(c); });
+
+    var grid = document.querySelector('[data-product-grid]');
+    if (grid) grid.setAttribute('data-reveal-reobservado', String(cards.length));
+    return true;
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     CARRINHO — adicionar pelo card
+     ──────────────────────────────────────────────────────────
+     Todo produto do catálogo tem tamanho (P/M/G/GG...), então a regra
+     do item 9 vale sempre: o tamanho é escolhido ANTES de adicionar.
+     A interface de escolha reaproveita as classes que já existem
+     (.p-card__size-chip, .btn, .btn--outline, .btn--primary), apenas
+     dentro de um painel novo — nenhuma regra de estilo existente muda.
+     ══════════════════════════════════ */
+
+  /* Produto do card (lê do catálogo central, nunca do DOM). */
+  function produtoDoCard(card) {
+    if (!card) return null;
+    var id = card.getAttribute('data-produto-id');
+    var catalogo = window.GRACIOU_CATALOGO;
+    if (!id || !catalogo || typeof catalogo.busca !== 'function') return null;
+    return catalogo.busca(id);
+  }
+
+  function tamanhosDoProduto(produto) {
+    var catalogo = window.GRACIOU_CATALOGO;
+    var lista = (produto && produto.tamanhos) ? produto.tamanhos.slice() : [];
+    if (catalogo && typeof catalogo.ordenarTamanhos === 'function') return catalogo.ordenarTamanhos(lista);
+    return lista;
+  }
+
+  /* Painel de escolha de tamanho. Devolve o elemento para o chamador
+     poder remover depois; o callback recebe o tamanho escolhido. */
+  function abrirSeletorDeTamanho(produto, aoEscolher) {
+    var tamanhos = tamanhosDoProduto(produto);
+    if (!tamanhos.length) return null;
+
+    var painel = document.createElement('div');
+    painel.className = 'tamanho-painel';
+    painel.setAttribute('role', 'dialog');
+    painel.setAttribute('aria-modal', 'true');
+    painel.setAttribute('aria-label', 'Escolher tamanho');
+
+    painel.innerHTML = [
+      '<div class="tamanho-painel__caixa">',
+        '<p class="tamanho-painel__rotulo">Escolha o tamanho</p>',
+        '<p class="tamanho-painel__produto">' + escapar(produto.nome) + '</p>',
+        '<div class="tamanho-painel__opcoes">',
+          tamanhos.map(function (t) {
+            return '<button type="button" class="p-card__size-chip tamanho-painel__chip" ' +
+              'data-tamanho="' + escapar(t) + '">' + escapar(t) + '</button>';
+          }).join(''),
+        '</div>',
+        '<button type="button" class="btn btn--ghost-dark tamanho-painel__cancelar">CANCELAR</button>',
+      '</div>'
+    ].join('');
+
+    document.body.appendChild(painel);
+
+    function fechar() {
+      painel.remove();
+      document.removeEventListener('keydown', aoTeclar);
+    }
+    function aoTeclar(ev) {
+      if (ev.key === 'Escape') fechar();
+    }
+
+    document.addEventListener('keydown', aoTeclar);
+
+    painel.addEventListener('click', function (ev) {
+      /* Clique fora da caixa fecha */
+      if (ev.target === painel) { fechar(); return; }
+
+      var chip = ev.target.closest('[data-tamanho]');
+      if (chip) {
+        aoEscolher(chip.getAttribute('data-tamanho'));
+        fechar();
+        return;
+      }
+      if (ev.target.closest('.tamanho-painel__cancelar')) fechar();
+    });
+
+    var primeiro = painel.querySelector('[data-tamanho]');
+    if (primeiro) primeiro.focus();
+
+    return painel;
+  }
+
+  /* Confirma a adição e dá feedback no próprio botão. */
+  function confirmarAdicao(btn, tamanho, produto) {
+    var original = btn.textContent;
+    btn.textContent = '✓ ' + tamanho + ' ADICIONADO';
+    btn.style.background = '#4F5D3A';
+    btn.style.color = '#FDFDD0';
+    setTimeout(function () {
+      btn.textContent = original;
+      btn.style.background = '';
+      btn.style.color = '';
+    }, 2000);
+  }
+
+  function adicionarAoCarrinho(btn) {
+    var store = window.GRACIOU_STORE;
+    if (!store || typeof store.addToCart !== 'function') {
+      btn.textContent = 'CARRINHO INDISPONÍVEL';
+      setTimeout(function () { btn.textContent = '+ ADICIONAR AO CARRINHO'; }, 2000);
+      return;
+    }
+
+    var card = btn.closest('.p-card');
+    var produto = produtoDoCard(card);
+    if (!produto) return;
+
+    var tamanhos = tamanhosDoProduto(produto);
+
+    /* Regra do item 9: havendo tamanho a escolher, a escolha vem antes. */
+    if (tamanhos.length > 1) {
+      abrirSeletorDeTamanho(produto, function (tamanho) {
+        store.addToCart({ productId: produto.id, tamanho: tamanho });
+        confirmarAdicao(btn, tamanho, produto);
+      });
+      return;
+    }
+
+    var unico = tamanhos.length === 1 ? tamanhos[0] : 'Único';
+    store.addToCart({ productId: produto.id, tamanho: unico });
+    confirmarAdicao(btn, unico, produto);
+  }
+
+  /* Delegação de clique nos botões dos cards do catálogo. */
+  document.addEventListener('click', function (ev) {
+    var btn = ev.target.closest ? ev.target.closest('[data-acao="adicionar-carrinho"]') : null;
+    if (!btn) return;
+    ev.preventDefault();
+    adicionarAoCarrinho(btn);
+  });
+
+  /* ── Espera o catálogo.
+     assets/graciou-store.js usa defer, então pode rodar depois deste script.
+     Tentamos agora e, se preciso, aguardamos por polling curto. ── */
+  function iniciar() {
+    if (renderizar()) return true;
+    if (window.__GRACIOU_GRID_AGUARDANDO__) return false;
+    window.__GRACIOU_GRID_AGUARDANDO__ = true;
+
+    var tentativas = 0;
+    var timer = setInterval(function () {
+      tentativas++;
+      if (renderizar()) { clearInterval(timer); return; }
+      if (tentativas >= 60) {                       /* ~15s */
+        clearInterval(timer);
+        console.warn('[GRACIOU] ' + FONTE + ' não expôs window.GRACIOU_STORE.products ' +
+          'a tempo; o grid ficou como estava.');
+      }
+    }, 250);
+
+    window.addEventListener('load', renderizar);
+    return false;
+  }
+
+  iniciar();
+})();
+</script>
+</body>
+</html>

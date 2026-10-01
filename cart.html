@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Carrinho GRACIOU — Drop 01." />
+  <title>Carrinho — GRACIOU</title>
+  <link rel="icon" href="data:," />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ════════════════════════════════════
+       TOKENS — iguais aos de collection.html
+    ════════════════════════════════════ */
+    :root {
+      --ecru:       #FDFDD0;
+      --moss:       #4F5D3A;
+      --moss-light: #6B7A50;
+      --moss-dark:  #3A4529;
+      --navy:       #1A1A1A;
+      --ecru-70:    rgba(253,253,208,0.7);
+      --ecru-40:    rgba(253,253,208,0.4);
+      --navy-10:    rgba(26,26,26,0.10);
+      --navy-06:    rgba(26,26,26,0.06);
+      --moss-10:    rgba(79,93,58,0.10);
+      --f-head:     'Barlow Condensed', sans-serif;
+      --f-body:     'DM Sans', sans-serif;
+      --ease:       cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ════════════════════════════════════
+       RESET — igual ao de collection.html
+    ════════════════════════════════════ */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:var(--f-body);
+      background:var(--ecru);
+      color:var(--navy);
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    img { max-width:100%; display:block; }
+    a   { color:inherit; text-decoration:none; }
+    ul  { list-style:none; }
+    h1,h2,h3 { font-family:var(--f-head); font-weight:800; line-height:1; }
+    button { cursor:pointer; font-family:inherit; background:none; border:none; }
+
+    /* ════════════════════════════════════
+       HEADER — mesmas classes/tokens do projeto
+    ════════════════════════════════════ */
+    .header {
+      position:sticky; top:0; z-index:100;
+      background:var(--ecru);
+      border-bottom:1px solid var(--navy-10);
+      transition:box-shadow .3s;
+    }
+    .header.scrolled { box-shadow:0 4px 24px rgba(0,0,0,0.09); }
+    .header__inner {
+      max-width:1400px; margin:0 auto;
+      padding:0 3rem; height:72px;
+      display:flex; align-items:center; justify-content:space-between; gap:2rem;
+    }
+    .header__logo { display:flex; align-items:center; gap:.6rem; }
+    .header__logo-text {
+      font-family:'Oswald', sans-serif; font-size:1.6rem; font-weight:600;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--moss);
+      transform: scaleY(1.1); transform-origin: bottom;
+    }
+    .header__nav { display:flex; align-items:center; gap:2.5rem; }
+    .header__nav a {
+      font-size:.75rem; font-weight:500; letter-spacing:.14em;
+      text-transform:uppercase; position:relative; padding-bottom:2px; transition:color .2s;
+    }
+    .header__nav a::after {
+      content:''; position:absolute; bottom:-1px; left:0; right:0;
+      height:1px; background:var(--moss);
+      transform:scaleX(0); transform-origin:left; transition:transform .3s;
+    }
+    .header__nav a:hover { color:var(--moss); }
+    .header__nav a:hover::after { transform:scaleX(1); }
+    .header__actions { display:flex; align-items:center; gap:.75rem; }
+    .header__icon-btn {
+      width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+      color:var(--navy); border-radius:2px; transition:color .2s, background .2s;
+    }
+    .header__icon-btn:hover { color:var(--moss); background:var(--moss-10); }
+    .cart-badge { position:relative; }
+    .cart-badge__count {
+      position:absolute; top:-5px; right:-5px;
+      min-width:18px; height:18px; background:var(--moss); color:var(--ecru);
+      font-size:.6rem; font-weight:700; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* Breadcrumb — mesma classe do projeto */
+    .breadcrumb {
+      max-width:1400px; margin:0 auto;
+      padding:.875rem 3rem;
+      border-bottom:1px solid var(--navy-06);
+      display:flex; align-items:center; gap:.5rem;
+    }
+    .breadcrumb a, .breadcrumb span {
+      font-size:.68rem; letter-spacing:.12em;
+      text-transform:uppercase; color:rgba(26,26,26,.4);
+      transition:color .2s;
+    }
+    .breadcrumb a:hover { color:var(--moss); }
+    .breadcrumb__sep { color:rgba(26,26,26,.2); }
+    .breadcrumb__current { color:var(--navy); }
+
+    /* ════════════════════════════════════
+       HERO DA PÁGINA — mesma linguagem do col-hero
+    ════════════════════════════════════ */
+    .cart-hero {
+      background:var(--moss-dark);
+      padding:3.25rem 3rem 2.75rem;
+      position:relative; overflow:hidden;
+    }
+    .cart-hero__inner { max-width:1400px; margin:0 auto; position:relative; z-index:1; }
+    .cart-hero__eyebrow {
+      font-size:.65rem; letter-spacing:.28em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:.875rem;
+    }
+    .cart-hero__title {
+      font-size:clamp(2.4rem,5.5vw,4.5rem);
+      text-transform:uppercase; color:var(--ecru); line-height:.95;
+      margin-bottom:.75rem;
+    }
+    .cart-hero__desc {
+      font-size:.85rem; font-weight:300; line-height:1.7;
+      color:var(--ecru-70); max-width:60ch; letter-spacing:.02em;
+    }
+
+    /* ════════════════════════════════════
+       LAYOUT
+    ════════════════════════════════════ */
+    .cart-page {
+      max-width:1400px; margin:0 auto;
+      padding:2.5rem 3rem 6rem;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 380px;
+      gap:2.5rem;
+      align-items:start;
+    }
+
+    /* Itens */
+    .cart-lista { display:flex; flex-direction:column; }
+
+    .cart-item {
+      display:grid;
+      grid-template-columns:96px minmax(0,1fr) auto;
+      gap:1.25rem;
+      padding:1.5rem 0;
+      border-bottom:1px solid var(--navy-06);
+      align-items:start;
+    }
+    .cart-item:first-child { border-top:1px solid var(--navy-06); }
+
+    .cart-item__img {
+      width:96px; aspect-ratio:3/4;
+      display:flex; align-items:center; justify-content:center;
+      background:var(--navy-06);
+      overflow:hidden;
+    }
+    .cart-item__img svg { opacity:.28; }
+    .cart-item__img--creme            { background:linear-gradient(145deg,#FDFDD0,#EAE7C2); }
+    .cart-item__img--off-white        { background:linear-gradient(145deg,#F2F0E4,#DEDBC8); }
+    .cart-item__img--preto            { background:linear-gradient(145deg,#1A1A1A,#2E2E2E); }
+    .cart-item__img--verde-musgo      { background:linear-gradient(145deg,#2A3520,#1E2916); }
+    .cart-item__img--verde-musgo-claro{ background:linear-gradient(145deg,#4F5D3A,#3A4529); }
+    .cart-item__img--verde-musgo-escuro{ background:linear-gradient(145deg,#3A4529,#2E3820); }
+    .cart-item__img--marrom           { background:linear-gradient(145deg,#8B7355,#6F5A42); }
+    .cart-item__img--verde-militar    { background:linear-gradient(145deg,#4A5D3A,#38472C); }
+    .cart-item__img--padrao           { background:linear-gradient(145deg,#3A4529,#1A1A1A); }
+    .cart-item__img[data-invert]      { color:#FDFDD0; }
+    .cart-item__img:not([data-invert]){ color:#4F5D3A; }
+
+    .cart-item__info { min-width:0; }
+    .cart-item__cat {
+      font-size:.58rem; letter-spacing:.2em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:.3rem;
+    }
+    .cart-item__nome {
+      font-family:var(--f-head); font-size:1.15rem; font-weight:700;
+      text-transform:uppercase; line-height:1.15; margin-bottom:.4rem;
+      letter-spacing:.02em;
+    }
+    .cart-item__variacao {
+      font-size:.68rem; letter-spacing:.12em; text-transform:uppercase;
+      color:rgba(26,26,26,.5); margin-bottom:.55rem;
+    }
+    .cart-item__preco-unit {
+      font-size:.75rem; font-weight:300; color:rgba(26,26,26,.55);
+    }
+
+    /* Controles */
+    .cart-item__controles {
+      display:flex; flex-direction:column; align-items:flex-end; gap:.75rem;
+    }
+    .cart-item__preco {
+      font-size:.95rem; font-weight:500; color:var(--navy); white-space:nowrap;
+    }
+
+    .cart-qtd {
+      display:flex; align-items:center; gap:0;
+      border:1px solid var(--navy-10);
+    }
+    .cart-qtd__btn {
+      width:32px; height:32px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.95rem; line-height:1; color:var(--navy);
+      transition:background .2s, color .2s;
+    }
+    .cart-qtd__btn:hover { background:var(--navy); color:var(--ecru); }
+    .cart-qtd__valor {
+      min-width:36px; text-align:center;
+      font-size:.78rem; font-weight:500; letter-spacing:.06em;
+    }
+
+    .cart-item__remover {
+      font-size:.62rem; letter-spacing:.14em; text-transform:uppercase;
+      color:rgba(26,26,26,.45); text-decoration:underline; text-underline-offset:3px;
+      transition:color .2s;
+    }
+    .cart-item__remover:hover { color:var(--moss); }
+
+    /* ════════════════════════════════════
+       RESUMO / PAGAMENTO / FRETE
+    ════════════════════════════════════ */
+    .cart-resumo {
+      border:1px solid var(--navy-10);
+      padding:1.75rem;
+      position:sticky; top:96px;
+      background:var(--ecru);
+    }
+    .cart-resumo__titulo {
+      font-size:1.35rem; text-transform:uppercase;
+      padding-bottom:1rem; margin-bottom:1.25rem;
+      border-bottom:1px solid var(--navy-10);
+    }
+
+    .cart-bloco { margin-bottom:1.5rem; }
+    .cart-bloco__titulo {
+      font-size:.62rem; letter-spacing:.2em; text-transform:uppercase;
+      color:rgba(26,26,26,.4); font-weight:600; margin-bottom:.7rem;
+    }
+
+    /* Pix / Cartão */
+    .cart-pagamento { display:flex; gap:.5rem; }
+    .cart-pagamento__btn {
+      flex:1;
+      padding:.7rem .5rem;
+      font-size:.68rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+      border:1px solid var(--navy-10); color:rgba(26,26,26,.5);
+      transition:all .2s;
+    }
+    .cart-pagamento__btn:hover { border-color:var(--navy); color:var(--navy); }
+    .cart-pagamento__btn.is-active {
+      background:var(--navy); color:var(--ecru); border-color:var(--navy);
+    }
+
+    /* Linhas de total */
+    .cart-linhas { border-top:1px solid var(--navy-06); padding-top:1rem; }
+    .cart-linha {
+      display:flex; align-items:baseline; justify-content:space-between;
+      gap:1rem; font-size:.8rem; padding:.4rem 0;
+    }
+    .cart-linha__rotulo { color:rgba(26,26,26,.55); font-weight:300; letter-spacing:.03em; }
+    .cart-linha__valor  { color:var(--navy); font-weight:500; white-space:nowrap; }
+    .cart-linha--total {
+      margin-top:.6rem; padding-top:.9rem;
+      border-top:1px solid var(--navy-10);
+      font-size:1rem;
+    }
+    .cart-linha--total .cart-linha__rotulo {
+      font-family:var(--f-head); font-weight:700;
+      letter-spacing:.14em; text-transform:uppercase; color:var(--navy);
+    }
+    .cart-linha--total .cart-linha__valor {
+      font-family:var(--f-head); font-size:1.5rem; font-weight:800;
+    }
+
+    /* Frete grátis / pendente */
+    .cart-frete-gratis {
+      display:inline-block;
+      font-family:var(--f-head); font-size:.68rem; font-weight:700;
+      letter-spacing:.16em; text-transform:uppercase;
+      color:var(--moss);
+      border:1px solid rgba(79,93,58,.35);
+      padding:.22rem .55rem;
+    }
+    /* Frete pendente: mesmo tratamento visual do .p-card__price--pendente.
+       O valor do frete normal NÃO foi informado (META.valorFrete = null),
+       então a interface nunca inventa um número. */
+    .cart-frete-pendente {
+      display:inline-block;
+      font-family:var(--f-head); font-size:.68rem; font-weight:700;
+      letter-spacing:.16em; text-transform:uppercase;
+      color:var(--moss);
+      border:1px solid rgba(79,93,58,.35);
+      padding:.22rem .55rem;
+      cursor:help;
+    }
+
+    .cart-aviso-frete {
+      margin-top:1rem; padding-top:.9rem;
+      border-top:1px solid var(--navy-06);
+      font-size:.65rem; letter-spacing:.1em; line-height:1.6;
+      text-transform:uppercase; color:rgba(26,26,26,.45);
+    }
+
+    /* ════════════════════════════════════
+       BOTÕES — mesmas classes do projeto
+    ════════════════════════════════════ */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+      padding:.875rem 2.25rem;
+      font-family:var(--f-head); font-size:.78rem; font-weight:700;
+      letter-spacing:.2em; text-transform:uppercase;
+      border:1.5px solid transparent; cursor:pointer;
+      transition:all .25s; white-space:nowrap;
+    }
+    .btn--outline { background:transparent; color:var(--moss); border-color:var(--moss); }
+    .btn--outline:hover { background:var(--moss); color:var(--ecru); }
+    .btn--primary { background:var(--navy); color:var(--ecru); border-color:var(--navy); }
+    .btn--primary:hover { background:var(--moss); border-color:var(--moss); }
+    .btn--ghost-dark {
+      background:transparent; color:rgba(26,26,26,.5);
+      border-color:var(--navy-10);
+    }
+    .btn--ghost-dark:hover { color:var(--navy); border-color:var(--navy); }
+    .btn--bloco { width:100%; }
+
+    .cart-acoes { display:flex; flex-direction:column; gap:.75rem; }
+
+    /* Cupom — mesmo tratamento visual dos controles existentes. */
+    .cart-cupom { margin-bottom:1.5rem; }
+    .cart-cupom__form { display:flex; gap:.5rem; }
+    .cart-cupom__input {
+      min-width:0; flex:1; padding:.7rem .75rem;
+      font:inherit; font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--navy); background:transparent; border:1px solid var(--navy-10);
+      outline:none;
+    }
+    .cart-cupom__input:focus { border-color:var(--moss); }
+    .cart-cupom__btn { padding:.7rem .8rem; font-size:.65rem; letter-spacing:.12em; }
+    .cart-cupom__mensagem { min-height:1.1rem; margin-top:.55rem; font-size:.67rem; line-height:1.4; }
+    .cart-cupom__mensagem.sucesso { color:var(--moss); }
+    .cart-cupom__mensagem.erro { color:#8B2F2F; }
+    .cart-cupom__aplicado {
+      display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+      padding:.7rem .75rem; border:1px solid rgba(79,93,58,.35);
+      color:var(--moss); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
+    }
+    .cart-cupom__remover { color:var(--moss); font-size:.62rem; text-decoration:underline; text-underline-offset:3px; }
+    .cart-linha--desconto .cart-linha__valor { color:var(--moss); }
+
+    /* Estado vazio */
+    .cart-vazio {
+      grid-column:1/-1;
+      display:none; flex-direction:column; align-items:center;
+      padding:5rem 2rem; text-align:center;
+      border:1px solid var(--navy-06);
+    }
+    .cart-vazio.visible { display:flex; }
+    .cart-vazio__icon { margin-bottom:1.5rem; opacity:.2; }
+    .cart-vazio__titulo {
+      font-size:2rem; text-transform:uppercase; color:var(--navy); margin-bottom:.75rem;
+    }
+    .cart-vazio__sub {
+      font-size:.85rem; font-weight:300; color:rgba(26,26,26,.5);
+      letter-spacing:.04em; margin-bottom:2rem;
+    }
+
+    /* ════════════════════════════════════
+       TICKER — mesma classe do projeto
+    ════════════════════════════════════ */
+    .ticker {
+      background:var(--moss); overflow:hidden;
+      padding:.75rem 0; white-space:nowrap;
+    }
+    .ticker__track { display:inline-flex; animation:ticker 25s linear infinite; }
+    .ticker__item {
+      font-family:var(--f-head); font-size:.75rem; font-weight:700;
+      letter-spacing:.18em; text-transform:uppercase;
+      color:var(--ecru-70); padding:0 2.5rem;
+    }
+    .ticker__item span { color:var(--ecru); }
+    @keyframes ticker {
+      from { transform:translateX(0); }
+      to   { transform:translateX(-50%); }
+    }
+
+    /* ════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════ */
+    @media(max-width:1024px){
+      .cart-page { grid-template-columns:minmax(0,1fr); }
+      .cart-resumo { position:static; }
+    }
+    @media(max-width:768px){
+      .header__inner, .breadcrumb, .cart-hero, .cart-page {
+        padding-left:1.25rem; padding-right:1.25rem;
+      }
+      .header__nav { display:none; }
+      .cart-item { grid-template-columns:72px minmax(0,1fr); }
+      .cart-item__img { width:72px; }
+      .cart-item__controles { grid-column:2; align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     HEADER — mesma estrutura/classes do projeto
+══════════════════════════════════════ -->
+<header class="header" id="site-header">
+  <div class="header__inner">
+    <a href="preview.html" class="header__logo" aria-label="GRACIOU — voltar ao início">
+      <img src="assets/tree-icon.png" alt="Tree" style="height:48px; width:auto; mix-blend-mode:multiply; margin-right:-4px; margin-top:-2px;" aria-hidden="true" />
+      <span class="header__logo-text">GRACIOU</span>
+    </a>
+    <nav class="header__nav">
+      <a href="preview.html">Loja</a>
+      <a href="collection.html">Drops</a>
+      <a href="preview.html#philosophy">Missão</a>
+      <a href="#">Lookbook</a>
+    </nav>
+    <div class="header__actions">
+      <button class="header__icon-btn" aria-label="Buscar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <a href="cart.html" class="header__icon-btn cart-badge" aria-label="Carrinho">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-badge__count" data-graciou-cart-count>0</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="preview.html">Início</a>
+  <span class="breadcrumb__sep" aria-hidden="true">/</span>
+  <a href="collection.html">Drops</a>
+  <span class="breadcrumb__sep" aria-hidden="true">/</span>
+  <span class="breadcrumb__current">Carrinho</span>
+</nav>
+
+<!-- ══════════════════════════════════════
+     HERO
+══════════════════════════════════════ -->
+<section class="cart-hero">
+  <div class="cart-hero__inner">
+    <p class="cart-hero__eyebrow">Sua seleção</p>
+    <h1 class="cart-hero__title">Carrinho</h1>
+    <p class="cart-hero__desc" id="cart-hero-desc">
+      Revise as peças escolhidas, ajuste as quantidades e confirme a forma de pagamento.
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     CARRINHO
+══════════════════════════════════════ -->
+<main class="cart-page" id="cart-main">
+
+  <section aria-label="Itens do carrinho">
+    <div class="cart-lista" id="cart-lista"></div>
+
+    <div class="cart-vazio" id="cart-vazio" role="status">
+      <div class="cart-vazio__icon">
+        <svg width="48" height="60" viewBox="0 0 400 500" fill="none">
+          <path d="M200 420 Q200 445 200 470" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#1A1A1A" stroke-width="14" stroke-linecap="round"/>
+          <path d="M198 300 C185 285 165 270 140 260" stroke="#1A1A1A" stroke-width="7" stroke-linecap="round"/>
+          <path d="M202 300 C215 285 235 270 260 260" stroke="#1A1A1A" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h2 class="cart-vazio__titulo">Carrinho vazio</h2>
+      <p class="cart-vazio__sub">Nenhuma peça adicionada ainda.</p>
+      <a href="collection.html" class="btn btn--outline">VER O DROP 01</a>
+    </div>
+  </section>
+
+  <!-- Resumo -->
+  <aside class="cart-resumo" id="cart-resumo" aria-label="Resumo do pedido" hidden>
+    <h2 class="cart-resumo__titulo">Resumo</h2>
+
+    <div class="cart-bloco">
+      <p class="cart-bloco__titulo">Forma de pagamento</p>
+      <div class="cart-pagamento" role="group" aria-label="Forma de pagamento">
+        <button type="button" class="cart-pagamento__btn is-active" data-forma="pix" aria-pressed="true">Pix</button>
+        <button type="button" class="cart-pagamento__btn" data-forma="cartao" aria-pressed="false">Cartão</button>
+      </div>
+    </div>
+
+    <div class="cart-cupom">
+      <p class="cart-bloco__titulo">Cupom de desconto</p>
+      <div id="cart-cupom-conteudo">
+        <form class="cart-cupom__form" id="cart-cupom-form">
+          <input class="cart-cupom__input" id="cart-cupom-input" type="text"
+            placeholder="Digite seu cupom" autocomplete="off" aria-label="Cupom de desconto" />
+          <button class="btn btn--ghost-dark cart-cupom__btn" type="submit">APLICAR</button>
+        </form>
+        <p class="cart-cupom__mensagem" id="cart-cupom-mensagem" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <div class="cart-bloco">
+      <p class="cart-bloco__titulo">Estado de entrega</p>
+      <label class="cart-campo-uf" for="cart-estado">UF</label>
+      <input id="cart-estado" class="cart-cupom__input" maxlength="2" placeholder="SP" autocomplete="address-level1" aria-describedby="cart-uf-mensagem" />
+      <p id="cart-uf-mensagem" class="cart-cupom__mensagem" role="status" aria-live="polite">Informe a UF para calcular o frete.</p>
+    </div>
+
+    <div class="cart-bloco">
+      <p class="cart-bloco__titulo">Frete</p>
+      <div id="cart-frete"></div>
+    </div>
+
+    <div class="cart-linhas">
+      <div class="cart-linha">
+        <span class="cart-linha__rotulo">Subtotal</span>
+        <span class="cart-linha__valor" id="cart-subtotal">—</span>
+      </div>
+      <div class="cart-linha">
+        <span class="cart-linha__rotulo">Peças</span>
+        <span class="cart-linha__valor" id="cart-pecas">0</span>
+      </div>
+      <div class="cart-linha cart-linha--desconto" id="cart-linha-desconto" hidden>
+        <span class="cart-linha__rotulo">Desconto <span id="cart-cupom-codigo"></span></span>
+        <span class="cart-linha__valor" id="cart-desconto">—</span>
+      </div>
+      <div class="cart-linha">
+        <span class="cart-linha__rotulo">Frete</span>
+        <span class="cart-linha__valor" id="cart-valor-frete">—</span>
+      </div>
+      <div class="cart-linha cart-linha--total">
+        <span class="cart-linha__rotulo">Total</span>
+        <span class="cart-linha__valor" id="cart-total">—</span>
+      </div>
+    </div>
+
+    <div class="cart-aviso-frete" id="cart-aviso-frete"></div>
+
+    <div class="cart-acoes" style="margin-top:1.5rem">
+      <!-- Checkout é uma página própria (checkout.html). Sem backend, sem gateway
+           de pagamento ainda: o botão só leva o carrinho para a próxima etapa. -->
+      <a href="checkout.html" class="btn btn--primary btn--bloco" id="cart-finalizar">
+        CONTINUAR PARA PAGAMENTO
+      </a>
+      <button type="button" class="btn btn--ghost-dark btn--bloco" id="cart-limpar">
+        LIMPAR CARRINHO
+      </button>
+      <a href="collection.html" class="btn btn--ghost-dark btn--bloco">CONTINUAR COMPRANDO</a>
+    </div>
+  </aside>
+</main>
+
+<!-- Ticker -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker__track">
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Drop 01 — 8 peças oficiais</span>
+    <span class="ticker__item">Frete grátis a partir de <span>2 peças</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Drop 01 — 8 peças oficiais</span>
+    <span class="ticker__item">Frete grátis a partir de <span>2 peças</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+  </div>
+</div>
+
+<!-- Mesma ordem de scripts da collection.html:
+     1) dados/catalogo.js — fonte única dos produtos e das regras;
+     2) assets/graciou-store.js — carrinho persistente (localStorage). -->
+<script src="dados/catalogo.js"></script>
+<script src="assets/graciou-store.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORE = window.GRACIOU_STORE;
+  var CATALOGO = window.GRACIOU_CATALOGO;
+
+  var lista      = document.getElementById('cart-lista');
+  var vazio      = document.getElementById('cart-vazio');
+  var resumo     = document.getElementById('cart-resumo');
+  var elFrete    = document.getElementById('cart-frete');
+  var elSubtotal = document.getElementById('cart-subtotal');
+  var elPecas    = document.getElementById('cart-pecas');
+  var elValorFrete = document.getElementById('cart-valor-frete');
+  var elTotal    = document.getElementById('cart-total');
+  var elAviso    = document.getElementById('cart-aviso-frete');
+  var btnLimpar  = document.getElementById('cart-limpar');
+  var cupomForm  = document.getElementById('cart-cupom-form');
+  var cupomInput = document.getElementById('cart-cupom-input');
+  var cupomMsg   = document.getElementById('cart-cupom-mensagem');
+  var cupomConteudo = document.getElementById('cart-cupom-conteudo');
+  var linhaDesconto = document.getElementById('cart-linha-desconto');
+  var elCupomCodigo = document.getElementById('cart-cupom-codigo');
+  var elDesconto = document.getElementById('cart-desconto');
+  var elEstado = document.getElementById('cart-estado');
+  var elUfMensagem = document.getElementById('cart-uf-mensagem');
+  var CART_UF_KEY = 'graciou-uf-v1';
+  try { elEstado.value = String(localStorage.getItem(CART_UF_KEY) || '').toUpperCase(); } catch (_) {}
+
+  /* Glifo de marca usado como placeholder de imagem, igual ao da collection. */
+  var ARVORE_SVG =
+    '<svg width="40" height="50" viewBox="0 0 400 500" fill="none" aria-hidden="true">' +
+      '<path d="M200 420 Q200 445 200 470" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>' +
+      '<path d="M198 300 C185 285 165 270 140 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M202 300 C215 285 235 270 260 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M200 220 C195 200 188 178 175 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+      '<path d="M200 220 C205 200 212 178 225 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>';
+
+  /* Cor do catálogo > classe CSS já existente nesta página. */
+  var CLASSE_COR = {
+    'verde-musgo': 'verde-musgo',
+    'verde musgo': 'verde-musgo',
+    'verde-militar': 'verde-militar',
+    'verde militar': 'verde-militar',
+    'off-white': 'off-white',
+    'off white': 'off-white',
+    'creme': 'creme',
+    'ecru': 'creme',
+    'preto': 'preto',
+    'black': 'preto',
+    'marrom': 'marrom'
+  };
+  var CORES_ESCURAS = ['preto', 'verde-musgo', 'verde-militar', 'marrom', 'verde-musgo-escuro'];
+
+  function classeDaCor(nome) {
+    var chave = String(nome || '').trim().toLowerCase();
+    var classe = CLASSE_COR[chave] || 'padrao';
+    return classe;
+  }
+
+  function escapar(texto) {
+    return String(texto === undefined || texto === null ? '' : texto)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function rotuloCategoria(produto) {
+    if (!produto) return '';
+    if (produto.categoriaId === 'graciou-move') return 'GRACIOU Move';
+    return produto.categoria || produto.categoriaId || '';
+  }
+
+  /* ── Uma linha do carrinho ──
+     Mostra o preço da forma de pagamento escolhida. Se o valor não
+     existir no catálogo, mostra "—" em vez de inventar número. */
+  function montarLinha(linha) {
+    var produto = CATALOGO && typeof CATALOGO.busca === 'function'
+      ? CATALOGO.busca(linha.productId) : null;
+
+    var cor = linha.cor || (produto ? produto.corPrincipal : '') || '';
+    var classe = classeDaCor(cor);
+    var escura = CORES_ESCURAS.indexOf(classe) !== -1;
+
+    var unitario = linha.unitarioFormatado === null ? '—' : linha.unitarioFormatado;
+    var totalLinha = linha.totalLinhaFormatado === null ? '—' : linha.totalLinhaFormatado;
+
+    return [
+      '<article class="cart-item" data-key="' + escapar(linha.key) + '">',
+
+        '<div class="cart-item__img cart-item__img--' + classe + '"' +
+          (escura ? ' data-invert' : '') + '>' + ARVORE_SVG + '</div>',
+
+        '<div class="cart-item__info">',
+          '<p class="cart-item__cat">' + escapar(rotuloCategoria(produto)) + '</p>',
+          '<h3 class="cart-item__nome">' + escapar(linha.nome) + '</h3>',
+          '<p class="cart-item__variacao">Tamanho: ' + escapar(linha.tamanho) +
+            (cor ? ' · Cor: ' + escapar(cor) : '') + '</p>',
+          '<p class="cart-item__preco-unit">' + unitario + ' a unidade</p>',
+        '</div>',
+
+        '<div class="cart-item__controles">',
+          '<span class="cart-item__preco">' + totalLinha + '</span>',
+          '<div class="cart-qtd">',
+            '<button type="button" class="cart-qtd__btn" data-acao="diminuir" ' +
+              'aria-label="Diminuir quantidade">−</button>',
+            '<span class="cart-qtd__valor">' + linha.quantidade + '</span>',
+            '<button type="button" class="cart-qtd__btn" data-acao="aumentar" ' +
+              'aria-label="Aumentar quantidade">+</button>',
+          '</div>',
+          '<button type="button" class="cart-item__remover" data-acao="remover">Remover</button>',
+        '</div>',
+
+      '</article>'
+    ].join('');
+  }
+
+  /* ── Bloco de frete ──
+     Frete grátis: 2 peças ou mais.
+     1 peça: "frete pendente", porque META.valorFrete é null e o valor
+     do frete normal NÃO foi informado. Nada é inventado. */
+  function montarFrete(totais) {
+    var frete = totais.frete;
+    var minimo = frete.minimo;
+
+    if (totais.pecas === 0) return '';
+
+    if (frete.gratis) {
+      return '<span class="cart-frete-gratis">Frete grátis</span>' +
+        '<p class="cart-aviso-frete">Você tem ' + totais.pecas + ' peças — frete grátis aplicado.</p>';
+    }
+
+    if (frete.valor === null) {
+      var faltam = (typeof minimo === 'number') ? (minimo - totais.pecas) : null;
+      var dica = 'Valor do frete ainda não informado pelo fornecedor.';
+      if (faltam && faltam > 0) {
+        dica += ' Faltam ' + faltam + ' peça' + (faltam > 1 ? 's' : '') +
+          ' para o frete grátis.';
+      }
+      return '<span class="cart-frete-pendente" title="' +
+        escapar('Valor do frete ainda não informado — não inventamos um número.') +
+        '">Frete pendente</span>' +
+        '<p class="cart-aviso-frete">' + escapar(dica) + '</p>';
+    }
+
+    return '<span class="cart-linha__valor">' + escapar(frete.valorFormatado || '—') + '</span>';
+  }
+
+  function mostrarMensagem(texto, tipo) {
+    cupomMsg.textContent = texto || '';
+    cupomMsg.className = 'cart-cupom__mensagem';
+    cupomMsg.classList.toggle('sucesso', tipo === 'sucesso');
+    cupomMsg.classList.toggle('erro', tipo === 'erro');
+  }
+
+  function renderizarCupom(totais) {
+    var codigo = STORE.getCoupon();
+    var aplicado = totais.cupom && totais.cupom.valido && codigo;
+    if (aplicado) {
+      cupomConteudo.innerHTML = '<div class="cart-cupom__aplicado">' +
+        '<span>' + escapar(codigo) + ' aplicado</span>' +
+        '<button type="button" class="cart-cupom__remover" id="cart-cupom-remover">Remover</button>' +
+        '</div><p class="cart-cupom__mensagem sucesso" id="cart-cupom-mensagem" role="status" aria-live="polite">Cupom aplicado.</p>';
+      cupomMsg = document.getElementById('cart-cupom-mensagem');
+      linhaDesconto.hidden = false;
+      elCupomCodigo.textContent = '(' + codigo + ')';
+      elDesconto.textContent = '-' + (totais.descontoFormatado || 'R$ 0,00');
+      return;
+    }
+
+    if (!document.getElementById('cart-cupom-form')) {
+      cupomConteudo.innerHTML = '<form class="cart-cupom__form" id="cart-cupom-form">' +
+        '<input class="cart-cupom__input" id="cart-cupom-input" type="text" placeholder="Digite seu cupom" autocomplete="off" aria-label="Cupom de desconto" />' +
+        '<button class="btn btn--ghost-dark cart-cupom__btn" type="submit">APLICAR</button>' +
+        '</form><p class="cart-cupom__mensagem" id="cart-cupom-mensagem" role="status" aria-live="polite"></p>';
+      cupomForm = document.getElementById('cart-cupom-form');
+      cupomInput = document.getElementById('cart-cupom-input');
+      cupomMsg = document.getElementById('cart-cupom-mensagem');
+    }
+    linhaDesconto.hidden = true;
+    elCupomCodigo.textContent = '';
+    elDesconto.textContent = '—';
+  }
+
+  function renderizar() {
+    if (!STORE || typeof STORE.totalizar !== 'function') return;
+
+    var forma = STORE.getPayment();
+    var uf = String(elEstado.value || '').trim().toUpperCase();
+    var totais = STORE.totalizar(forma, undefined, uf);
+
+    /* Marca o botão da forma ativa sem alterar o CSS. */
+    document.querySelectorAll('.cart-pagamento__btn').forEach(function (btn) {
+      var ativo = btn.getAttribute('data-forma') === forma;
+      btn.classList.toggle('is-active', ativo);
+      btn.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+    });
+
+    /* Lista */
+    lista.innerHTML = totais.linhas.map(montarLinha).join('');
+
+    var temItens = totais.linhas.length > 0;
+    vazio.classList.toggle('visible', !temItens);
+    resumo.hidden = !temItens;
+    if (!temItens) {
+      elFrete.innerHTML = '';
+      return;
+    }
+
+    /* Frete */
+    elFrete.innerHTML = montarFrete(totais);
+
+    /* Cupom e totais. O desconto já está aplicado apenas ao subtotal
+       de produtos; o frete continua separado e sem desconto. */
+    renderizarCupom(totais);
+    elSubtotal.textContent = totais.subtotalFormatado || '—';
+    elPecas.textContent = String(totais.pecas);
+    elValorFrete.innerHTML = totais.frete.erro
+      ? '<span class="cart-frete-pendente">Informe uma UF válida</span>'
+      : (totais.frete.valor === 0 ? 'Grátis' : escapar(totais.frete.valorFormatado || '—'));
+    elTotal.textContent = totais.totalFormatado || '—';
+
+    elAviso.textContent = totais.frete.erro
+      ? 'Informe uma UF válida do Brasil para calcular o frete.'
+      : 'Subtotal, desconto e frete calculados a partir do catálogo central.';
+    elUfMensagem.textContent = totais.frete.erro ? totais.frete.erro : (uf ? 'UF válida: ' + uf : 'Informe a UF para calcular o frete.');
+  }
+
+  /* ── Cupom: um único código normalizado e validado pela fonte central. ── */
+  elEstado.addEventListener('input', function () {
+    elEstado.value = elEstado.value.replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
+    try { localStorage.setItem(CART_UF_KEY, elEstado.value); } catch (_) {}
+    renderizar();
+  });
+
+  document.getElementById('cart-finalizar').addEventListener('click', function (ev) {
+    var totais = STORE.totalizar(STORE.getPayment(), undefined, elEstado.value);
+    if (totais.pecas === 1 && (!totais.frete || totais.frete.erro)) {
+      ev.preventDefault();
+      elUfMensagem.textContent = 'Informe uma UF válida antes de continuar para o checkout.';
+      elEstado.focus();
+    }
+  });
+
+  document.addEventListener('submit', function (ev) {
+    if (ev.target.id !== 'cart-cupom-form') return;
+    ev.preventDefault();
+    var codigo = cupomInput ? cupomInput.value : '';
+    var base = STORE.totalizar(STORE.getPayment(), '').subtotal;
+    var resultado = CATALOGO.descontoCupom(codigo, base);
+    if (!resultado.valido) {
+      mostrarMensagem(resultado.motivo, 'erro');
+      return;
+    }
+    STORE.setCoupon(resultado.codigo);
+    mostrarMensagem(resultado.motivo, 'sucesso');
+    renderizar();
+    return;
+  });
+
+  document.addEventListener('click', function (ev) {
+    if (ev.target.closest && ev.target.closest('#cart-cupom-remover')) {
+      ev.preventDefault();
+      STORE.removeCoupon();
+      renderizar();
+      mostrarMensagem('Cupom removido.', 'sucesso');
+    }
+  });
+
+  /* ── Ações ── */
+  document.addEventListener('click', function (ev) {
+    var btnForma = ev.target.closest ? ev.target.closest('[data-forma]') : null;
+    if (btnForma) {
+      ev.preventDefault();
+      STORE.setPayment(btnForma.getAttribute('data-forma'));
+      renderizar();
+      return;
+    }
+
+    var btn = ev.target.closest ? ev.target.closest('[data-acao]') : null;
+    if (!btn) return;
+
+    var item = btn.closest('.cart-item');
+    if (!item) return;
+    var key = item.getAttribute('data-key');
+    var acao = btn.getAttribute('data-acao');
+
+    ev.preventDefault();
+
+    if (acao === 'aumentar') STORE.incrementar(key, 1);
+    else if (acao === 'diminuir') STORE.decrementar(key, 1);
+    else if (acao === 'remover') STORE.removeFromCart(key);
+    /* renderizar() é chamado pelo evento graciou:cart-updated. */
+  });
+
+  btnLimpar.addEventListener('click', function () {
+    if (!STORE.getCart().length) return;
+    var ok = window.confirm('Remover todas as peças do carrinho?');
+    if (ok) STORE.clearCart();
+  });
+
+  /* A store emite este evento em toda mudança de carrinho. */
+  window.addEventListener('graciou:cart-updated', renderizar);
+  window.addEventListener('graciou:pagamento-updated', renderizar);
+  window.addEventListener('graciou:cupom-updated', renderizar);
+
+  /* Header com sombra ao rolar — mesmo comportamento do resto do site. */
+  var header = document.getElementById('site-header');
+  window.addEventListener('scroll', function () {
+    header.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', renderizar);
+  } else {
+    renderizar();
+  }
+})();
+</script>
+</body>
+</html>

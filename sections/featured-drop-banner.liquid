@@ -1,0 +1,106 @@
+{% comment %}
+  ============================================================
+  Seção: featured-drop-banner.liquid
+  Marca: GRACIOU
+  Descrição: Banner de destaque para novos drops / pré-lançamentos.
+              Fundo verde musgo com tipografia ecru. Alta conversão.
+  ============================================================
+{% endcomment %}
+
+<section
+  id="featured-drop-banner"
+  class="featured-drop-banner py-20 md:py-28"
+  aria-labelledby="drop-banner-heading"
+  data-animate
+>
+  <div class="container mx-auto px-6 md:px-12 lg:px-16">
+    <div class="featured-drop-banner__inner">
+
+      <!-- Decoração: árvore fantasma no fundo -->
+      <div class="featured-drop-banner__bg-tree" aria-hidden="true">
+        {% render 'icon-tree', width: 320, color: 'rgba(253,253,208,0.06)' %}
+      </div>
+
+      <!-- Conteúdo -->
+      <div class="featured-drop-banner__content text-center relative z-10">
+
+        <!-- Label de badge -->
+        {%- if section.settings.label != blank -%}
+          <span class="featured-drop-banner__badge">
+            {{ section.settings.label }}
+          </span>
+        {%- endif -%}
+
+        <!-- Título -->
+        <h2
+          id="drop-banner-heading"
+          class="featured-drop-banner__heading font-heading text-5xl md:text-7xl lg:text-8xl text-ecru uppercase leading-none mt-6 mb-6"
+        >
+          {{ section.settings.heading | default: 'DROP 02 — EM BREVE' | newline_to_br }}
+        </h2>
+
+        <!-- Subtexto -->
+        {%- if section.settings.subtext != blank -%}
+          <p class="featured-drop-banner__subtext text-ecru/70 text-sm md:text-base tracking-widest uppercase font-body font-light mb-10">
+            {{ section.settings.subtext }}
+          </p>
+        {%- endif -%}
+
+        <!-- CTA -->
+        {%- if section.settings.cta_label != blank -%}
+          <a
+            href="{{ section.settings.cta_url | default: '#' }}"
+            class="btn btn--ecru"
+            id="drop-banner-cta"
+          >
+            {{ section.settings.cta_label }}
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Banner de Drop",
+  "tag": "section",
+  "class": "section-drop-banner",
+  "settings": [
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Badge / Tag",
+      "default": "NOVIDADE"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Título do drop",
+      "default": "DROP 02 — EM BREVE"
+    },
+    {
+      "type": "text",
+      "id": "subtext",
+      "label": "Texto de apoio",
+      "default": "Acesse a lista de espera e seja o primeiro a saber."
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Texto do botão",
+      "default": "ENTRAR NA LISTA"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "Link do botão"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Banner de Drop"
+    }
+  ]
+}
+{% endschema %}

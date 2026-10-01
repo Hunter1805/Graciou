@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Painel administrativo GRACIOU — pedidos internos, status, rastreio e exportação para a YouDraw." />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Painel Admin — GRACIOU</title>
+  <link rel="icon" href="data:," />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ════════════════════════════════════
+       TOKENS — iguais aos de checkout.html / cart.html
+    ════════════════════════════════════ */
+    :root {
+      --ecru:       #FDFDD0;
+      --moss:       #4F5D3A;
+      --moss-light: #6B7A50;
+      --moss-dark:  #3A4529;
+      --navy:       #1A1A1A;
+      --erro:       #8B2F2F;
+      --ok:         #3F6B3F;
+      --ecru-70:    rgba(253,253,208,0.7);
+      --navy-10:    rgba(26,26,26,0.10);
+      --navy-06:    rgba(26,26,26,0.06);
+      --moss-10:    rgba(79,93,58,0.10);
+      --f-head:     'Barlow Condensed', sans-serif;
+      --f-body:     'DM Sans', sans-serif;
+      --ease:       cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ════════════════════════════════════
+       RESET
+    ════════════════════════════════════ */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      font-family:var(--f-body);
+      background:var(--ecru);
+      color:var(--navy);
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    img { max-width:100%; display:block; }
+    a   { color:inherit; text-decoration:none; }
+    ul  { list-style:none; }
+    h1,h2,h3 { font-family:var(--f-head); font-weight:800; line-height:1; }
+    button { cursor:pointer; font-family:inherit; background:none; border:none; color:inherit; }
+    input, select, textarea { font-family:inherit; font-size:inherit; }
+
+    /* ════════════════════════════════════
+       HEADER
+    ════════════════════════════════════ */
+    .header {
+      position:sticky; top:0; z-index:100;
+      background:var(--ecru);
+      border-bottom:1px solid var(--navy-10);
+    }
+    .header__inner {
+      max-width:1400px; margin:0 auto;
+      padding:0 3rem; height:72px;
+      display:flex; align-items:center; justify-content:space-between; gap:2rem;
+    }
+    .header__logo { display:flex; align-items:center; gap:.6rem; }
+    .header__logo-text {
+      font-family:'Oswald', sans-serif; font-size:1.6rem; font-weight:600;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--moss);
+      transform: scaleY(1.1); transform-origin: bottom;
+    }
+    .header__tag {
+      font-size:.6rem; letter-spacing:.24em; text-transform:uppercase;
+      color:rgba(26,26,26,.4); padding-left:.6rem;
+      border-left:1px solid var(--navy-10);
+    }
+    .header__actions { display:flex; align-items:center; gap:1.25rem; }
+    .header__quem { font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:rgba(26,26,26,.5); }
+
+    /* ════════════════════════════════════
+       BOTÕES
+    ════════════════════════════════════ */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+      padding:.7rem 1.4rem; font-size:.68rem; font-weight:500;
+      letter-spacing:.16em; text-transform:uppercase;
+      border:1px solid var(--navy); transition:all .2s var(--ease);
+    }
+    .btn--escuro { background:var(--navy); color:var(--ecru); }
+    .btn--escuro:hover { background:var(--moss); border-color:var(--moss); }
+    .btn--vazio { background:transparent; color:var(--navy); }
+    .btn--vazio:hover { background:var(--navy); color:var(--ecru); }
+    .btn--moss { background:var(--moss); border-color:var(--moss); color:var(--ecru); }
+    .btn--moss:hover { background:var(--moss-dark); border-color:var(--moss-dark); }
+    .btn--min { padding:.5rem 1rem; font-size:.62rem; }
+    .btn[disabled] { opacity:.45; cursor:not-allowed; }
+
+    /* ════════════════════════════════════
+       TELA DE LOGIN
+    ════════════════════════════════════ */
+    .login-wrap {
+      min-height:calc(100vh - 72px);
+      display:flex; align-items:center; justify-content:center;
+      padding:3rem;
+      background:var(--moss-dark);
+    }
+    .login-card {
+      width:100%; max-width:420px;
+      background:var(--ecru);
+      padding:2.75rem 2.5rem;
+    }
+    .login-card__eyebrow {
+      font-size:.62rem; letter-spacing:.28em; text-transform:uppercase;
+      color:var(--moss); margin-bottom:.75rem;
+    }
+    .login-card__title { font-size:2.1rem; text-transform:uppercase; margin-bottom:.6rem; }
+    .login-card__desc {
+      font-size:.8rem; font-weight:300; line-height:1.65;
+      color:rgba(26,26,26,.6); margin-bottom:2rem;
+    }
+
+    /* ════════════════════════════════════
+       CAMPOS
+    ════════════════════════════════════ */
+    .campo { display:flex; flex-direction:column; gap:.45rem; margin-bottom:1.1rem; }
+    .campo__label {
+      font-size:.62rem; letter-spacing:.16em; text-transform:uppercase;
+      color:rgba(26,26,26,.55);
+    }
+    .campo input, .campo select, .campo textarea {
+      width:100%; padding:.75rem .9rem;
+      background:#fff; border:1px solid var(--navy-10);
+      color:var(--navy); font-size:.85rem;
+      transition:border-color .2s var(--ease);
+    }
+    .campo input:focus, .campo select:focus, .campo textarea:focus {
+      outline:none; border-color:var(--moss);
+    }
+    .campo textarea { resize:vertical; min-height:90px; line-height:1.6; }
+    .campo__dica { font-size:.68rem; color:rgba(26,26,26,.45); font-weight:300; }
+
+    /* ════════════════════════════════════
+       AVISOS
+    ════════════════════════════════════ */
+    .aviso {
+      padding:.85rem 1rem; font-size:.78rem; line-height:1.55;
+      border-left:3px solid var(--navy-10); background:var(--navy-06);
+      margin-bottom:1.1rem;
+    }
+    .aviso--erro { border-left-color:var(--erro); background:rgba(139,47,47,.07); color:var(--erro); }
+    .aviso--ok   { border-left-color:var(--ok); background:rgba(63,107,63,.08); color:var(--ok); }
+    .aviso--info { border-left-color:var(--moss); background:var(--moss-10); }
+
+    /* ════════════════════════════════════
+       ÁREA PRINCIPAL (pós-login)
+    ════════════════════════════════════ */
+    .app { display:none; }
+    .app.is-visivel { display:block; }
+
+    .pb-hero { background:var(--moss-dark); padding:2.5rem 3rem 2.25rem; }
+    .pb-hero__inner { max-width:1400px; margin:0 auto; }
+    .pb-hero__eyebrow {
+      font-size:.62rem; letter-spacing:.28em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:.7rem;
+    }
+    .pb-hero__title { font-size:clamp(2.2rem,4.5vw,3.4rem); text-transform:uppercase; color:var(--ecru); }
+    .pb-hero__desc {
+      font-size:.82rem; font-weight:300; line-height:1.7;
+      color:var(--ecru-70); max-width:70ch; margin-top:.7rem;
+    }
+
+    .pb-page { max-width:1400px; margin:0 auto; padding:2.25rem 3rem 6rem; }
+
+    /* ── Barra de ferramentas ── */
+    .pb-barra {
+      display:flex; align-items:flex-end; gap:1.25rem; flex-wrap:wrap;
+      padding-bottom:1.5rem; border-bottom:1px solid var(--navy-10);
+      margin-bottom:1.75rem;
+    }
+    .pb-barra .campo { margin-bottom:0; min-width:220px; }
+    .pb-barra__espaco { flex:1 1 auto; }
+
+    /* ── Cartões de contagem por status ── */
+    .pb-contagens { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:1.75rem; }
+    .pb-contagem {
+      border:1px solid var(--navy-10); padding:.6rem .95rem;
+      display:flex; align-items:center; gap:.55rem;
+      font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(26,26,26,.6); transition:all .2s var(--ease);
+    }
+    .pb-contagem:hover { border-color:var(--moss); color:var(--moss); }
+    .pb-contagem.is-ativa { background:var(--navy); border-color:var(--navy); color:var(--ecru); }
+    .pb-contagem__n { font-weight:700; font-size:.8rem; }
+
+    /* ── Tabela de pedidos ── */
+    .pb-tabela-wrap { border:1px solid var(--navy-10); overflow-x:auto; }
+    table.pb-tabela { width:100%; border-collapse:collapse; font-size:.8rem; }
+    .pb-tabela thead th {
+      text-align:left; padding:.85rem 1rem;
+      font-size:.6rem; letter-spacing:.14em; text-transform:uppercase;
+      color:rgba(26,26,26,.5); font-weight:500;
+      border-bottom:1px solid var(--navy-10); background:var(--navy-06);
+      white-space:nowrap;
+    }
+    .pb-tabela tbody td {
+      padding:.9rem 1rem; border-bottom:1px solid var(--navy-06); vertical-align:middle;
+    }
+    .pb-tabela tbody tr:last-child td { border-bottom:none; }
+    .pb-tabela tbody tr { cursor:pointer; transition:background .15s var(--ease); }
+    .pb-tabela tbody tr:hover { background:var(--moss-10); }
+    .pb-tabela tbody tr.is-selecionada { background:var(--moss-10); box-shadow:inset 3px 0 0 var(--moss); }
+    .pb-tabela__id { font-family:var(--f-head); font-size:.92rem; font-weight:600; letter-spacing:.02em; }
+    .pb-tabela__sub { display:block; font-size:.68rem; color:rgba(26,26,26,.45); font-weight:300; }
+    .pb-num { font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+    /* ── Selo de status ── */
+    .selo {
+      display:inline-block; padding:.3rem .6rem;
+      font-size:.58rem; letter-spacing:.1em; text-transform:uppercase;
+      border:1px solid currentColor; white-space:nowrap;
+    }
+    .selo--aguardando_pagamento { color:#8A6A1F; }
+    .selo--pago                  { color:var(--ok); }
+    .selo--encomendar_na_youdraw { color:var(--moss); }
+    .selo--pedido_na_youdraw     { color:var(--moss-dark); }
+    .selo--em_producao           { color:#2F5F7A; }
+    .selo--enviado               { color:#2F5F7A; }
+    .selo--entregue              { color:rgba(26,26,26,.55); }
+    .selo--cancelado             { color:var(--erro); }
+
+    /* ── Estado vazio / carregando ── */
+    .pb-vazio {
+      padding:3.5rem 2rem; text-align:center;
+      border:1px dashed var(--navy-10); color:rgba(26,26,26,.45);
+      font-size:.82rem; font-weight:300; line-height:1.7;
+    }
+
+    /* ════════════════════════════════════
+       DETALHE DO PEDIDO
+    ════════════════════════════════════ */
+    .pb-detalhe { margin-top:2.5rem; border-top:2px solid var(--navy); padding-top:1.75rem; }
+    .pb-detalhe__topo {
+      display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap;
+      margin-bottom:1.5rem;
+    }
+    .pb-detalhe__titulo { font-size:1.8rem; text-transform:uppercase; }
+    .pb-detalhe__data { font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:rgba(26,26,26,.45); }
+
+    .pb-detalhe-grid {
+      display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);
+      gap:2.5rem; align-items:start;
+    }
+    .pb-bloco { border:1px solid var(--navy-10); padding:1.5rem; margin-bottom:1.5rem; }
+    .pb-bloco__titulo {
+      font-size:1.15rem; text-transform:uppercase;
+      padding-bottom:.85rem; margin-bottom:1.1rem;
+      border-bottom:1px solid var(--navy-10);
+    }
+    .pb-linhas { display:flex; flex-direction:column; gap:.55rem; }
+    .pb-linha { display:flex; gap:.75rem; font-size:.82rem; line-height:1.5; }
+    .pb-linha__rot {
+      flex:0 0 120px; font-size:.62rem; letter-spacing:.12em;
+      text-transform:uppercase; color:rgba(26,26,26,.45); padding-top:.15rem;
+    }
+    .pb-linha__val { flex:1 1 auto; word-break:break-word; font-weight:400; }
+
+    /* ── Itens ── */
+    .pb-item {
+      display:flex; justify-content:space-between; gap:1rem;
+      padding:.7rem 0; border-bottom:1px solid var(--navy-06); font-size:.82rem;
+    }
+    .pb-item:last-child { border-bottom:none; }
+    .pb-item__meta { font-size:.7rem; color:rgba(26,26,26,.5); font-weight:300; display:block; margin-top:.15rem; }
+
+    /* ── Totais ── */
+    .pb-totais { margin-top:1rem; padding-top:1rem; border-top:1px solid var(--navy-10); }
+    .pb-total-linha {
+      display:flex; justify-content:space-between;
+      font-size:.82rem; padding:.28rem 0;
+    }
+    .pb-total-linha--forte {
+      font-family:var(--f-head); font-size:1.3rem; font-weight:700;
+      text-transform:uppercase; padding-top:.7rem; margin-top:.45rem;
+      border-top:1px solid var(--navy-10);
+    }
+
+    /* ════════════════════════════════════
+       RESUMO YOUDRAW
+    ════════════════════════════════════ */
+    .pb-youdraw {
+      border:1px solid var(--moss); background:var(--moss-10);
+      padding:1.5rem; margin-bottom:1.5rem;
+    }
+    .pb-youdraw__topo {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:1rem; flex-wrap:wrap; margin-bottom:1rem;
+    }
+    .pb-youdraw__titulo { font-size:1.15rem; text-transform:uppercase; color:var(--moss-dark); }
+    .pb-youdraw__texto {
+      width:100%; background:var(--ecru); border:1px solid var(--navy-10);
+      padding:.9rem; font-family:'Courier New', monospace; font-size:.74rem;
+      line-height:1.65; color:var(--navy); min-height:280px; resize:vertical;
+      white-space:pre; overflow-wrap:normal; overflow-x:auto;
+    }
+
+    /* ════════════════════════════════════
+       AÇÕES (formulário de atualização)
+    ════════════════════════════════════ */
+    .pb-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1.1rem 1rem; }
+    .pb-form .campo--full { grid-column:span 2; }
+    .pb-form__acoes {
+      grid-column:span 2; display:flex; gap:.75rem; flex-wrap:wrap;
+      padding-top:.35rem;
+    }
+
+    .pb-rodape {
+      max-width:1400px; margin:0 auto; padding:2rem 3rem;
+      border-top:1px solid var(--navy-10);
+      font-size:.68rem; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(26,26,26,.35);
+    }
+
+    /* ════════════════════════════════════
+       RESPONSIVO
+    ════════════════════════════════════ */
+    @media (max-width:1024px) {
+      .pb-detalhe-grid { grid-template-columns:1fr; gap:1.75rem; }
+    }
+    @media (max-width:768px) {
+      .header__inner, .pb-hero, .pb-page, .pb-rodape { padding-left:1.5rem; padding-right:1.5rem; }
+      .pb-form { grid-template-columns:1fr; }
+      .pb-form .campo--full, .pb-form__acoes { grid-column:span 1; }
+      .pb-linha__rot { flex-basis:100px; }
+      .header__tag, .header__quem { display:none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════ HEADER ═══════════ -->
+  <header class="header">
+    <div class="header__inner">
+      <div class="header__logo">
+        <span class="header__logo-text">GRACIOU</span>
+        <span class="header__tag">Painel Admin</span>
+      </div>
+      <div class="header__actions">
+        <span class="header__quem" id="quem" hidden></span>
+        <a class="btn btn--vazio btn--min" href="/index.html">Hub</a>
+        <button class="btn btn--vazio btn--min" id="btn-sair" hidden>Encerrar sessão</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════ LOGIN ═══════════ -->
+  <section class="login-wrap" id="tela-login">
+    <div class="login-card">
+      <p class="login-card__eyebrow">Acesso restrito</p>
+      <h1 class="login-card__title">Painel de Pedidos</h1>
+      <p class="login-card__desc">
+        Área interna da GRACIOU. As credenciais não ficam no código nem no banco:
+        vêm de <strong>ADMIN_EMAIL</strong> e <strong>ADMIN_PASSWORD</strong>,
+        definidas no ambiente da API.
+      </p>
+
+      <div class="aviso aviso--erro" id="login-erro" hidden></div>
+
+      <form id="form-login" novalidate>
+        <div class="campo">
+          <label class="campo__label" for="login-email">E-mail</label>
+          <input type="email" id="login-email" autocomplete="username" spellcheck="false" />
+        </div>
+        <div class="campo">
+          <label class="campo__label" for="login-senha">Senha</label>
+          <input type="password" id="login-senha" autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn--escuro" id="btn-entrar" style="width:100%">Entrar</button>
+      </form>
+
+      <p class="campo__dica" style="margin-top:1.25rem">
+        Sessão em memória, válida por 30 minutos. Reiniciar a API encerra todas as sessões.
+      </p>
+    </div>
+  </section>
+
+  <!-- ═══════════ APLICAÇÃO ═══════════ -->
+  <div class="app" id="app">
+
+    <section class="pb-hero">
+      <div class="pb-hero__inner">
+        <p class="pb-hero__eyebrow">Operação</p>
+        <h1 class="pb-hero__title">Pedidos</h1>
+        <p class="pb-hero__desc">
+          Acompanhe os pedidos recebidos, atualize status, informe rastreio e número da
+          YouDraw, e copie o resumo formatado para lançar na produção. A lista mostra
+          apenas o essencial — CPF, endereço e itens aparecem só no detalhe.
+        </p>
+      </div>
+    </section>
+
+    <main class="pb-page">
+
+      <div class="aviso aviso--info" id="app-aviso" hidden></div>
+
+      <!-- Barra de filtro -->
+      <div class="pb-barra">
+        <div class="campo">
+          <label class="campo__label" for="filtro-status">Filtrar por status</label>
+          <select id="filtro-status">
+            <option value="todos">Todos os status</option>
+          </select>
+        </div>
+        <div class="campo">
+          <label class="campo__label" for="filtro-limite">Máximo de pedidos</label>
+          <select id="filtro-limite">
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+          </select>
+        </div>
+        <div class="pb-barra__espaco"></div>
+        <button class="btn btn--moss" id="btn-atualizar">Atualizar lista</button>
+      </div>
+
+      <!-- Contagens por status -->
+      <div class="pb-contagens" id="contagens"></div>
+
+      <!-- Lista -->
+      <div id="lista-wrap">
+        <div class="pb-vazio" id="lista-vazio">Carregando pedidos…</div>
+        <div class="pb-tabela-wrap" id="lista-tabela-wrap" hidden>
+          <table class="pb-tabela">
+            <thead>
+              <tr>
+                <th>Pedido</th>
+                <th>Cliente</th>
+                <th>Cidade</th>
+                <th>Peças</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="lista-corpo"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Detalhe -->
+      <section class="pb-detalhe" id="detalhe" hidden>
+        <div class="pb-detalhe__topo">
+          <h2 class="pb-detalhe__titulo" id="detalhe-id"></h2>
+          <span class="selo" id="detalhe-selo"></span>
+          <span class="pb-detalhe__data" id="detalhe-data"></span>
+          <div class="pb-barra__espaco"></div>
+          <button class="btn btn--vazio btn--min" id="btn-fechar-detalhe">Fechar detalhe</button>
+        </div>
+
+        <div class="aviso" id="detalhe-aviso" hidden></div>
+
+        <div class="pb-detalhe-grid">
+
+          <!-- Coluna esquerda: dados -->
+          <div>
+            <div class="pb-bloco">
+              <h3 class="pb-bloco__titulo">Cliente</h3>
+              <div class="pb-linhas" id="detalhe-cliente"></div>
+            </div>
+
+            <div class="pb-bloco">
+              <h3 class="pb-bloco__titulo">Entrega</h3>
+              <div class="pb-linhas" id="detalhe-endereco"></div>
+            </div>
+
+            <div class="pb-bloco">
+              <h3 class="pb-bloco__titulo">Itens</h3>
+              <div id="detalhe-itens"></div>
+              <div class="pb-totais" id="detalhe-totais"></div>
+            </div>
+
+            <div class="pb-bloco" id="bloco-observacoes" hidden>
+              <h3 class="pb-bloco__titulo">Observações internas</h3>
+              <div id="detalhe-observacoes" style="font-size:.82rem;line-height:1.7;white-space:pre-wrap"></div>
+            </div>
+          </div>
+
+          <!-- Coluna direita: YouDraw + atualização -->
+          <div>
+            <div class="pb-youdraw">
+              <div class="pb-youdraw__topo">
+                <h3 class="pb-youdraw__titulo">Resumo para a YouDraw</h3>
+                <button class="btn btn--moss btn--min" id="btn-copiar">Copiar resumo</button>
+              </div>
+              <textarea class="pb-youdraw__texto" id="youdraw-texto" readonly spellcheck="false"></textarea>
+              <p class="campo__dica" style="margin-top:.75rem">
+                Texto gerado pelo servidor a partir do pedido gravado. Cole na plataforma da
+                YouDraw e guarde o número do pedido de lá no campo abaixo.
+              </p>
+            </div>
+
+            <div class="pb-bloco">
+              <h3 class="pb-bloco__titulo">Atualizar pedido</h3>
+              <form class="pb-form" id="form-atualizar" novalidate>
+                <div class="campo">
+                  <label class="campo__label" for="up-status">Status do pedido</label>
+                  <select id="up-status"></select>
+                </div>
+                <div class="campo">
+                  <label class="campo__label" for="up-pagamento">Status do pagamento</label>
+                  <select id="up-pagamento"></select>
+                </div>
+                <div class="campo">
+                  <label class="campo__label" for="up-rastreio">Código de rastreio</label>
+                  <input type="text" id="up-rastreio" maxlength="120" placeholder="Ex.: BR123456789BR" />
+                </div>
+                <div class="campo">
+                  <label class="campo__label" for="up-youdraw">Nº do pedido na YouDraw</label>
+                  <input type="text" id="up-youdraw" maxlength="120" placeholder="Ex.: YD-4821" />
+                </div>
+                <div class="campo campo--full">
+                  <label class="campo__label" for="up-observacoes">Observação interna</label>
+                  <textarea id="up-observacoes" maxlength="2000" placeholder="Nota sobre este pedido (ex.: cliente pediu embalagem separada)."></textarea>
+                </div>
+                <div class="campo--full" style="display:flex;align-items:center;gap:.5rem">
+                  <input type="checkbox" id="up-modo" style="width:auto" />
+                  <label class="campo__dica" for="up-modo" style="cursor:pointer">Substituir todas as observações (em vez de acrescentar)</label>
+                </div>
+                <div class="pb-form__acoes">
+                  <button type="submit" class="btn btn--escuro" id="btn-salvar">Salvar alterações</button>
+                  <button type="button" class="btn btn--vazio" id="btn-recarregar">Descartar e recarregar</button>
+                </div>
+              </form>
+              <p class="campo__dica" style="margin-top:1rem">
+                Somente os campos que você alterar são enviados. Campos não tocados permanecem
+                exatamente como estavam — nenhum dado existente é apagado.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+
+    <footer class="pb-rodape">
+      GRACIOU © 2026 — Painel interno. Não há dado de cartão nesta base.
+    </footer>
+  </div>
+
+  <script>
+  /* ════════════════════════════════════════════════════════════
+     GRACIOU — PAINEL ADMIN
+     Script clássico (sem módulos, sem build). Fala apenas com a
+     API local em http://localhost:3001.
+
+     O que este painel NÃO faz, por decisão de escopo:
+       - não guarda senha (a credencial vive no ambiente da API);
+       - não persiste token em localStorage (o token fica só em
+         memória: fechar a aba exige novo login — mais seguro);
+       - não inventa valores: total, frete e desconto vêm do
+         servidor, nunca são editados aqui.
+  ════════════════════════════════════════════════════════════ */
+  (function () {
+    'use strict';
+
+    /* A API da GRACIOU roda em http://localhost:3001 por padrão.
+       Se ela estiver em outra porta, abre-se o painel com
+       ?api=http://localhost:3002 — útil quando a 3001 está ocupada. */
+    var API_BASE = 'http://localhost:3001';
+    (function () {
+      try {
+        /* O valor vem codificado na query string (?api=http%3A%2F%2F...),
+           então decodifica antes de usar. */
+        var parametro = new URLSearchParams(window.location.search).get('api');
+        if (parametro) API_BASE = decodeURIComponent(String(parametro)).replace(/\/+$/, '');
+      } catch (_) { /* mantém o padrão */ }
+    })();
+
+    /* Token só em memória. Fechar/recarregar a aba = novo login. */
+    var token = null;
+    var meta = null;          /* statusPermitidos, rotulosStatus, etc. */
+    var pedidosAtuais = [];
+    var pedidoAberto = null;  /* detalhe completo em exibição */
+
+    /* ── Referências de DOM ── */
+    var $ = function (id) { return document.getElementById(id); };
+
+    var telaLogin    = $('tela-login');
+    var app          = $('app');
+    var formLogin    = $('form-login');
+    var loginErro    = $('login-erro');
+    var btnEntrar    = $('btn-entrar');
+    var btnSair      = $('btn-sair');
+    var quem         = $('quem');
+
+    var filtroStatus = $('filtro-status');
+    var filtroLimite = $('filtro-limite');
+    var btnAtualizar = $('btn-atualizar');
+    var appAviso     = $('app-aviso');
+    var contagens    = $('contagens');
+    var listaVazio   = $('lista-vazio');
+    var listaWrap    = $('lista-tabela-wrap');
+    var listaCorpo   = $('lista-corpo');
+
+    var detalhe      = $('detalhe');
+    var detalheAviso = $('detalhe-aviso');
+
+    /* ════════════════════════════════════════
+       UTILITÁRIOS
+    ════════════════════════════════════════ */
+
+    function escapar(valor) {
+      return String(valor === null || valor === undefined ? '' : valor)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function moeda(centavos) {
+      if (centavos === null || centavos === undefined || centavos === '') return '—';
+      return 'R$ ' + (Number(centavos) / 100).toFixed(2).replace('.', ',');
+    }
+
+    function dataLegivel(iso) {
+      if (!iso) return '—';
+      var d = new Date(String(iso).replace(' ', 'T'));
+      if (isNaN(d.getTime())) return String(iso);
+      var pad = function (n) { return String(n).padStart(2, '0'); };
+      return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
+        ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+
+    function rotulo(status) {
+      return (meta && meta.rotulosStatus && meta.rotulosStatus[status]) || status || '—';
+    }
+
+    function seloHtml(status) {
+      return '<span class="selo selo--' + escapar(status) + '">' + escapar(rotulo(status)) + '</span>';
+    }
+
+    function mostrarAviso(el, tipo, texto) {
+      if (!texto) { el.hidden = true; el.textContent = ''; return; }
+      el.className = 'aviso aviso--' + tipo;
+      el.textContent = texto;
+      el.hidden = false;
+    }
+
+    /* Chamada autenticada à API. 401 => sessão caiu, volta ao login. */
+    function api(caminho, opcoes) {
+      var config = opcoes || {};
+      var cabecalhos = { 'Content-Type': 'application/json' };
+      if (token) cabecalhos['Authorization'] = 'Bearer ' + token;
+
+      return fetch(API_BASE + caminho, {
+        method: config.method || 'GET',
+        headers: cabecalhos,
+        body: config.body ? JSON.stringify(config.body) : undefined
+      }).then(function (resposta) {
+        return resposta.json().catch(function () { return {}; }).then(function (dados) {
+          if (resposta.status === 401) {
+            encerrarSessaoLocal();
+            throw new Error(dados.erro || 'Sessão expirada. Entre novamente.');
+          }
+          if (!resposta.ok || dados.ok === false) {
+            var detalheErro = dados.erro || ('Erro ' + resposta.status);
+            if (Array.isArray(dados.campos) && dados.campos.length) {
+              detalheErro += ' ' + dados.campos.map(function (c) { return c.mensagem; }).join(' ');
+            }
+            throw new Error(detalheErro);
+          }
+          return dados;
+        });
+      });
+    }
+
+    /* ════════════════════════════════════════
+       LOGIN / SESSÃO
+    ════════════════════════════════════════ */
+
+    formLogin.addEventListener('submit', function (evento) {
+      evento.preventDefault();
+      mostrarAviso(loginErro, 'erro', '');
+
+      var email = $('login-email').value.trim();
+      var senha = $('login-senha').value;
+
+      if (!email || !senha) {
+        mostrarAviso(loginErro, 'erro', 'Informe e-mail e senha.');
+        return;
+      }
+
+      btnEntrar.disabled = true;
+      btnEntrar.textContent = 'Entrando…';
+
+      fetch(API_BASE + '/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, senha: senha })
+      }).then(function (resposta) {
+        return resposta.json().catch(function () { return {}; }).then(function (dados) {
+          if (!resposta.ok || !dados.ok) {
+            throw new Error(dados.erro || 'Não foi possível entrar.');
+          }
+          return dados;
+        });
+      }).then(function (dados) {
+        token = dados.token;
+        entrarNoPainel(email);
+      }).catch(function (erro) {
+        var mensagem = erro.message || '';
+        if (mensagem.indexOf('fetch') !== -1 || mensagem.indexOf('Failed') !== -1) {
+          mensagem = 'A API não respondeu em ' + API_BASE + '. Suba o backend (cd backend; npm run dev) e tente de novo.';
+        }
+        mostrarAviso(loginErro, 'erro', mensagem);
+      }).then(function () {
+        btnEntrar.disabled = false;
+        btnEntrar.textContent = 'Entrar';
+      });
+    });
+
+    function entrarNoPainel(email) {
+      $('login-senha').value = '';
+      telaLogin.hidden = true;
+      app.classList.add('is-visivel');
+      btnSair.hidden = false;
+      quem.hidden = false;
+      quem.textContent = email;
+      carregarPedidos();
+    }
+
+    function encerrarSessaoLocal() {
+      token = null;
+      pedidoAberto = null;
+      pedidosAtuais = [];
+      app.classList.remove('is-visivel');
+      detalhe.hidden = true;
+      telaLogin.hidden = false;
+      btnSair.hidden = true;
+      quem.hidden = true;
+      mostrarAviso(loginErro, 'erro', 'Sessão encerrada. Entre novamente.');
+    }
+
+    btnSair.addEventListener('click', function () {
+      var cabecalhos = { 'Authorization': 'Bearer ' + token };
+      fetch(API_BASE + '/api/admin/logout', { method: 'POST', headers: cabecalhos })
+        .catch(function () { /* mesmo falhando, a sessão local acaba */ })
+        .then(function () {
+          mostrarAviso(loginErro, 'info', 'Sessão encerrada no servidor.');
+          encerrarSessaoLocal();
+        });
+    });
+
+    /* ════════════════════════════════════════
+       LISTA DE PEDIDOS
+    ════════════════════════════════════════ */
+
+    function carregarPedidos() {
+      var status = filtroStatus.value;
+      var limite = filtroLimite.value;
+
+      listaVazio.hidden = false;
+      listaVazio.textContent = 'Carregando pedidos…';
+      listaWrap.hidden = true;
+      mostrarAviso(appAviso, 'info', '');
+
+      api('/api/admin/orders?status=' + encodeURIComponent(status) + '&limite=' + encodeURIComponent(limite))
+        .then(function (dados) {
+          meta = dados.meta || meta;
+          pedidosAtuais = Array.isArray(dados.pedidos) ? dados.pedidos : [];
+
+          montarFiltros();
+          montarContagens(dados.contagemPorStatus || {});
+          desenharLista();
+        })
+        .catch(function (erro) {
+          listaVazio.hidden = false;
+          listaVazio.textContent = 'Não foi possível carregar os pedidos.';
+          mostrarAviso(appAviso, 'erro', erro.message);
+        });
+    }
+
+    /* <select> de status e de atualização montados a partir do servidor:
+       uma lista só, sem duplicar os status no HTML. */
+    function montarFiltros() {
+      if (!meta || !Array.isArray(meta.statusPermitidos)) return;
+
+      var valorFiltro = filtroStatus.value;
+
+      filtroStatus.innerHTML = '<option value="todos">Todos os status</option>' +
+        meta.statusPermitidos.map(function (s) {
+          return '<option value="' + escapar(s) + '">' + escapar(rotulo(s)) + '</option>';
+        }).join('');
+      filtroStatus.value = valorFiltro || 'todos';
+
+      $('up-status').innerHTML = meta.statusPermitidos.map(function (s) {
+        return '<option value="' + escapar(s) + '">' + escapar(rotulo(s)) + '</option>';
+      }).join('');
+
+      $('up-pagamento').innerHTML = (meta.statusPagamentoPermitidos || []).map(function (s) {
+        return '<option value="' + escapar(s) + '">' + escapar(s) + '</option>';
+      }).join('');
+    }
+
+    function montarContagens(mapa) {
+      var chaves = Object.keys(mapa || {});
+      if (!chaves.length) { contagens.innerHTML = ''; return; }
+
+      var atual = filtroStatus.value;
+
+      contagens.innerHTML = chaves.map(function (chave) {
+        var ativa = (chave === atual) ? ' is-ativa' : '';
+        return '<button type="button" class="pb-contagem' + ativa + '" data-status="' + escapar(chave) + '">' +
+          escapar(rotulo(chave)) + ' <span class="pb-contagem__n">' + escapar(mapa[chave]) + '</span></button>';
+      }).join('');
+    }
+
+    /* Clique numa contagem filtra por aquele status. */
+    contagens.addEventListener('click', function (evento) {
+      var botao = evento.target.closest('.pb-contagem');
+      if (!botao) return;
+      var status = botao.getAttribute('data-status');
+      filtroStatus.value = (filtroStatus.value === status) ? 'todos' : status;
+      carregarPedidos();
+    });
+
+    function desenharLista() {
+      if (!pedidosAtuais.length) {
+        listaVazio.hidden = false;
+        listaVazio.textContent = 'Nenhum pedido para este filtro.';
+        listaWrap.hidden = true;
+        listaCorpo.innerHTML = '';
+        return;
+      }
+
+      listaVazio.hidden = true;
+      listaWrap.hidden = false;
+
+      listaCorpo.innerHTML = pedidosAtuais.map(function (p) {
+        var selecionada = (pedidoAberto && pedidoAberto.id === p.id) ? ' is-selecionada' : '';
+        var local = [p.cidade, p.estado].filter(Boolean).join('/') || '—';
+        return '<tr class="' + selecionada.trim() + '" data-id="' + escapar(p.id) + '">' +
+          '<td><span class="pb-tabela__id">' + escapar(p.id) + '</span>' +
+            '<span class="pb-tabela__sub">' + escapar(dataLegivel(p.criadoEm)) + '</span></td>' +
+          '<td>' + escapar(p.clienteNome || '—') +
+            '<span class="pb-tabela__sub">' + escapar(p.clienteEmail || '') + '</span></td>' +
+          '<td>' + escapar(local) + '</td>' +
+          '<td class="pb-num">' + escapar(p.pecas) + '</td>' +
+          '<td class="pb-num">' + escapar(moeda(p.total)) + '</td>' +
+          '<td>' + seloHtml(p.statusPedido) + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    listaCorpo.addEventListener('click', function (evento) {
+      var linha = evento.target.closest('tr[data-id]');
+      if (!linha) return;
+      abrirPedido(linha.getAttribute('data-id'));
+    });
+
+    /* ════════════════════════════════════════
+       DETALHE
+    ════════════════════════════════════════ */
+
+    function abrirPedido(id) {
+      mostrarAviso(detalheAviso, 'info', 'Carregando detalhe…');
+      detalhe.hidden = false;
+      detalhe.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      api('/api/admin/orders/' + encodeURIComponent(id))
+        .then(function (dados) {
+          pedidoAberto = dados.pedido;
+          desenharDetalhe(dados.pedido, dados.resumoYouDraw || '');
+          desenharLista(); /* atualiza a seleção na tabela */
+          mostrarAviso(detalheAviso, 'info', '');
+        })
+        .catch(function (erro) {
+          mostrarAviso(detalheAviso, 'erro', erro.message);
+        });
+    }
+
+    function linhaHtml(rotuloTexto, valor) {
+      return '<div class="pb-linha">' +
+        '<span class="pb-linha__rot">' + escapar(rotuloTexto) + '</span>' +
+        '<span class="pb-linha__val">' + escapar(valor || '—') + '</span>' +
+        '</div>';
+    }
+
+    function desenharDetalhe(pedido, resumo) {
+      /* Cabeçalho */
+      $('detalhe-id').textContent = pedido.id;
+      var selo = $('detalhe-selo');
+      selo.className = 'selo selo--' + pedido.statusPedido;
+      selo.textContent = rotulo(pedido.statusPedido);
+      $('detalhe-data').textContent = 'Criado em ' + dataLegivel(pedido.criadoEm) +
+        (pedido.atualizadoEm ? ' · atualizado em ' + dataLegivel(pedido.atualizadoEm) : '');
+
+      /* Cliente — o CPF só aparece aqui, no detalhe */
+      var c = pedido.cliente || {};
+      $('detalhe-cliente').innerHTML =
+        linhaHtml('Nome', c.nome) +
+        linhaHtml('E-mail', c.email) +
+        linhaHtml('Telefone', c.telefone) +
+        linhaHtml('CPF', c.cpf);
+
+      /* Endereço */
+      var e = pedido.endereco || {};
+      var rua = [e.rua, e.numero].filter(Boolean).join(', ') +
+        (e.complemento ? ' — ' + e.complemento : '');
+      $('detalhe-endereco').innerHTML =
+        linhaHtml('Endereço', rua) +
+        linhaHtml('Bairro', e.bairro) +
+        linhaHtml('Cidade', [e.cidade, e.estado].filter(Boolean).join('/')) +
+        linhaHtml('CEP', e.cep);
+
+      /* Itens */
+      var itens = Array.isArray(pedido.itens) ? pedido.itens : [];
+      $('detalhe-itens').innerHTML = itens.length
+        ? itens.map(function (item, indice) {
+            var meta_item = [
+              'Tam ' + (item.tamanho || '—'),
+              'Cor ' + (item.cor || '—'),
+              'Qtd ' + (item.quantidade || 0),
+              'Un ' + moeda(item.precoUnitario)
+            ].join(' · ');
+            return '<div class="pb-item">' +
+              '<span><strong>' + escapar((indice + 1) + '. ' + (item.nome || item.productId || '—')) + '</strong>' +
+              '<span class="pb-item__meta">' + escapar(meta_item) + '</span></span>' +
+              '<span class="pb-num">' + escapar(moeda((item.precoUnitario || 0) * (item.quantidade || 0))) + '</span>' +
+            '</div>';
+          }).join('')
+        : '<div class="pb-linha">Nenhum item registrado.</div>';
+
+      /* Totais */
+      var pagamento = pedido.pagamento || {};
+      var cupom = pedido.cupom ? pedido.cupom.codigo : 'sem cupom';
+      $('detalhe-totais').innerHTML =
+        '<div class="pb-total-linha"><span>Subtotal</span><span class="pb-num">' + escapar(moeda(pedido.subtotal)) + '</span></div>' +
+        '<div class="pb-total-linha"><span>Desconto (' + escapar(cupom) + ')</span><span class="pb-num">' + escapar(moeda(pedido.desconto || 0)) + '</span></div>' +
+        '<div class="pb-total-linha"><span>Frete</span><span class="pb-num">' + escapar(moeda(pedido.frete)) + '</span></div>' +
+        '<div class="pb-total-linha"><span>Pagamento</span><span>' + escapar((pagamento.forma || '—') + ' · ' + (pagamento.status || '—')) + '</span></div>' +
+        '<div class="pb-total-linha pb-total-linha--forte"><span>Total</span><span class="pb-num">' + escapar(moeda(pedido.total)) + '</span></div>';
+
+      /* Observações */
+      var blocoObs = $('bloco-observacoes');
+      if (pedido.observacoes) {
+        $('detalhe-observacoes').textContent = pedido.observacoes;
+        blocoObs.hidden = false;
+      } else {
+        blocoObs.hidden = true;
+      }
+
+      /* Resumo YouDraw — texto vem pronto do servidor */
+      $('youdraw-texto').value = resumo;
+
+      /* Formulário preenchido com o estado atual */
+      $('up-status').value = pedido.statusPedido;
+      $('up-pagamento').value = pagamento.status || 'aguardando';
+      $('up-rastreio').value = pedido.rastreio || '';
+      $('up-youdraw').value = pedido.pedidoYouDraw || '';
+      $('up-observacoes').value = '';
+      $('up-modo').checked = false;
+    }
+
+    $('btn-fechar-detalhe').addEventListener('click', function () {
+      detalhe.hidden = true;
+      pedidoAberto = null;
+      desenharLista();
+    });
+
+    /* ── Copiar resumo ── */
+    $('btn-copiar').addEventListener('click', function () {
+      var texto = $('youdraw-texto').value || '';
+      if (!texto) { mostrarAviso(detalheAviso, 'erro', 'Nada para copiar.'); return; }
+
+      var avisar = function (ok) {
+        mostrarAviso(detalheAviso, ok ? 'ok' : 'erro',
+          ok ? 'Resumo copiado. Cole na plataforma da YouDraw.' : 'Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.');
+      };
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto)
+          .then(function () { avisar(true); })
+          .catch(function () { avisar(false); });
+      } else {
+        var campo = $('youdraw-texto');
+        campo.removeAttribute('readonly');
+        campo.select();
+        try { avisar(document.execCommand('copy')); } catch (_) { avisar(false); }
+        campo.setAttribute('readonly', 'readonly');
+      }
+    });
+
+    /* ════════════════════════════════════════
+       ATUALIZAÇÃO DO PEDIDO
+       Só envia o que mudou de fato. Campo igual ao original fica
+       de fora — é isso que garante "não apagar dados existentes".
+    ════════════════════════════════════════ */
+
+    $('form-atualizar').addEventListener('submit', function (evento) {
+      evento.preventDefault();
+      if (!pedidoAberto) return;
+
+      var alteracoes = {};
+
+      var statusNovo = $('up-status').value;
+      if (statusNovo !== pedidoAberto.statusPedido) alteracoes.statusPedido = statusNovo;
+
+      var pagamentoNovo = $('up-pagamento').value;
+      if (pagamentoNovo !== (pedidoAberto.pagamento && pedidoAberto.pagamento.status)) {
+        alteracoes.statusPagamento = pagamentoNovo;
+      }
+
+      var rastreioNovo = $('up-rastreio').value.trim();
+      if (rastreioNovo !== (pedidoAberto.rastreio || '')) alteracoes.rastreio = rastreioNovo;
+
+      var youdrawNovo = $('up-youdraw').value.trim();
+      if (youdrawNovo !== (pedidoAberto.pedidoYouDraw || '')) alteracoes.pedidoYouDraw = youdrawNovo;
+
+      var obsNova = $('up-observacoes').value.trim();
+      if (obsNova) {
+        alteracoes.observacoes = obsNova;
+        alteracoes.observacoesModo = $('up-modo').checked ? 'substituir' : 'adicionar';
+      }
+
+      if (!Object.keys(alteracoes).length) {
+        mostrarAviso(detalheAviso, 'info', 'Nada mudou. Ajuste algum campo antes de salvar.');
+        return;
+      }
+
+      var btn = $('btn-salvar');
+      btn.disabled = true;
+      btn.textContent = 'Salvando…';
+
+      api('/api/admin/orders/' + encodeURIComponent(pedidoAberto.id), {
+        method: 'PATCH',
+        body: alteracoes
+      }).then(function (dados) {
+        pedidoAberto = dados.pedido;
+        desenharDetalhe(dados.pedido, dados.resumoYouDraw || '');
+        mostrarAviso(detalheAviso, 'ok',
+          'Pedido atualizado. Campos gravados: ' + (dados.alterado || []).join(', ') + '.');
+        carregarPedidos(); /* a lista reflete o novo status/contagem */
+      }).catch(function (erro) {
+        mostrarAviso(detalheAviso, 'erro', erro.message);
+      }).then(function () {
+        btn.disabled = false;
+        btn.textContent = 'Salvar alterações';
+      });
+    });
+
+    $('btn-recarregar').addEventListener('click', function () {
+      if (pedidoAberto) abrirPedido(pedidoAberto.id);
+    });
+
+    /* ════════════════════════════════════════
+       BARRA DE FERRAMENTAS
+    ════════════════════════════════════════ */
+
+    filtroStatus.addEventListener('change', carregarPedidos);
+    filtroLimite.addEventListener('change', carregarPedidos);
+    btnAtualizar.addEventListener('click', carregarPedidos);
+
+    /* Enter no campo de e-mail pula para a senha. */
+    $('login-email').addEventListener('keydown', function (evento) {
+      if (evento.key === 'Enter') { evento.preventDefault(); $('login-senha').focus(); }
+    });
+  })();
+  </script>
+
+</body>
+</html>

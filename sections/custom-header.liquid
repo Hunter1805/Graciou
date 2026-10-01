@@ -1,0 +1,250 @@
+{% comment %}
+  ============================================================
+  Seção: custom-header.liquid
+  Marca: GRACIOU
+  Descrição: Header minimalista com logo, navegação principal
+              e menu mobile responsivo.
+  Integração: linklists.main-menu (Shopify nativo)
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign menu = linklists['main-menu']
+-%}
+
+<header
+  id="graciou-header"
+  class="graciou-header sticky top-0 z-50 w-full"
+  role="banner"
+  data-header
+>
+  <div class="header-inner flex items-center justify-between px-6 md:px-12 lg:px-16 h-16 md:h-20">
+
+    <!-- Logo -->
+    <a
+      href="{{ routes.root_url }}"
+      class="header__logo flex items-center gap-3 shrink-0"
+      aria-label="{{ shop.name }} — ir para a página inicial"
+    >
+      {%- if section.settings.logo != blank -%}
+        {{
+          section.settings.logo
+          | image_url: width: 140
+          | image_tag:
+            class: 'header__logo-img',
+            alt: shop.name,
+            width: 140,
+            height: 'auto',
+            loading: 'eager'
+        }}
+      {%- else -%}
+        <!-- Ícone SVG da Árvore + Nome -->
+        <span class="header__logo-icon" aria-hidden="true">
+          {% render 'icon-tree', width: 28, color: '#4F5D3A' %}
+        </span>
+        <span class="header__logo-text font-heading text-xl tracking-widest text-moss-green uppercase">
+          {{ shop.name }}
+        </span>
+      {%- endif -%}
+    </a>
+
+    <!-- Navegação Desktop -->
+    <nav class="header__nav hidden md:flex items-center gap-8" role="navigation" aria-label="Menu principal">
+      {%- for link in menu.links -%}
+        {%- if link.links != blank -%}
+          <!-- Dropdown -->
+          <div class="header__dropdown-wrapper relative group">
+            <button
+              class="header__nav-link header__nav-link--has-dropdown {% if link.active %}is-active{% endif %}"
+              aria-expanded="false"
+              aria-haspopup="true"
+            >
+              {{ link.title }}
+              <svg class="header__dropdown-arrow inline-block ml-1 w-3 h-3 transition-transform group-hover:rotate-180" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+                <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <ul class="header__dropdown absolute left-0 top-full mt-2 min-w-[160px] bg-ecru border border-moss-green/20 shadow-lg py-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200" role="menu">
+              {%- for child in link.links -%}
+                <li role="none">
+                  <a href="{{ child.url }}" class="header__dropdown-item block px-4 py-2 text-sm tracking-wide hover:bg-moss-green hover:text-ecru transition-colors" role="menuitem">
+                    {{ child.title }}
+                  </a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          </div>
+        {%- else -%}
+          <a
+            href="{{ link.url }}"
+            class="header__nav-link {% if link.active %}is-active{% endif %}"
+            {% if link.current %}aria-current="page"{% endif %}
+          >
+            {{ link.title }}
+          </a>
+        {%- endif -%}
+      {%- endfor -%}
+    </nav>
+
+    <!-- Ações (Carrinho + Busca + Mobile) -->
+    <div class="header__actions flex items-center gap-4">
+
+      <!-- Busca -->
+      <button
+        class="header__action-btn"
+        id="search-toggle"
+        aria-label="Abrir busca"
+        data-search-toggle
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+
+      <!-- Carrinho -->
+      <a
+        href="{{ routes.cart_url }}"
+        class="header__action-btn header__cart-btn relative"
+        aria-label="Abrir carrinho — {{ cart.item_count }} {{ 'cart.general.item_count' | t: count: cart.item_count }}"
+        id="cart-icon-bubble"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+          <line x1="3" x2="21" y1="6" y2="6"/>
+          <path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        {%- if cart.item_count > 0 -%}
+          <span class="header__cart-count" aria-hidden="true">{{ cart.item_count }}</span>
+        {%- endif -%}
+      </a>
+
+      <!-- Hamburguer Mobile -->
+      <button
+        class="header__mobile-toggle md:hidden"
+        id="mobile-menu-toggle"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Barra de Busca (oculta por padrão) -->
+  <div class="header__search-bar" id="search-bar" aria-hidden="true" hidden>
+    <form action="{{ routes.search_url }}" method="get" role="search" class="search-form">
+      <input
+        type="search"
+        name="q"
+        placeholder="Buscar produtos..."
+        class="search-form__input"
+        aria-label="Campo de busca"
+        autocomplete="off"
+      />
+      <button type="submit" class="search-form__submit" aria-label="Enviar busca">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+    </form>
+  </div>
+</header>
+
+<!-- Menu Mobile (Drawer) -->
+<div
+  id="mobile-menu"
+  class="mobile-menu"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Menu de navegação"
+  aria-hidden="true"
+  hidden
+>
+  <div class="mobile-menu__overlay" data-close-mobile-menu></div>
+  <nav class="mobile-menu__panel" aria-label="Menu mobile">
+    <div class="mobile-menu__header">
+      <span class="font-heading text-lg tracking-widest text-moss-green uppercase">{{ shop.name }}</span>
+      <button class="mobile-menu__close" data-close-mobile-menu aria-label="Fechar menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+    <ul class="mobile-menu__list">
+      {%- for link in menu.links -%}
+        <li class="mobile-menu__item">
+          <a href="{{ link.url }}" class="mobile-menu__link {% if link.active %}is-active{% endif %}">
+            {{ link.title }}
+          </a>
+          {%- if link.links != blank -%}
+            <ul class="mobile-menu__sub">
+              {%- for child in link.links -%}
+                <li>
+                  <a href="{{ child.url }}" class="mobile-menu__sub-link">{{ child.title }}</a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </li>
+      {%- endfor -%}
+    </ul>
+  </nav>
+</div>
+
+{% schema %}
+{
+  "name": "Cabeçalho",
+  "tag": "section",
+  "class": "section-header",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo da Marca",
+      "info": "Recomendado: PNG transparente, 280px de largura"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "min": 80,
+      "max": 300,
+      "step": 10,
+      "default": 140,
+      "unit": "px",
+      "label": "Largura do Logo"
+    },
+    {
+      "type": "checkbox",
+      "id": "sticky_header",
+      "default": true,
+      "label": "Header fixo no topo ao rolar"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "default": true,
+      "label": "Mostrar botão de busca"
+    },
+    {
+      "type": "select",
+      "id": "header_style",
+      "label": "Estilo do Header",
+      "options": [
+        { "value": "solid", "label": "Sólido" },
+        { "value": "transparent", "label": "Transparente sobre hero" }
+      ],
+      "default": "solid"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Cabeçalho GRACIOU"
+    }
+  ]
+}
+{% endschema %}

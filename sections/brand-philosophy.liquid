@@ -1,0 +1,294 @@
+{% comment %}
+  ============================================================
+  Seção: brand-philosophy.liquid
+  Marca: GRACIOU
+  Descrição: Seção filosófica da marca com tipografia editorial,
+              SVG da Árvore da Vida e rich text configurável.
+              Layout split: texto à esquerda, árvore à direita.
+  ============================================================
+{% endcomment %}
+
+<section
+  id="brand-philosophy"
+  class="brand-philosophy py-20 md:py-32 overflow-hidden"
+  aria-labelledby="philosophy-heading"
+  data-animate
+>
+  <div class="container mx-auto px-6 md:px-12 lg:px-16">
+    <div class="brand-philosophy__inner grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+
+      <!-- Coluna de Texto -->
+      <div class="brand-philosophy__text" data-animate-child>
+
+        <!-- Label decorativo -->
+        <div class="brand-philosophy__label flex items-center gap-3 mb-8">
+          <span class="brand-philosophy__label-line block w-12 h-px bg-moss-green"></span>
+          <span class="text-xs tracking-widest uppercase text-moss-green font-body font-medium">
+            {{ section.settings.label | default: 'Nossa Filosofia' }}
+          </span>
+        </div>
+
+        <!-- Título -->
+        <h2
+          id="philosophy-heading"
+          class="brand-philosophy__heading font-heading text-5xl md:text-6xl xl:text-7xl leading-none uppercase mb-8"
+        >
+          {{ section.settings.heading | default: 'VESTIDO COM PROPÓSITO' | newline_to_br }}
+        </h2>
+
+        <!-- Corpo do texto (rich text) -->
+        <div class="brand-philosophy__body prose prose-lg max-w-prose">
+          {%- if section.settings.body_richtext != blank -%}
+            {{ section.settings.body_richtext }}
+          {%- elsif section.settings.body_text != blank -%}
+            <p class="text-base md:text-lg leading-relaxed tracking-wide font-body font-light">
+              {{ section.settings.body_text }}
+            </p>
+          {%- else -%}
+            <p class="text-base md:text-lg leading-relaxed tracking-wide font-body font-light">
+              GRACIOU nasce da crença de que a moda pode ser um ato de intenção. Cada peça é criada com consciência — dos materiais à silhueta — para que você vista não apenas um estilo, mas um manifesto.
+            </p>
+          {%- endif -%}
+        </div>
+
+        <!-- Estatísticas / Valores (opcional) -->
+        {%- if section.settings.show_stats -%}
+          <div class="brand-philosophy__stats grid grid-cols-3 gap-6 mt-12 pt-10 border-t border-current/20">
+            <div class="philosophy-stat">
+              <span class="philosophy-stat__number font-heading text-4xl text-moss-green">{{ section.settings.stat_1_number | default: '100%' }}</span>
+              <span class="philosophy-stat__label block text-xs tracking-widest uppercase mt-1 font-light">{{ section.settings.stat_1_label | default: 'Materiais Conscientes' }}</span>
+            </div>
+            <div class="philosophy-stat">
+              <span class="philosophy-stat__number font-heading text-4xl text-moss-green">{{ section.settings.stat_2_number | default: '01' }}</span>
+              <span class="philosophy-stat__label block text-xs tracking-widest uppercase mt-1 font-light">{{ section.settings.stat_2_label | default: 'Drop Limitado' }}</span>
+            </div>
+            <div class="philosophy-stat">
+              <span class="philosophy-stat__number font-heading text-4xl text-moss-green">{{ section.settings.stat_3_number | default: '∞' }}</span>
+              <span class="philosophy-stat__label block text-xs tracking-widest uppercase mt-1 font-light">{{ section.settings.stat_3_label | default: 'Impacto' }}</span>
+            </div>
+          </div>
+        {%- endif -%}
+
+        <!-- CTA -->
+        {%- if section.settings.cta_label != blank -%}
+          <a
+            href="{{ section.settings.cta_url | default: '/pages/sobre' }}"
+            class="btn btn--outline mt-10 inline-block"
+            id="philosophy-cta"
+          >
+            {{ section.settings.cta_label }}
+          </a>
+        {%- endif -%}
+      </div>
+
+      <!-- Coluna da Árvore SVG -->
+      {%- if section.settings.show_tree -%}
+        <div class="brand-philosophy__tree-wrapper flex justify-center items-center" aria-hidden="true" data-animate-child>
+          <div class="brand-philosophy__tree relative">
+
+            <!-- Decoração de fundo circular -->
+            <div class="philosophy-tree__bg-circle"></div>
+
+            <!-- SVG inline da Árvore da Vida GRACIOU -->
+            <svg
+              class="philosophy-tree__svg"
+              viewBox="0 0 400 500"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              role="img"
+              aria-label="Símbolo da Árvore da Vida GRACIOU"
+            >
+              <!-- Raízes -->
+              <path d="M200 420 Q185 440 165 455 Q150 465 140 480" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <path d="M200 420 Q215 440 235 455 Q250 465 260 480" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="3" stroke-linecap="round" fill="none"/>
+              <path d="M200 420 Q200 445 200 470" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <path d="M200 420 Q180 450 155 460" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M200 420 Q220 450 245 460" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+              <!-- Tronco principal -->
+              <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="14" stroke-linecap="round" fill="none"/>
+              <path d="M205 420 C207 380 210 340 208 300 C207 270 204 240 200 220" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="10" stroke-linecap="round" fill="none"/>
+
+              <!-- Galhos principais -->
+              <!-- Esquerda nível 1 -->
+              <path d="M198 300 C185 285 165 270 140 260" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="7" stroke-linecap="round" fill="none"/>
+              <!-- Direita nível 1 -->
+              <path d="M202 300 C215 285 235 270 260 260" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="7" stroke-linecap="round" fill="none"/>
+
+              <!-- Galhos secundários esquerdos -->
+              <path d="M140 260 C120 250 100 245 75 248" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+              <path d="M140 260 C130 240 125 220 120 200" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="4" stroke-linecap="round" fill="none"/>
+              <path d="M165 270 C160 250 155 228 150 205" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+              <!-- Galhos secundários direitos -->
+              <path d="M260 260 C280 250 300 245 325 248" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+              <path d="M260 260 C270 240 275 220 280 200" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="4" stroke-linecap="round" fill="none"/>
+              <path d="M235 270 C240 250 245 228 250 205" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+
+              <!-- Galhos superiores centrais -->
+              <path d="M200 220 C195 200 188 178 175 155" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <path d="M200 220 C205 200 212 178 225 155" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <path d="M200 220 C200 198 200 175 200 150" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="4" stroke-linecap="round" fill="none"/>
+
+              <!-- Galhos terciários - detalhamento finos -->
+              <!-- Esquerda superior -->
+              <path d="M175 155 C165 140 152 128 140 118" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <path d="M175 155 C168 138 160 122 152 108" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M175 155 C178 138 180 120 178 103" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+              <!-- Centro superior -->
+              <path d="M200 150 C196 132 192 112 188 90" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <path d="M200 150 C204 132 208 112 212 90" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <path d="M200 150 C200 130 200 108 200 85" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+              <!-- Direita superior -->
+              <path d="M225 155 C235 140 248 128 260 118" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <path d="M225 155 C232 138 240 122 248 108" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M225 155 C222 138 220 120 222 103" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="2" stroke-linecap="round" fill="none"/>
+
+              <!-- Pontinhos finais (galhos quaternários) -->
+              <path d="M75 248 C62 242 50 238 38 240" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M75 248 C70 232 65 218 62 202" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M120 200 C112 184 105 168 100 150" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M120 200 C128 184 132 166 136 148" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M325 248 C338 242 350 238 362 240" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M325 248 C330 232 335 218 338 202" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M280 200 C288 184 295 168 300 150" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M280 200 C272 184 268 166 264 148" stroke="{{ section.settings.tree_color | default: '#4F5D3A' }}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+            </svg>
+          </div>
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Filosofia da Marca",
+  "tag": "section",
+  "class": "section-brand-philosophy",
+  "settings": [
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Label acima do título",
+      "default": "Nossa Filosofia"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Título",
+      "default": "VESTIDO COM PROPÓSITO"
+    },
+    {
+      "type": "richtext",
+      "id": "body_richtext",
+      "label": "Texto (rich text)",
+      "info": "Suporta negrito, itálico e links. Deixe vazio para usar o campo de texto simples."
+    },
+    {
+      "type": "textarea",
+      "id": "body_text",
+      "label": "Texto (simples, fallback)",
+      "default": "GRACIOU nasce da crença de que a moda pode ser um ato de intenção."
+    },
+    {
+      "type": "header",
+      "content": "Botão CTA (opcional)"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Texto do botão"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "Link do botão"
+    },
+    {
+      "type": "header",
+      "content": "Árvore SVG"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_tree",
+      "default": true,
+      "label": "Exibir Árvore da Vida"
+    },
+    {
+      "type": "color",
+      "id": "tree_color",
+      "label": "Cor da árvore",
+      "default": "#4F5D3A"
+    },
+    {
+      "type": "header",
+      "content": "Estatísticas (opcional)"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_stats",
+      "default": false,
+      "label": "Exibir números/estatísticas"
+    },
+    {
+      "type": "text",
+      "id": "stat_1_number",
+      "label": "Valor 1",
+      "default": "100%"
+    },
+    {
+      "type": "text",
+      "id": "stat_1_label",
+      "label": "Legenda 1",
+      "default": "Materiais Conscientes"
+    },
+    {
+      "type": "text",
+      "id": "stat_2_number",
+      "label": "Valor 2",
+      "default": "01"
+    },
+    {
+      "type": "text",
+      "id": "stat_2_label",
+      "label": "Legenda 2",
+      "default": "Drop Limitado"
+    },
+    {
+      "type": "text",
+      "id": "stat_3_number",
+      "label": "Valor 3",
+      "default": "∞"
+    },
+    {
+      "type": "text",
+      "id": "stat_3_label",
+      "label": "Legenda 3",
+      "default": "Impacto"
+    },
+    {
+      "type": "header",
+      "content": "Estilo de Fundo"
+    },
+    {
+      "type": "select",
+      "id": "bg_style",
+      "label": "Cor de fundo",
+      "options": [
+        { "value": "ecru", "label": "Ecru / Off-white" },
+        { "value": "moss", "label": "Verde Musgo" },
+        { "value": "navy", "label": "Preto Profundo" }
+      ],
+      "default": "ecru"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Filosofia da Marca"
+    }
+  ]
+}
+{% endschema %}

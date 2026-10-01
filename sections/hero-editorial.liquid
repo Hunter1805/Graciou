@@ -1,0 +1,225 @@
+{% comment %}
+  ============================================================
+  Seção: hero-editorial.liquid
+  Marca: GRACIOU
+  Descrição: Hero editorial de alto impacto visual com imagem/vídeo
+              de fundo, título com efeito tipográfico, subtítulo e
+              botão CTA. Configurável inteiramente via admin Shopify.
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign has_video = false
+  if section.settings.video_url != blank
+    assign has_video = true
+  endif
+-%}
+
+<section
+  id="hero-editorial"
+  class="hero-editorial relative overflow-hidden"
+  aria-label="Hero principal"
+  data-animate
+>
+  <!-- Mídia de Fundo: vídeo ou imagem -->
+  <div class="hero-editorial__media" aria-hidden="true">
+    {%- if has_video -%}
+      <video
+        class="hero-editorial__video"
+        src="{{ section.settings.video_url }}"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster="{% if section.settings.image != blank %}{{ section.settings.image | image_url: width: 1440 }}{% endif %}"
+      ></video>
+    {%- elsif section.settings.image != blank -%}
+      {{
+        section.settings.image
+        | image_url: width: 1440
+        | image_tag:
+          class: 'hero-editorial__image',
+          alt: section.settings.image.alt | default: shop.name,
+          loading: 'eager',
+          fetchpriority: 'high',
+          width: 1440,
+          height: 900
+      }}
+    {%- else -%}
+      <!-- Placeholder quando nenhuma mídia está configurada -->
+      <div class="hero-editorial__placeholder bg-moss-green/10">
+        <span class="sr-only">Adicione uma imagem ou vídeo no admin Shopify</span>
+      </div>
+    {%- endif -%}
+
+    <!-- Overlay de gradiente para legibilidade do texto -->
+    <div class="hero-editorial__overlay" aria-hidden="true"></div>
+  </div>
+
+  <!-- Conteúdo do Hero -->
+  <div class="hero-editorial__content container mx-auto px-6 md:px-12 lg:px-16">
+    <div class="hero-editorial__text-wrapper">
+
+      <!-- Tag / Kicker (opcional) -->
+      {%- if section.settings.kicker != blank -%}
+        <p class="hero-editorial__kicker" data-animate-child>
+          {{ section.settings.kicker }}
+        </p>
+      {%- endif -%}
+
+      <!-- Título Principal -->
+      <h1 class="hero-editorial__heading" data-animate-child>
+        {{ section.settings.heading | default: 'GRACE IN EVERY THREAD' | newline_to_br }}
+      </h1>
+
+      <!-- Subtítulo -->
+      {%- if section.settings.subheading != blank -%}
+        <p class="hero-editorial__subheading" data-animate-child>
+          {{ section.settings.subheading }}
+        </p>
+      {%- endif -%}
+
+      <!-- CTAs -->
+      <div class="hero-editorial__ctas" data-animate-child>
+        {%- if section.settings.cta_label != blank -%}
+          <a
+            href="{{ section.settings.cta_url | default: routes.collections_url }}"
+            class="btn btn--primary"
+            id="hero-cta-primary"
+          >
+            {{ section.settings.cta_label }}
+          </a>
+        {%- endif -%}
+        {%- if section.settings.cta_secondary_label != blank -%}
+          <a
+            href="{{ section.settings.cta_secondary_url | default: routes.all_products_collection_url }}"
+            class="btn btn--ghost"
+            id="hero-cta-secondary"
+          >
+            {{ section.settings.cta_secondary_label }}
+          </a>
+        {%- endif -%}
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicador de scroll -->
+  <div class="hero-editorial__scroll-hint" aria-hidden="true">
+    <span class="hero-editorial__scroll-line"></span>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero Editorial",
+  "tag": "section",
+  "class": "section-hero",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Mídia de Fundo"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Imagem de fundo",
+      "info": "Recomendado: 1440×900px ou maior, JPEG/WebP"
+    },
+    {
+      "type": "url",
+      "id": "video_url",
+      "label": "URL do vídeo de fundo (MP4)",
+      "info": "Se preenchido, o vídeo prevalece sobre a imagem"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 90,
+      "step": 5,
+      "default": 35,
+      "unit": "%",
+      "label": "Opacidade do overlay escuro"
+    },
+    {
+      "type": "header",
+      "content": "Texto"
+    },
+    {
+      "type": "text",
+      "id": "kicker",
+      "label": "Tag acima do título (kicker)",
+      "placeholder": "ex: NOVA COLEÇÃO"
+    },
+    {
+      "type": "textarea",
+      "id": "heading",
+      "label": "Título principal",
+      "default": "GRACE IN EVERY THREAD",
+      "info": "Use quebra de linha para criar duas linhas no título"
+    },
+    {
+      "type": "text",
+      "id": "subheading",
+      "label": "Subtítulo",
+      "default": "Streetwear elevated by purpose."
+    },
+    {
+      "type": "header",
+      "content": "Botões CTA"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "Texto do botão principal",
+      "default": "EXPLORE DROP 01"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "Link do botão principal"
+    },
+    {
+      "type": "text",
+      "id": "cta_secondary_label",
+      "label": "Texto do botão secundário (opcional)"
+    },
+    {
+      "type": "url",
+      "id": "cta_secondary_url",
+      "label": "Link do botão secundário"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "text_alignment",
+      "label": "Alinhamento do texto",
+      "options": [
+        { "value": "left", "label": "Esquerda" },
+        { "value": "center", "label": "Centro" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "select",
+      "id": "hero_height",
+      "label": "Altura do Hero",
+      "options": [
+        { "value": "full", "label": "Tela cheia (100vh)" },
+        { "value": "large", "label": "Grande (80vh)" },
+        { "value": "medium", "label": "Médio (60vh)" }
+      ],
+      "default": "large"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero Editorial"
+    }
+  ]
+}
+{% endschema %}

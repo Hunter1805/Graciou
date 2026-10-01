@@ -1,0 +1,18 @@
+# Segredos locais — nunca versionar
+.env
+.env.*
+!.env.example
+# Dependências
+node_modules/
+
+# Banco SQLite local (WAL + SHM são gerados junto)
+backend/data/*.sqlite
+backend/data/*.sqlite-shm
+backend/data/*.sqlite-wal
+
+# Logs do servidor local
+backend/data/*.log
+
+# Vite
+dist/
+.vite/

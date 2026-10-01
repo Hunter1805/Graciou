@@ -1,0 +1,129 @@
+{% comment %}
+  ============================================================
+  Seção: main-collection.liquid
+  Marca: GRACIOU
+  Descrição: Página de coleção com filtros, ordenação e grid de produtos.
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign sort_by = collection.sort_by | default: collection.default_sort_by
+  assign products_per_page = section.settings.products_per_page | default: 12
+-%}
+
+<section
+  id="main-collection"
+  class="main-collection py-12 md:py-20"
+  aria-label="{{ collection.title }}"
+>
+  <div class="container mx-auto px-6 md:px-12 lg:px-16">
+
+    <!-- Header da coleção -->
+    <div class="collection-header mb-12">
+      <h1 class="font-heading text-5xl md:text-7xl uppercase leading-none text-navy mb-4">
+        {{ collection.title }}
+      </h1>
+      {%- if collection.description != blank -%}
+        <p class="text-base text-navy/60 font-light max-w-2xl">{{ collection.description }}</p>
+      {%- endif -%}
+    </div>
+
+    <!-- Toolbar: contagem + ordenação -->
+    <div class="collection-toolbar flex items-center justify-between mb-8 pb-4 border-b border-navy/10">
+      <p class="text-xs tracking-wider text-navy/50 uppercase font-light">
+        {{ collection.products_count }} produto{{ collection.products_count | pluralize: '', 's' }}
+      </p>
+      <div class="collection-sort flex items-center gap-3">
+        <label for="sort-by" class="text-xs tracking-wider uppercase text-navy/50 font-light">Ordenar:</label>
+        <select
+          id="sort-by"
+          name="sort_by"
+          class="collection-sort__select text-xs tracking-wide text-navy bg-transparent border-b border-navy/20 pb-1 pr-5 cursor-pointer appearance-none"
+          aria-label="Ordenar produtos"
+          onchange="window.location.href = '{{ collection.url }}?sort_by=' + this.value;"
+        >
+          <option value="manual" {% if sort_by == 'manual' %}selected{% endif %}>Destaque</option>
+          <option value="created-descending" {% if sort_by == 'created-descending' %}selected{% endif %}>Mais recentes</option>
+          <option value="price-ascending" {% if sort_by == 'price-ascending' %}selected{% endif %}>Menor preço</option>
+          <option value="price-descending" {% if sort_by == 'price-descending' %}selected{% endif %}>Maior preço</option>
+          <option value="best-selling" {% if sort_by == 'best-selling' %}selected{% endif %}>Mais vendidos</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Grid de Produtos -->
+    {%- paginate collection.products by products_per_page -%}
+      {%- if collection.products.size > 0 -%}
+        <div class="collection-grid" id="collection-grid" aria-live="polite">
+          {%- for product in collection.products -%}
+            <article class="collection-grid__item" data-animate-child>
+              {% render 'product-card', product: product, show_vendor: true, show_quick_add: true, size: 'medium' %}
+            </article>
+          {%- endfor -%}
+        </div>
+
+        <!-- Paginação -->
+        {%- if paginate.pages > 1 -%}
+          <nav class="collection-pagination flex justify-center items-center gap-4 mt-16" aria-label="Navegação de páginas">
+            {%- if paginate.previous -%}
+              <a href="{{ paginate.previous.url }}" class="pagination-btn" aria-label="Página anterior">&larr; Anterior</a>
+            {%- endif -%}
+            {%- for part in paginate.parts -%}
+              {%- if part.is_link -%}
+                <a href="{{ part.url }}" class="pagination-number">{{ part.title }}</a>
+              {%- else -%}
+                <span class="pagination-number {% if part.title == paginate.current_page %}is-active{% endif %}" aria-current="{% if part.title == paginate.current_page %}page{% endif %}">
+                  {{ part.title }}
+                </span>
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if paginate.next -%}
+              <a href="{{ paginate.next.url }}" class="pagination-btn" aria-label="Próxima página">Próxima &rarr;</a>
+            {%- endif -%}
+          </nav>
+        {%- endif -%}
+
+      {%- else -%}
+        <div class="collection-empty text-center py-24">
+          <p class="text-navy/40 text-sm tracking-widest uppercase">Nenhum produto encontrado.</p>
+        </div>
+      {%- endif -%}
+    {%- endpaginate -%}
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Coleção Principal",
+  "tag": "section",
+  "class": "section-main-collection",
+  "settings": [
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "min": 8,
+      "max": 48,
+      "step": 4,
+      "default": 12,
+      "label": "Produtos por página"
+    },
+    {
+      "type": "select",
+      "id": "grid_columns",
+      "label": "Colunas no grid",
+      "options": [
+        { "value": "2", "label": "2 colunas" },
+        { "value": "3", "label": "3 colunas" },
+        { "value": "4", "label": "4 colunas" }
+      ],
+      "default": "3"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Coleção Principal"
+    }
+  ]
+}
+{% endschema %}

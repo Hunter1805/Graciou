@@ -1,0 +1,54 @@
+{
+  "sections": {
+    "custom-header": {
+      "type": "custom-header",
+      "settings": {}
+    },
+    "hero-editorial": {
+      "type": "hero-editorial",
+      "settings": {
+        "heading": "GRACE IN EVERY THREAD",
+        "subheading": "Streetwear elevated by purpose.",
+        "cta_label": "EXPLORE DROP 01",
+        "cta_url": "/collections/drop-01"
+      }
+    },
+    "asymmetric-grid": {
+      "type": "asymmetric-grid",
+      "settings": {
+        "section_title": "DROP 01",
+        "collection": "drop-01",
+        "view_all_label": "View All",
+        "products_to_show": 6
+      }
+    },
+    "brand-philosophy": {
+      "type": "brand-philosophy",
+      "settings": {
+        "heading": "VESTIDO COM PROPÓSITO",
+        "body_text": "GRACIOU nasce da crença de que a moda pode ser um ato de intenção. Cada peça é criada com consciência — dos materiais à silhueta — para que você vista não apenas um estilo, mas um manifesto.",
+        "show_tree": true
+      }
+    },
+    "featured-drop-banner": {
+      "type": "featured-drop-banner",
+      "settings": {
+        "label": "NOVIDADE",
+        "heading": "DROP 02 — EM BREVE",
+        "subtext": "Acesse a lista de espera e seja o primeiro a saber.",
+        "cta_label": "ENTRAR NA LISTA",
+        "cta_url": "/pages/waitlist"
+      }
+    },
+    "custom-footer": {
+      "type": "custom-footer",
+      "settings": {}
+    }
+  },
+  "order": [
+    "hero-editorial",
+    "asymmetric-grid",
+    "brand-philosophy",
+    "featured-drop-banner"
+  ]
+}

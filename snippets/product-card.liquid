@@ -1,0 +1,127 @@
+{% comment %}
+  ============================================================
+  Snippet: product-card.liquid
+  Parâmetros:
+    - product {Object} — produto Shopify
+    - size {String}   — 'large' | 'small' | 'medium' | 'full'
+    - show_vendor {Boolean}
+    - show_quick_add {Boolean}
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign card_size = size | default: 'medium'
+  assign show_vendor_val = show_vendor | default: false
+  assign show_quick_add_val = show_quick_add | default: true
+  assign featured_image = product.featured_image
+  assign is_on_sale = false
+  if product.compare_at_price > product.price
+    assign is_on_sale = true
+  endif
+-%}
+
+<div
+  class="product-card product-card--{{ card_size }}"
+  data-product-id="{{ product.id }}"
+  itemscope
+  itemtype="https://schema.org/Product"
+>
+  <!-- Imagem com Link -->
+  <a
+    href="{{ product.url }}"
+    class="product-card__image-link block relative overflow-hidden aspect-[3/4] bg-moss-green/5"
+    tabindex="0"
+    aria-label="Ver {{ product.title }}"
+  >
+    {%- if featured_image != blank -%}
+      {{
+        featured_image
+        | image_url: width: 800
+        | image_tag:
+          class: 'product-card__image object-cover w-full h-full transition-transform duration-700 group-hover:scale-105',
+          alt: featured_image.alt | default: product.title | escape,
+          loading: 'lazy',
+          width: 800,
+          height: 1067,
+          itemprop: 'image'
+      }}
+
+      <!-- Imagem de hover (segunda imagem, se disponível) -->
+      {%- if product.images.size > 1 -%}
+        {{
+          product.images[1]
+          | image_url: width: 800
+          | image_tag:
+            class: 'product-card__image product-card__image--hover object-cover w-full h-full absolute inset-0 opacity-0 transition-opacity duration-700',
+            alt: product.images[1].alt | default: product.title | escape,
+            loading: 'lazy',
+            width: 800,
+            height: 1067
+        }}
+      {%- endif -%}
+    {%- else -%}
+      <!-- Placeholder SVG sem imagem -->
+      <div class="product-card__placeholder w-full h-full flex items-center justify-center bg-moss-green/10">
+        {% render 'icon-tree', width: 60, color: '#4F5D3A' %}
+      </div>
+    {%- endif -%}
+
+    <!-- Badges -->
+    <div class="product-card__badges absolute top-3 left-3 flex flex-col gap-1.5 z-10">
+      {%- if is_on_sale -%}
+        <span class="product-card__badge product-card__badge--sale">Sale</span>
+      {%- endif -%}
+      {%- unless product.available -%}
+        <span class="product-card__badge product-card__badge--soldout">Esgotado</span>
+      {%- endunless -%}
+      {%- if product.tags contains 'new' or product.tags contains 'novo' -%}
+        <span class="product-card__badge product-card__badge--new">Novo</span>
+      {%- endif -%}
+    </div>
+
+    <!-- Quick Add Overlay -->
+    {%- if show_quick_add_val and product.available -%}
+      <div class="product-card__quick-add-overlay" aria-hidden="true">
+        <button
+          class="product-card__quick-add-btn"
+          data-product-id="{{ product.id }}"
+          data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+          type="button"
+          tabindex="-1"
+          aria-label="Adição rápida de {{ product.title }}"
+          onclick="event.preventDefault(); event.stopPropagation(); gracioQuickAdd({{ product.id }}, {{ product.selected_or_first_available_variant.id }});"
+        >
+          + ADICIONAR
+        </button>
+      </div>
+    {%- endif -%}
+  </a>
+
+  <!-- Informações do produto -->
+  <div class="product-card__info mt-4 px-1">
+    {%- if show_vendor_val and product.vendor != blank -%}
+      <p class="product-card__vendor text-xs tracking-widest uppercase text-moss-green/70 mb-1" itemprop="brand">
+        {{ product.vendor }}
+      </p>
+    {%- endif -%}
+
+    <h3 class="product-card__title font-body font-medium text-sm tracking-wide leading-snug mb-2" itemprop="name">
+      <a href="{{ product.url }}" class="hover:text-moss-green transition-colors">{{ product.title }}</a>
+    </h3>
+
+    <div class="product-card__price flex items-center gap-2" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+      <meta itemprop="priceCurrency" content="{{ cart.currency.iso_code }}" />
+      <meta itemprop="price" content="{{ product.price | divided_by: 100.0 }}" />
+      <meta itemprop="availability" content="{% if product.available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}" />
+
+      {%- if is_on_sale -%}
+        <span class="product-card__price-compare text-xs text-navy/40 line-through">
+          {{ product.compare_at_price | money }}
+        </span>
+      {%- endif -%}
+      <span class="product-card__price-current text-sm font-body font-medium {% if is_on_sale %}text-moss-green{% endif %}">
+        {{ product.price | money }}
+      </span>
+    </div>
+  </div>
+</div>

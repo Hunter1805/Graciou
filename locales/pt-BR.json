@@ -1,0 +1,32 @@
+{
+  "pt-BR": {
+    "general": {
+      "meta_tags": {
+        "title_suffix": "— {{ shop.name }}"
+      }
+    },
+    "accessibility": {
+      "skip_to_text": "Ir para o conteúdo principal"
+    },
+    "cart": {
+      "general": {
+        "item_count": {
+          "one": "{{ count }} item",
+          "other": "{{ count }} itens"
+        }
+      }
+    },
+    "products": {
+      "product": {
+        "add_to_cart": "Adicionar ao carrinho",
+        "sold_out": "Esgotado",
+        "unavailable": "Indisponível"
+      }
+    },
+    "customer": {
+      "login_page": {
+        "title": "Entrar na conta"
+      }
+    }
+  }
+}

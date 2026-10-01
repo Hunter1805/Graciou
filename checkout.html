@@ -1,0 +1,1628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Checkout GRACIOU — dados do cliente e revisão do pedido." />
+  <title>Checkout — GRACIOU</title>
+  <link rel="icon" href="data:," />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ════════════════════════════════════
+       TOKENS — iguais aos de cart.html / collection.html
+    ════════════════════════════════════ */
+    :root {
+      --ecru:       #FDFDD0;
+      --moss:       #4F5D3A;
+      --moss-light: #6B7A50;
+      --moss-dark:  #3A4529;
+      --navy:       #1A1A1A;
+      --erro:       #8B2F2F;
+      --ecru-70:    rgba(253,253,208,0.7);
+      --ecru-40:    rgba(253,253,208,0.4);
+      --navy-10:    rgba(26,26,26,0.10);
+      --navy-06:    rgba(26,26,26,0.06);
+      --moss-10:    rgba(79,93,58,0.10);
+      --f-head:     'Barlow Condensed', sans-serif;
+      --f-body:     'DM Sans', sans-serif;
+      --ease:       cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ════════════════════════════════════
+       RESET — igual ao das demais páginas
+    ════════════════════════════════════ */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:var(--f-body);
+      background:var(--ecru);
+      color:var(--navy);
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    img { max-width:100%; display:block; }
+    a   { color:inherit; text-decoration:none; }
+    ul  { list-style:none; }
+    h1,h2,h3 { font-family:var(--f-head); font-weight:800; line-height:1; }
+    button { cursor:pointer; font-family:inherit; background:none; border:none; }
+
+    /* ════════════════════════════════════
+       HEADER — mesmas classes/tokens do projeto
+    ════════════════════════════════════ */
+    .header {
+      position:sticky; top:0; z-index:100;
+      background:var(--ecru);
+      border-bottom:1px solid var(--navy-10);
+      transition:box-shadow .3s;
+    }
+    .header.scrolled { box-shadow:0 4px 24px rgba(0,0,0,0.09); }
+    .header__inner {
+      max-width:1400px; margin:0 auto;
+      padding:0 3rem; height:72px;
+      display:flex; align-items:center; justify-content:space-between; gap:2rem;
+    }
+    .header__logo { display:flex; align-items:center; gap:.6rem; }
+    .header__logo-text {
+      font-family:'Oswald', sans-serif; font-size:1.6rem; font-weight:600;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--moss);
+      transform: scaleY(1.1); transform-origin: bottom;
+    }
+    .header__nav { display:flex; align-items:center; gap:2.5rem; }
+    .header__nav a {
+      font-size:.75rem; font-weight:500; letter-spacing:.14em;
+      text-transform:uppercase; position:relative; padding-bottom:2px; transition:color .2s;
+    }
+    .header__nav a::after {
+      content:''; position:absolute; bottom:-1px; left:0; right:0;
+      height:1px; background:var(--moss);
+      transform:scaleX(0); transform-origin:left; transition:transform .3s;
+    }
+    .header__nav a:hover { color:var(--moss); }
+    .header__nav a:hover::after { transform:scaleX(1); }
+    .header__actions { display:flex; align-items:center; gap:.75rem; }
+    .header__icon-btn {
+      width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+      color:var(--navy); border-radius:2px; transition:color .2s, background .2s;
+    }
+    .header__icon-btn:hover { color:var(--moss); background:var(--moss-10); }
+    .cart-badge { position:relative; }
+    .cart-badge__count {
+      position:absolute; top:-5px; right:-5px;
+      min-width:18px; height:18px; background:var(--moss); color:var(--ecru);
+      font-size:.6rem; font-weight:700; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* Breadcrumb — mesma classe do projeto */
+    .breadcrumb {
+      max-width:1400px; margin:0 auto;
+      padding:.875rem 3rem;
+      border-bottom:1px solid var(--navy-06);
+      display:flex; align-items:center; gap:.5rem;
+    }
+    .breadcrumb a, .breadcrumb span {
+      font-size:.68rem; letter-spacing:.12em;
+      text-transform:uppercase; color:rgba(26,26,26,.4);
+      transition:color .2s;
+    }
+    .breadcrumb a:hover { color:var(--moss); }
+    .breadcrumb__sep { color:rgba(26,26,26,.2); }
+    .breadcrumb__current { color:var(--navy); }
+
+    /* ════════════════════════════════════
+       HERO DA PÁGINA — mesma linguagem do cart-hero
+    ════════════════════════════════════ */
+    .ck-hero {
+      background:var(--moss-dark);
+      padding:3.25rem 3rem 2.75rem;
+      position:relative; overflow:hidden;
+    }
+    .ck-hero__inner { max-width:1400px; margin:0 auto; position:relative; z-index:1; }
+    .ck-hero__eyebrow {
+      font-size:.65rem; letter-spacing:.28em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:.875rem;
+    }
+    .ck-hero__title {
+      font-size:clamp(2.4rem,5.5vw,4.5rem);
+      text-transform:uppercase; color:var(--ecru); line-height:.95;
+      margin-bottom:.75rem;
+    }
+    .ck-hero__desc {
+      font-size:.85rem; font-weight:300; line-height:1.7;
+      color:var(--ecru-70); max-width:60ch; letter-spacing:.02em;
+    }
+
+    /* Etapas — pedido / dados do cliente / pagamento */
+    .ck-etapas {
+      max-width:1400px; margin:0 auto;
+      padding:1.5rem 3rem 0;
+      display:flex; align-items:center; gap:1rem; flex-wrap:wrap;
+    }
+    .ck-etapa {
+      font-size:.6rem; letter-spacing:.2em; text-transform:uppercase;
+      color:rgba(26,26,26,.35); display:flex; align-items:center; gap:.5rem;
+    }
+    .ck-etapa__num {
+      width:20px; height:20px; border:1px solid var(--navy-10);
+      display:flex; align-items:center; justify-content:center;
+      font-size:.58rem; font-weight:700;
+    }
+    .ck-etapa.is-ativa { color:var(--navy); }
+    .ck-etapa.is-ativa .ck-etapa__num { background:var(--navy); color:var(--ecru); border-color:var(--navy); }
+    .ck-etapa__sep { color:rgba(26,26,26,.2); font-size:.7rem; }
+
+    /* ════════════════════════════════════
+       LAYOUT
+    ════════════════════════════════════ */
+    .ck-page {
+      max-width:1400px; margin:0 auto;
+      padding:2.5rem 3rem 6rem;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) 380px;
+      gap:2.5rem;
+      align-items:start;
+    }
+
+    /* Cartões de bloco do formulário */
+    .ck-bloco {
+      border:1px solid var(--navy-10);
+      padding:1.75rem;
+      margin-bottom:2rem;
+    }
+    .ck-bloco:last-of-type { margin-bottom:0; }
+    .ck-bloco__titulo {
+      font-size:1.35rem; text-transform:uppercase;
+      padding-bottom:1rem; margin-bottom:1.5rem;
+      border-bottom:1px solid var(--navy-10);
+      display:flex; align-items:center; gap:.75rem;
+    }
+    .ck-bloco__num {
+      width:24px; height:24px; background:var(--moss); color:var(--ecru);
+      font-family:var(--f-head); font-size:.72rem; font-weight:700;
+      display:flex; align-items:center; justify-content:center; flex:none;
+    }
+
+    /* Grade do formulário */
+    .ck-form { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:1.1rem 1rem; }
+    .ck-campo { display:flex; flex-direction:column; gap:.45rem; }
+    .ck-campo--6 { grid-column:span 6; }
+    .ck-campo--4 { grid-column:span 4; }
+    .ck-campo--3 { grid-column:span 3; }
+    .ck-campo--2 { grid-column:span 2; }
+
+    .ck-campo__rotulo {
+      font-size:.6rem; letter-spacing:.18em; text-transform:uppercase;
+      color:rgba(26,26,26,.5); font-weight:600;
+    }
+    .ck-campo__rotulo span { color:var(--moss); }
+    .ck-campo__input {
+      width:100%; min-width:0; padding:.75rem .8rem;
+      font:inherit; font-size:.85rem; font-weight:400;
+      color:var(--navy); background:transparent;
+      border:1px solid var(--navy-10); outline:none;
+      transition:border-color .2s;
+    }
+    .ck-campo__input::placeholder { color:rgba(26,26,26,.28); }
+    .ck-campo__input:focus { border-color:var(--moss); }
+    .ck-campo__input[aria-invalid="true"] { border-color:var(--erro); }
+    .ck-campo__erro {
+      min-height:0; font-size:.65rem; line-height:1.4;
+      color:var(--erro); letter-spacing:.02em;
+    }
+    .ck-campo__erro:empty { display:none; }
+    .ck-campo__dica {
+      font-size:.62rem; line-height:1.4; letter-spacing:.02em;
+      color:rgba(26,26,26,.4);
+    }
+
+    /* Aviso geral de validação */
+    .ck-alerta {
+      border:1px solid rgba(139,47,47,.4);
+      border-left-width:3px;
+      padding:.9rem 1rem; margin-bottom:1.5rem;
+      font-size:.72rem; line-height:1.6; color:var(--erro);
+      letter-spacing:.02em;
+    }
+    .ck-alerta[hidden] { display:none; }
+
+    /* Erro de envio: ajusta a cópia do aviso e mantém o formulário intacto. */
+    .ck-alerta__dica {
+      display:block; margin-top:.5rem;
+      font-size:.65rem; letter-spacing:.08em; text-transform:uppercase;
+      color:rgba(139,47,47,.75);
+    }
+
+    /* Pagamento — mesmo padrão do cart-pagamento */
+    .ck-pagamento { display:flex; gap:.5rem; }
+    .ck-pagamento__btn {
+      flex:1; padding:.9rem .5rem;
+      font-size:.68rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase;
+      border:1px solid var(--navy-10); color:rgba(26,26,26,.5);
+      transition:all .2s;
+    }
+    .ck-pagamento__btn:hover { border-color:var(--navy); color:var(--navy); }
+    .ck-pagamento__btn.is-active {
+      background:var(--navy); color:var(--ecru); border-color:var(--navy);
+    }
+    .ck-pagamento__obs {
+      margin-top:.9rem; font-size:.66rem; line-height:1.6;
+      letter-spacing:.06em; text-transform:uppercase;
+      color:rgba(26,26,26,.45);
+    }
+
+    /* ════════════════════════════════════
+       RESUMO — mesma base do cart-resumo
+    ════════════════════════════════════ */
+    .ck-resumo {
+      border:1px solid var(--navy-10);
+      padding:1.75rem;
+      position:sticky; top:96px;
+      background:var(--ecru);
+    }
+    .ck-resumo__titulo {
+      font-size:1.35rem; text-transform:uppercase;
+      padding-bottom:1rem; margin-bottom:1.25rem;
+      border-bottom:1px solid var(--navy-10);
+    }
+
+    /* Itens do pedido */
+    .ck-itens { display:flex; flex-direction:column; margin-bottom:1.5rem; }
+    .ck-item {
+      display:grid; grid-template-columns:48px minmax(0,1fr) auto;
+      gap:.85rem; align-items:start;
+      padding:.85rem 0; border-bottom:1px solid var(--navy-06);
+    }
+    .ck-item:first-child { border-top:1px solid var(--navy-06); }
+    .ck-item__img {
+      width:48px; aspect-ratio:3/4;
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+    }
+    .ck-item__img svg { opacity:.3; }
+    .ck-item__qtd {
+      font-size:.6rem; font-weight:700; letter-spacing:.1em;
+      color:var(--moss); text-transform:uppercase; margin-bottom:.2rem;
+    }
+    .ck-item__nome {
+      font-family:var(--f-head); font-size:.92rem; font-weight:700;
+      text-transform:uppercase; line-height:1.2; letter-spacing:.02em;
+      margin-bottom:.3rem;
+    }
+    .ck-item__variacao {
+      font-size:.6rem; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(26,26,26,.5); line-height:1.5;
+    }
+    .ck-item__preco {
+      font-size:.82rem; font-weight:500; white-space:nowrap;
+      padding-top:.1rem;
+    }
+
+    /* Cores de placeholder — mesmas classes do cart.html */
+    .ck-item__img--creme            { background:linear-gradient(145deg,#FDFDD0,#EAE7C2); color:#4F5D3A; }
+    .ck-item__img--off-white        { background:linear-gradient(145deg,#F2F0E4,#DEDBC8); color:#4F5D3A; }
+    .ck-item__img--preto            { background:linear-gradient(145deg,#1A1A1A,#2E2E2E); color:#FDFDD0; }
+    .ck-item__img--verde-musgo      { background:linear-gradient(145deg,#2A3520,#1E2916); color:#FDFDD0; }
+    .ck-item__img--verde-musgo-claro{ background:linear-gradient(145deg,#4F5D3A,#3A4529); color:#FDFDD0; }
+    .ck-item__img--verde-musgo-escuro{background:linear-gradient(145deg,#3A4529,#2E3820); color:#FDFDD0; }
+    .ck-item__img--marrom           { background:linear-gradient(145deg,#8B7355,#6F5A42); color:#FDFDD0; }
+    .ck-item__img--verde-militar    { background:linear-gradient(145deg,#4A5D3A,#38472C); color:#FDFDD0; }
+    .ck-item__img--padrao           { background:linear-gradient(145deg,#3A4529,#1A1A1A); color:#FDFDD0; }
+
+    /* Blocos do resumo */
+    .ck-bloco-resumo { margin-bottom:1.5rem; }
+    .ck-bloco-resumo__titulo {
+      font-size:.62rem; letter-spacing:.2em; text-transform:uppercase;
+      color:rgba(26,26,26,.4); font-weight:600; margin-bottom:.7rem;
+    }
+
+    /* Linhas de total */
+    .ck-linhas { border-top:1px solid var(--navy-06); padding-top:1rem; }
+    .ck-linha {
+      display:flex; align-items:baseline; justify-content:space-between;
+      gap:1rem; font-size:.8rem; padding:.4rem 0;
+    }
+    .ck-linha__rotulo { color:rgba(26,26,26,.55); font-weight:300; letter-spacing:.03em; }
+    .ck-linha__valor  { color:var(--navy); font-weight:500; white-space:nowrap; }
+    .ck-linha--desconto .ck-linha__valor { color:var(--moss); }
+    .ck-linha--total {
+      margin-top:.6rem; padding-top:.9rem;
+      border-top:1px solid var(--navy-10);
+      font-size:1rem;
+    }
+    .ck-linha--total .ck-linha__rotulo {
+      font-family:var(--f-head); font-weight:700;
+      letter-spacing:.14em; text-transform:uppercase; color:var(--navy);
+    }
+    .ck-linha--total .ck-linha__valor {
+      font-family:var(--f-head); font-size:1.5rem; font-weight:800;
+    }
+
+    /* Frete grátis / pendente — mesmo tratamento do cart.html */
+    .ck-frete-gratis, .ck-frete-pendente {
+      display:inline-block;
+      font-family:var(--f-head); font-size:.68rem; font-weight:700;
+      letter-spacing:.16em; text-transform:uppercase;
+      color:var(--moss);
+      border:1px solid rgba(79,93,58,.35);
+      padding:.22rem .55rem;
+    }
+    .ck-frete-pendente { cursor:help; }
+
+    .ck-aviso-frete {
+      margin-top:1rem; padding-top:.9rem;
+      border-top:1px solid var(--navy-06);
+      font-size:.65rem; letter-spacing:.1em; line-height:1.6;
+      text-transform:uppercase; color:rgba(26,26,26,.45);
+    }
+
+    /* Cupom aplicado */
+    .ck-cupom-aplicado {
+      display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+      padding:.7rem .75rem; border:1px solid rgba(79,93,58,.35);
+      color:var(--moss); font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
+    }
+    .ck-cupom-vazio {
+      font-size:.7rem; letter-spacing:.06em; color:rgba(26,26,26,.4);
+    }
+
+    /* ════════════════════════════════════
+       BOTÕES — mesmas classes do projeto
+    ════════════════════════════════════ */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+      padding:.875rem 2.25rem;
+      font-family:var(--f-head); font-size:.78rem; font-weight:700;
+      letter-spacing:.2em; text-transform:uppercase;
+      border:1.5px solid transparent; cursor:pointer;
+      transition:all .25s; white-space:nowrap;
+    }
+    .btn--outline { background:transparent; color:var(--moss); border-color:var(--moss); }
+    .btn--outline:hover { background:var(--moss); color:var(--ecru); }
+    .btn--primary { background:var(--navy); color:var(--ecru); border-color:var(--navy); }
+    .btn--primary:hover { background:var(--moss); border-color:var(--moss); }
+    .btn--primary:disabled { background:rgba(26,26,26,.2); border-color:transparent; cursor:not-allowed; }
+    .btn--ghost-dark {
+      background:transparent; color:rgba(26,26,26,.5);
+      border-color:var(--navy-10);
+    }
+    .btn--ghost-dark:hover { color:var(--navy); border-color:var(--navy); }
+    .btn--bloco { width:100%; }
+
+    .ck-acoes { display:flex; flex-direction:column; gap:.75rem; margin-top:1.5rem; }
+    .ck-voltar {
+      display:inline-flex; align-items:center; gap:.4rem;
+      font-size:.62rem; letter-spacing:.14em; text-transform:uppercase;
+      color:rgba(26,26,26,.5); transition:color .2s;
+    }
+    .ck-voltar:hover { color:var(--moss); }
+
+    /* ════════════════════════════════════
+       CONFIRMAÇÃO — "dados salvos"
+    ════════════════════════════════════ */
+    .ck-confirmacao {
+      max-width:760px; margin:4rem auto 6rem;
+      padding:3rem 2rem; text-align:center;
+      border:1px solid var(--navy-06);
+    }
+    .ck-confirmacao__icon { margin:0 auto 1.5rem; opacity:.22; }
+    .ck-confirmacao__eyebrow {
+      font-size:.62rem; letter-spacing:.24em; text-transform:uppercase;
+      color:var(--moss); margin-bottom:.75rem;
+    }
+    .ck-confirmacao__titulo {
+      font-size:clamp(1.8rem,4vw,2.75rem); text-transform:uppercase;
+      color:var(--navy); margin-bottom:.9rem;
+    }
+    .ck-confirmacao__texto {
+      font-size:.9rem; font-weight:300; line-height:1.7;
+      color:rgba(26,26,26,.6); letter-spacing:.02em;
+      max-width:52ch; margin:0 auto 1.75rem;
+    }
+    .ck-resumo-pedido {
+      border:1px solid var(--navy-10); text-align:left;
+      padding:1.25rem 1.35rem; margin-bottom:2rem;
+    }
+    .ck-resumo-pedido__linha {
+      display:flex; align-items:baseline; justify-content:space-between;
+      gap:1rem; font-size:.78rem; padding:.35rem 0;
+    }
+    .ck-resumo-pedido__linha span:first-child {
+      font-size:.6rem; letter-spacing:.16em; text-transform:uppercase;
+      color:rgba(26,26,26,.45);
+    }
+    .ck-resumo-pedido__linha span:last-child { font-weight:500; text-align:right; }
+    .ck-resumo-pedido__id {
+      font-family:var(--f-head); font-size:1rem; font-weight:700;
+      letter-spacing:.1em;
+    }
+    .ck-confirmacao__acoes { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+
+    /* ════════════════════════════════════
+       TICKER — mesma classe do projeto
+    ════════════════════════════════════ */
+    .ticker {
+      background:var(--moss); overflow:hidden;
+      padding:.75rem 0; white-space:nowrap;
+    }
+    .ticker__track { display:inline-flex; animation:ticker 25s linear infinite; }
+    .ticker__item {
+      font-family:var(--f-head); font-size:.75rem; font-weight:700;
+      letter-spacing:.18em; text-transform:uppercase;
+      color:var(--ecru-70); padding:0 2.5rem;
+    }
+    .ticker__item span { color:var(--ecru); }
+    @keyframes ticker {
+      from { transform:translateX(0); }
+      to   { transform:translateX(-50%); }
+    }
+
+    /* ════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════ */
+    @media(max-width:1024px){
+      .ck-page { grid-template-columns:minmax(0,1fr); }
+      .ck-resumo { position:static; }
+    }
+    @media(max-width:768px){
+      .header__inner, .breadcrumb, .ck-hero, .ck-etapas, .ck-page {
+        padding-left:1.25rem; padding-right:1.25rem;
+      }
+      .header__nav { display:none; }
+      .ck-form { grid-template-columns:minmax(0,1fr); }
+      .ck-campo--6, .ck-campo--4, .ck-campo--3, .ck-campo--2 { grid-column:span 1; }
+      .ck-bloco { padding:1.35rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     HEADER — mesma estrutura/classes do projeto
+══════════════════════════════════════ -->
+<header class="header" id="site-header">
+  <div class="header__inner">
+    <a href="preview.html" class="header__logo" aria-label="GRACIOU — voltar ao início">
+      <img src="assets/tree-icon.png" alt="Tree" style="height:48px; width:auto; mix-blend-mode:multiply; margin-right:-4px; margin-top:-2px;" aria-hidden="true" />
+      <span class="header__logo-text">GRACIOU</span>
+    </a>
+    <nav class="header__nav">
+      <a href="preview.html">Loja</a>
+      <a href="collection.html">Drops</a>
+      <a href="preview.html#philosophy">Missão</a>
+      <a href="#">Lookbook</a>
+    </nav>
+    <div class="header__actions">
+      <button class="header__icon-btn" aria-label="Buscar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <a href="cart.html" class="header__icon-btn cart-badge" aria-label="Carrinho">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-badge__count" data-graciou-cart-count>0</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Breadcrumb -->
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="preview.html">Início</a>
+  <span class="breadcrumb__sep" aria-hidden="true">/</span>
+  <a href="collection.html">Drops</a>
+  <span class="breadcrumb__sep" aria-hidden="true">/</span>
+  <a href="cart.html">Carrinho</a>
+  <span class="breadcrumb__sep" aria-hidden="true">/</span>
+  <span class="breadcrumb__current">Checkout</span>
+</nav>
+
+<!-- ══════════════════════════════════════
+     HERO
+══════════════════════════════════════ -->
+<section class="ck-hero">
+  <div class="ck-hero__inner">
+    <p class="ck-hero__eyebrow">Etapa final</p>
+    <h1 class="ck-hero__title">Checkout</h1>
+    <p class="ck-hero__desc">
+      Informe seus dados de entrega e confirme a forma de pagamento. O carrinho permanece
+      salvo — você pode voltar e ajustar a qualquer momento.
+    </p>
+  </div>
+</section>
+
+<!-- Etapas -->
+<div class="ck-etapas" aria-hidden="true">
+  <span class="ck-etapa is-ativa"><span class="ck-etapa__num">1</span> Dados</span>
+  <span class="ck-etapa__sep">/</span>
+  <span class="ck-etapa is-ativa"><span class="ck-etapa__num">2</span> Pagamento</span>
+  <span class="ck-etapa__sep">/</span>
+  <span class="ck-etapa"><span class="ck-etapa__num">3</span> Confirmação</span>
+</div>
+
+<!-- ══════════════════════════════════════
+     CHECKOUT
+══════════════════════════════════════ -->
+<main class="ck-page" id="ck-main">
+
+  <!-- Formulário -->
+  <section aria-label="Dados do pedido">
+    <form id="ck-form" novalidate>
+
+      <div class="ck-alerta" id="ck-alerta" role="alert" hidden></div>
+
+      <!-- 1. Dados pessoais -->
+      <div class="ck-bloco">
+        <h2 class="ck-bloco__titulo"><span class="ck-bloco__num">1</span> Seus dados</h2>
+        <div class="ck-form">
+          <div class="ck-campo ck-campo--6">
+            <label class="ck-campo__rotulo" for="ck-nome">Nome completo <span>*</span></label>
+            <input class="ck-campo__input" id="ck-nome" name="nome" type="text"
+              autocomplete="name" placeholder="Como está no documento" />
+            <p class="ck-campo__erro" id="ck-erro-nome" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--3">
+            <label class="ck-campo__rotulo" for="ck-email">E-mail <span>*</span></label>
+            <input class="ck-campo__input" id="ck-email" name="email" type="email"
+              autocomplete="email" placeholder="voce@email.com" />
+            <p class="ck-campo__erro" id="ck-erro-email" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--3">
+            <label class="ck-campo__rotulo" for="ck-telefone">Telefone <span>*</span></label>
+            <input class="ck-campo__input" id="ck-telefone" name="telefone" type="tel"
+              inputmode="numeric" maxlength="15" autocomplete="tel"
+              placeholder="(00) 00000-0000" />
+            <p class="ck-campo__erro" id="ck-erro-telefone" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--3">
+            <label class="ck-campo__rotulo" for="ck-cpf">CPF <span>*</span></label>
+            <input class="ck-campo__input" id="ck-cpf" name="cpf" type="text"
+              inputmode="numeric" maxlength="14" placeholder="000.000.000-00" />
+            <p class="ck-campo__erro" id="ck-erro-cpf" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Endereço -->
+      <div class="ck-bloco">
+        <h2 class="ck-bloco__titulo"><span class="ck-bloco__num">2</span> Endereço de entrega</h2>
+        <div class="ck-form">
+          <div class="ck-campo ck-campo--2">
+            <label class="ck-campo__rotulo" for="ck-cep">CEP <span>*</span></label>
+            <input class="ck-campo__input" id="ck-cep" name="cep" type="text"
+              inputmode="numeric" maxlength="9" autocomplete="postal-code"
+              placeholder="00000-000" />
+            <p class="ck-campo__erro" id="ck-erro-cep" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--2">
+            <label class="ck-campo__rotulo" for="ck-estado">Estado <span>*</span></label>
+            <input class="ck-campo__input" id="ck-estado" name="estado" type="text"
+              maxlength="2" autocomplete="address-level1" placeholder="UF" />
+            <p class="ck-campo__erro" id="ck-erro-estado" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--2">
+            <label class="ck-campo__rotulo" for="ck-cidade">Cidade <span>*</span></label>
+            <input class="ck-campo__input" id="ck-cidade" name="cidade" type="text"
+              autocomplete="address-level2" placeholder="Sua cidade" />
+            <p class="ck-campo__erro" id="ck-erro-cidade" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--3">
+            <label class="ck-campo__rotulo" for="ck-bairro">Bairro <span>*</span></label>
+            <input class="ck-campo__input" id="ck-bairro" name="bairro" type="text"
+              autocomplete="address-level3" placeholder="Seu bairro" />
+            <p class="ck-campo__erro" id="ck-erro-bairro" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--3">
+            <label class="ck-campo__rotulo" for="ck-rua">Rua <span>*</span></label>
+            <input class="ck-campo__input" id="ck-rua" name="rua" type="text"
+              autocomplete="address-line1" placeholder="Rua, avenida..." />
+            <p class="ck-campo__erro" id="ck-erro-rua" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--2">
+            <label class="ck-campo__rotulo" for="ck-numero">Número <span>*</span></label>
+            <input class="ck-campo__input" id="ck-numero" name="numero" type="text"
+              inputmode="numeric" autocomplete="address-line2" placeholder="000" />
+            <p class="ck-campo__erro" id="ck-erro-numero" aria-live="polite"></p>
+          </div>
+
+          <div class="ck-campo ck-campo--4">
+            <label class="ck-campo__rotulo" for="ck-complemento">Complemento</label>
+            <input class="ck-campo__input" id="ck-complemento" name="complemento" type="text"
+              placeholder="Apto, bloco, referência (opcional)" />
+            <p class="ck-campo__erro" id="ck-erro-complemento" aria-live="polite"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Forma de pagamento — nenhum dado de cartão é coletado -->
+      <div class="ck-bloco">
+        <h2 class="ck-bloco__titulo"><span class="ck-bloco__num">3</span> Forma de pagamento</h2>
+        <div class="ck-pagamento" role="group" aria-label="Forma de pagamento">
+          <button type="button" class="ck-pagamento__btn is-active" data-forma="pix" aria-pressed="true">Pix</button>
+          <button type="button" class="ck-pagamento__btn" data-forma="cartao" aria-pressed="false">Cartão</button>
+        </div>
+        <p class="ck-pagamento__obs">
+          Nenhum dado de cartão é solicitado ou armazenado nesta etapa.
+          O pagamento será conectado na próxima etapa.
+        </p>
+      </div>
+
+    </form>
+  </section>
+
+  <!-- Resumo do pedido -->
+  <aside class="ck-resumo" id="ck-resumo" aria-label="Resumo do pedido">
+    <h2 class="ck-resumo__titulo">Seu pedido</h2>
+
+    <div class="ck-itens" id="ck-itens"></div>
+
+    <div class="ck-bloco-resumo">
+      <p class="ck-bloco-resumo__titulo">Cupom</p>
+      <div id="ck-cupom"></div>
+    </div>
+
+    <div class="ck-bloco-resumo">
+      <p class="ck-bloco-resumo__titulo">Frete</p>
+      <div id="ck-frete"></div>
+    </div>
+
+    <div class="ck-linhas">
+      <div class="ck-linha">
+        <span class="ck-linha__rotulo">Subtotal</span>
+        <span class="ck-linha__valor" id="ck-subtotal">—</span>
+      </div>
+      <div class="ck-linha">
+        <span class="ck-linha__rotulo">Peças</span>
+        <span class="ck-linha__valor" id="ck-pecas">0</span>
+      </div>
+      <div class="ck-linha ck-linha--desconto" id="ck-linha-desconto" hidden>
+        <span class="ck-linha__rotulo">Desconto <span id="ck-cupom-codigo"></span></span>
+        <span class="ck-linha__valor" id="ck-desconto">—</span>
+      </div>
+      <div class="ck-linha">
+        <span class="ck-linha__rotulo">Frete</span>
+        <span class="ck-linha__valor" id="ck-valor-frete">—</span>
+      </div>
+      <div class="ck-linha ck-linha--total">
+        <span class="ck-linha__rotulo">Total</span>
+        <span class="ck-linha__valor" id="ck-total">—</span>
+      </div>
+    </div>
+
+    <div class="ck-aviso-frete" id="ck-aviso-frete"></div>
+
+    <div class="ck-acoes">
+      <button type="submit" form="ck-form" class="btn btn--primary btn--bloco" id="ck-continuar">
+        CONTINUAR PARA PAGAMENTO
+      </button>
+      <a href="cart.html" class="btn btn--ghost-dark btn--bloco" id="ck-voltar-carrinho">
+        VOLTAR PARA O CARRINHO
+      </a>
+      <a href="cart.html" class="ck-voltar" id="ck-voltar-link">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+        Editar carrinho sem perder as peças
+      </a>
+    </div>
+  </aside>
+
+  <!-- Confirmação: dados salvos (esta etapa ainda não cobra nada) -->
+  <section class="ck-confirmacao" id="ck-confirmacao" hidden aria-live="polite">
+    <div class="ck-confirmacao__icon" aria-hidden="true">
+      <svg width="48" height="60" viewBox="0 0 400 500" fill="none">
+        <path d="M200 420 Q200 445 200 470" stroke="#1A1A1A" stroke-width="3.5" stroke-linecap="round"/>
+        <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#1A1A1A" stroke-width="14" stroke-linecap="round"/>
+        <path d="M198 300 C185 285 165 270 140 260" stroke="#1A1A1A" stroke-width="7" stroke-linecap="round"/>
+        <path d="M202 300 C215 285 235 270 260 260" stroke="#1A1A1A" stroke-width="7" stroke-linecap="round"/>
+        <path d="M200 220 C195 200 188 178 175 155" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round"/>
+        <path d="M200 220 C205 200 212 178 225 155" stroke="#1A1A1A" stroke-width="5" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <p class="ck-confirmacao__eyebrow">Pedido registrado</p>
+    <h2 class="ck-confirmacao__titulo">Dados salvos</h2>
+    <p class="ck-confirmacao__texto">Dados salvos. O pagamento será conectado na próxima etapa.</p>
+
+    <div class="ck-resumo-pedido">
+      <div class="ck-resumo-pedido__linha">
+        <span>Pedido</span><span class="ck-resumo-pedido__id" id="ck-conf-id">—</span>
+      </div>
+      <div class="ck-resumo-pedido__linha">
+        <span>Cliente</span><span id="ck-conf-cliente">—</span>
+      </div>
+      <div class="ck-resumo-pedido__linha">
+        <span>Entrega</span><span id="ck-conf-endereco">—</span>
+      </div>
+      <div class="ck-resumo-pedido__linha">
+        <span>Recebimento</span><span id="ck-conf-recebimento">—</span>
+      </div>
+      <div class="ck-resumo-pedido__linha">
+        <span>Pagamento</span><span id="ck-conf-pagamento">—</span>
+      </div>
+      <div class="ck-resumo-pedido__linha">
+        <span>Frete</span><span id="ck-conf-frete">—</span>
+      </div>
+      <div class="ck-resumo-pedido__linha">
+        <span>Total</span><span id="ck-conf-total">—</span>
+      </div>
+      <div class="ck-resumo-pedido__linha">
+        <span>Status</span><span id="ck-conf-status">—</span>
+      </div>
+    </div>
+
+    <div class="ck-confirmacao__acoes">
+      <a href="collection.html" class="btn btn--outline">CONTINUAR COMPRANDO</a>
+      <a href="cart.html" class="btn btn--ghost-dark">VER CARRINHO</a>
+    </div>
+  </section>
+</main>
+
+<!-- Ticker -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker__track">
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Drop 01 — 8 peças oficiais</span>
+    <span class="ticker__item">Frete grátis a partir de <span>2 peças</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Drop 01 — 8 peças oficiais</span>
+    <span class="ticker__item">Frete grátis a partir de <span>2 peças</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+  </div>
+</div>
+
+<!-- Mesma ordem de scripts do cart.html:
+     1) dados/catalogo.js — fonte única dos produtos e das regras;
+     2) assets/graciou-store.js — carrinho persistente (localStorage). -->
+<script src="dados/catalogo.js"></script>
+<script src="assets/graciou-store.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORE    = window.GRACIOU_STORE;
+  var CATALOGO = window.GRACIOU_CATALOGO;
+  if (!STORE || !CATALOGO) return;
+
+  /* ══════════════════════════════════════════════════════════════
+     ESTA ETAPA NÃO INTEGRA PAGAMENTO.
+     - nenhum dado de cartão é coletado, validado ou armazenado;
+     - nada é enviado para serviços externos (sem Mercado Pago,
+       sem backend, sem fetch);
+     - o "pedido" vive apenas em localStorage, com status
+       aguardando_pagamento, pronto para a próxima etapa.
+     ══════════════════════════════════════ */
+
+  var PEDIDO_KEY  = 'graciou-pedido-v1';
+  var RASCUNHO_KEY = 'graciou-checkout-rascunho-v1';
+
+  /* ── API LOCAL ──
+     O pedido é enviado para o backend em http://localhost:3001.
+     Nesta etapa NÃO há pagamento: nenhuma chamada ao Mercado Pago,
+     nenhum dado de cartão. A API só recebe e guarda o pedido.
+
+     Em file:// a origem é `null` e o navegador recusa a chamada a
+     localhost — por isso a página precisa rodar por HTTP
+     (npm run dev na raiz, ou o servidor estático). */
+  var API_BASE = 'http://localhost:3001';
+  try {
+    var apiQuery = new URLSearchParams(window.location.search).get('api');
+    if (apiQuery) API_BASE = String(apiQuery).replace(/\/+$/, '');
+  } catch (_) {}
+  var API_PEDIDOS = API_BASE + '/api/orders';
+  var API_PREFERENCIA = API_BASE + '/api/payments/create-preference';
+  var API_STATUS = API_BASE + '/api/payments/status/';
+  var API_TIMEOUT_MS = 12000;
+
+  var MSG_FALHA_API = 'Não foi possível registrar o pedido. Tente novamente.';
+  var MSG_FALHA_PAGAMENTO = 'Pedido registrado, mas não foi possível abrir o Mercado Pago. Tente novamente pelo checkout.';
+
+  /* ── DOM ── */
+  var form        = document.getElementById('ck-form');
+  var alerta      = document.getElementById('ck-alerta');
+  var elItens     = document.getElementById('ck-itens');
+  var elCupom     = document.getElementById('ck-cupom');
+  var elFrete     = document.getElementById('ck-frete');
+  var elSubtotal  = document.getElementById('ck-subtotal');
+  var elPecas     = document.getElementById('ck-pecas');
+  var elValorFrete= document.getElementById('ck-valor-frete');
+  var elTotal     = document.getElementById('ck-total');
+  var elAviso     = document.getElementById('ck-aviso-frete');
+  var linhaDesconto = document.getElementById('ck-linha-desconto');
+  var elCupomCodigo = document.getElementById('ck-cupom-codigo');
+  var elDesconto  = document.getElementById('ck-desconto');
+  var elResumo    = document.getElementById('ck-resumo');
+  var formSecao   = form.parentElement;
+  var confirmacao = document.getElementById('ck-confirmacao');
+
+  /* Glifo de marca usado como placeholder de imagem, igual ao do cart.html. */
+  var ARVORE_SVG =
+    '<svg width="24" height="30" viewBox="0 0 400 500" fill="none" aria-hidden="true">' +
+      '<path d="M200 420 Q200 445 200 470" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>' +
+      '<path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>' +
+      '<path d="M198 300 C185 285 165 270 140 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M202 300 C215 285 235 270 260 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+      '<path d="M200 220 C195 200 188 178 175 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+      '<path d="M200 220 C205 200 212 178 225 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>';
+
+  var CLASSE_COR = {
+    'verde-musgo': 'verde-musgo',
+    'verde musgo': 'verde-musgo',
+    'verde-militar': 'verde-militar',
+    'verde militar': 'verde-militar',
+    'off-white': 'off-white',
+    'off white': 'off-white',
+    'creme': 'creme',
+    'ecru': 'creme',
+    'preto': 'preto',
+    'black': 'preto',
+    'marrom': 'marrom'
+  };
+
+  function classeDaCor(nome) {
+    return CLASSE_COR[String(nome || '').trim().toLowerCase()] || 'padrao';
+  }
+
+  function escapar(texto) {
+    return String(texto === undefined || texto === null ? '' : texto)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ════════════════════════════════════════════════
+     1. CARRINHO VAZIO → volta para cart.html
+     O redirecionamento preserva o carrinho: nada é removido.
+     ════════════════════════════════════════════════ */
+  function redirecionarParaCarrinho() {
+    window.location.replace('cart.html');
+  }
+
+  var retornoMercadoPago = /^(sucesso|falha|pendente)$/.test(
+    new URLSearchParams(window.location.search).get('pagamento') || ''
+  );
+
+  if (!STORE.getCart().length && !retornoMercadoPago) {
+    redirecionarParaCarrinho();
+    return;
+  }
+
+  /* ════════════════════════════════════════════════
+     2. FORMULÁRIO — máscaras, validação e rascunho
+     ════════════════════════════════════════════════ */
+
+  /* Ordem dos campos no pedido. `obrigatorio` controla a validação. */
+  var CAMPOS = [
+    { nome: 'nome',        id: 'ck-nome',        erro: 'ck-erro-nome',        obrigatorio: true,  rotulo: 'Nome completo' },
+    { nome: 'email',       id: 'ck-email',       erro: 'ck-erro-email',       obrigatorio: true,  rotulo: 'E-mail' },
+    { nome: 'telefone',    id: 'ck-telefone',    erro: 'ck-erro-telefone',    obrigatorio: true,  rotulo: 'Telefone' },
+    { nome: 'cpf',         id: 'ck-cpf',         erro: 'ck-erro-cpf',         obrigatorio: true,  rotulo: 'CPF' },
+    { nome: 'cep',         id: 'ck-cep',         erro: 'ck-erro-cep',         obrigatorio: true,  rotulo: 'CEP' },
+    { nome: 'estado',      id: 'ck-estado',      erro: 'ck-erro-estado',      obrigatorio: true,  rotulo: 'Estado' },
+    { nome: 'cidade',      id: 'ck-cidade',      erro: 'ck-erro-cidade',      obrigatorio: true,  rotulo: 'Cidade' },
+    { nome: 'bairro',      id: 'ck-bairro',      erro: 'ck-erro-bairro',      obrigatorio: true,  rotulo: 'Bairro' },
+    { nome: 'rua',         id: 'ck-rua',         erro: 'ck-erro-rua',         obrigatorio: true,  rotulo: 'Rua' },
+    { nome: 'numero',      id: 'ck-numero',      erro: 'ck-erro-numero',      obrigatorio: true,  rotulo: 'Número' },
+    { nome: 'complemento', id: 'ck-complemento', erro: 'ck-erro-complemento', obrigatorio: false, rotulo: 'Complemento' }
+  ];
+
+  function campoPorNome(nome) {
+    for (var i = 0; i < CAMPOS.length; i++) if (CAMPOS[i].nome === nome) return CAMPOS[i];
+    return null;
+  }
+
+  function inputDe(campo)      { return document.getElementById(campo.id); }
+  function erroDe(campo)       { return document.getElementById(campo.erro); }
+  function limparErro(campo) {
+    var el = erroDe(campo), inp = inputDe(campo);
+    if (el) el.textContent = '';
+    if (inp) {
+      inp.removeAttribute('aria-invalid');
+      inp.removeAttribute('aria-describedby');
+    }
+  }
+  function marcarErro(campo, mensagem) {
+    var el = erroDe(campo), inp = inputDe(campo);
+    if (el) el.textContent = mensagem;
+    if (inp) {
+      inp.setAttribute('aria-invalid', 'true');
+      if (el) inp.setAttribute('aria-describedby', campo.erro);
+    }
+  }
+
+  /* ── Máscaras visuais: telefone e CEP ──
+     Só formatam o que o usuário digita; nenhum dado vai para fora. */
+  function somenteDigitos(valor) {
+    return String(valor || '').replace(/\D/g, '');
+  }
+
+  function mascaraTelefone(valor) {
+    var d = somenteDigitos(valor).slice(0, 11);
+    if (!d) return '';
+    if (d.length <= 2)  return '(' + d;
+    if (d.length <= 6)  return '(' + d.slice(0, 2) + ') ' + d.slice(2);
+    if (d.length <= 10) return '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+    return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+  }
+
+  function mascaraCep(valor) {
+    var d = somenteDigitos(valor).slice(0, 8);
+    if (d.length <= 5) return d;
+    return d.slice(0, 5) + '-' + d.slice(5);
+  }
+
+  function mascaraCpf(valor) {
+    var d = somenteDigitos(valor).slice(0, 11);
+    if (d.length <= 3)  return d;
+    if (d.length <= 6)  return d.slice(0, 3) + '.' + d.slice(3);
+    if (d.length <= 9)  return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
+    return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+  }
+
+  /* Estado: só letras, no máximo 2 (UF), sempre em maiúsculas. */
+  function normalizarEstado(valor) {
+    return String(valor || '').replace(/[^a-zA-Z]/g, '').slice(0, 2).toUpperCase();
+  }
+
+  /* ── Validadores ── */
+  var RE_EMAIL = /^[^\s@]+@[^\s@]+\.[A-Za-z]{2,}$/;
+
+  function validarEmail(valor) {
+    if (!valor) return 'Informe seu e-mail.';
+    if (!RE_EMAIL.test(valor)) return 'E-mail inválido. Exemplo: voce@email.com.';
+    return '';
+  }
+
+  function validarTelefone(valor) {
+    var d = somenteDigitos(valor);
+    if (!d) return 'Informe seu telefone.';
+    if (d.length < 10 || d.length > 11) return 'Telefone incompleto. Use (DDD) + número.';
+    return '';
+  }
+
+  function validarCep(valor) {
+    var d = somenteDigitos(valor);
+    if (!d) return 'Informe seu CEP.';
+    if (d.length !== 8) return 'CEP inválido. Use 8 dígitos (00000-000).';
+    return '';
+  }
+
+  function validarCpf(valor) {
+    var d = somenteDigitos(valor);
+    if (!d) return 'Informe seu CPF.';
+    if (d.length !== 11) return 'CPF inválido. Use 11 dígitos.';
+    return '';
+  }
+
+  function validarCampo(campo) {
+    var valor = String((inputDe(campo) || {}).value || '').trim();
+
+    if (!valor) {
+      return campo.obrigatorio ? 'Informe ' + campo.rotulo.toLowerCase() + '.' : '';
+    }
+
+    if (campo.nome === 'email')    return validarEmail(valor);
+    if (campo.nome === 'telefone') return validarTelefone(valor);
+    if (campo.nome === 'cpf')      return validarCpf(valor);
+    if (campo.nome === 'cep')      return validarCep(valor);
+    if (campo.nome === 'estado') {
+      var uf = normalizarEstado(valor);
+      return CATALOGO && CATALOGO.ufValida && CATALOGO.ufValida(uf)
+        ? '' : 'Informe uma UF válida do Brasil (ex.: SP).';
+    }
+    return '';
+  }
+
+  /* Valida tudo; marca os erros e devolve a lista de campos reprovados. */
+  function validarFormulario() {
+    var invalidos = [];
+    for (var i = 0; i < CAMPOS.length; i++) {
+      var campo = CAMPOS[i];
+      var mensagem = validarCampo(campo);
+      if (mensagem) { marcarErro(campo, mensagem); invalidos.push({ campo: campo, mensagem: mensagem }); }
+      else limparErro(campo);
+    }
+    return invalidos;
+  }
+
+  function mostrarAlerta(mensagem) {
+    if (!mensagem) { alerta.hidden = true; alerta.textContent = ''; return; }
+    alerta.textContent = mensagem;
+    alerta.hidden = false;
+  }
+
+  /* ── Rascunho: recarregar o checkout não perde o que foi digitado ── */
+  function lerRascunho() {
+    try { return JSON.parse(localStorage.getItem(RASCUNHO_KEY)) || {}; }
+    catch (_) { return {}; }
+  }
+  function salvarRascunho() {
+    var dados = {};
+    for (var i = 0; i < CAMPOS.length; i++) {
+      var campo = CAMPOS[i];
+      var inp = inputDe(campo);
+      if (inp) dados[campo.nome] = inp.value;
+    }
+    try { localStorage.setItem(RASCUNHO_KEY, JSON.stringify(dados)); } catch (_) {}
+  }
+  function restaurarRascunho() {
+    var dados = lerRascunho();
+    for (var i = 0; i < CAMPOS.length; i++) {
+      var campo = CAMPOS[i];
+      var inp = inputDe(campo);
+      if (inp && typeof dados[campo.nome] === 'string') inp.value = dados[campo.nome];
+    }
+  }
+
+  /* ── Formas de pagamento: clique e eventos (mouse/teclado) ── */
+  var botoesForma = document.querySelectorAll('.ck-pagamento__btn');
+  botoesForma.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      STORE.setPayment(btn.getAttribute('data-forma'));
+    });
+  });
+
+  function marcarFormaAtiva(forma) {
+    botoesForma.forEach(function (btn) {
+      var ativo = btn.getAttribute('data-forma') === forma;
+      btn.classList.toggle('is-active', ativo);
+      btn.setAttribute('aria-pressed', ativo ? 'true' : 'false');
+    });
+  }
+
+  /* ── Eventos de máscara e digitação ── */
+  function aoDigitar(ev) {
+    var alvo = ev.target;
+    if (!alvo || !alvo.id) return;
+
+    if (alvo.id === 'ck-telefone') alvo.value = mascaraTelefone(alvo.value);
+    else if (alvo.id === 'ck-cep') alvo.value = mascaraCep(alvo.value);
+    else if (alvo.id === 'ck-cpf') alvo.value = mascaraCpf(alvo.value);
+    else if (alvo.id === 'ck-estado') alvo.value = normalizarEstado(alvo.value);
+
+    var campo = null;
+    for (var i = 0; i < CAMPOS.length; i++) if (CAMPOS[i].id === alvo.id) { campo = CAMPOS[i]; break; }
+    if (campo) limparErro(campo);
+
+    salvarRascunho();
+    if (alvo.id === 'ck-estado') {
+      try { localStorage.setItem('graciou-uf-v1', normalizarEstado(alvo.value)); } catch (_) {}
+      renderizar();
+    }
+  }
+  form.addEventListener('input', aoDigitar);
+
+  function aoSair(ev) {
+    var alvo = ev.target;
+    if (!alvo || !alvo.id) return;
+    var campo = null;
+    for (var i = 0; i < CAMPOS.length; i++) if (CAMPOS[i].id === alvo.id) { campo = CAMPOS[i]; break; }
+    if (!campo) return;
+    /* Só mostra erro ao sair do campo se ele já foi preenchido —
+       evita marcar de vermelho quem apenas passou pelo formulário. */
+    if (!String(alvo.value || '').trim()) return;
+    var mensagem = validarCampo(campo);
+    if (mensagem) marcarErro(campo, mensagem); else limparErro(campo);
+  }
+  form.addEventListener('blur', aoSair, true);
+
+  /* ════════════════════════════════════════════════
+     3. RENDERIZAÇÃO DO RESUMO
+     ════════════════════════════════════════════════ */
+  function rotuloCategoria(produto) {
+    if (!produto) return '';
+    if (produto.categoriaId === 'graciou-move') return 'GRACIOU Move';
+    return produto.categoria || produto.categoriaId || '';
+  }
+
+  /* Uma linha do pedido: produto, tamanho, cor, quantidade e subtotal. */
+  function montarItem(linha) {
+    var produto = CATALOGO.busca(linha.productId);
+    var cor = linha.cor || (produto ? produto.corPrincipal : '') || '';
+    var totalLinha = linha.totalLinhaFormatado === null ? '—' : linha.totalLinhaFormatado;
+
+    return [
+      '<article class="ck-item" data-key="' + escapar(linha.key) + '">',
+        '<div class="ck-item__img ck-item__img--' + classeDaCor(cor) + '">' + ARVORE_SVG + '</div>',
+        '<div class="ck-item__info">',
+          '<p class="ck-item__qtd">' + linha.quantidade + (linha.quantidade > 1 ? ' peças' : ' peça') + '</p>',
+          '<h3 class="ck-item__nome">' + escapar(linha.nome) + '</h3>',
+          '<p class="ck-item__variacao">Tamanho: ' + escapar(linha.tamanho) +
+            (cor ? ' · Cor: ' + escapar(cor) : '') + '</p>',
+        '</div>',
+        '<span class="ck-item__preco">' + escapar(totalLinha) + '</span>',
+      '</article>'
+    ].join('');
+  }
+
+  /* Frete:
+       2 peças ou mais → grátis;
+       1 peça          → "será calculado antes do pagamento".
+     META.valorFrete é null, então nenhum número é inventado aqui. */
+  function rotuloFrete(totais) {
+    if (totais.frete.gratis) return 'Frete grátis';
+    if (totais.frete.valor !== null) return totais.frete.valorFormatado;
+    return 'Informe uma UF válida';
+  }
+
+  function montarFrete(totais) {
+    if (totais.pecas === 0) return '';
+
+    if (totais.frete.gratis) {
+      return '<span class="ck-frete-gratis">Frete grátis</span>' +
+        '<p class="ck-aviso-frete">Você tem ' + totais.pecas + ' peças — frete grátis aplicado.</p>';
+    }
+
+    if (totais.frete.valor === null) {
+      return '<span class="ck-frete-pendente">Informe uma UF válida</span>' +
+        '<p class="ck-aviso-frete">O frete de uma peça depende da UF do endereço.</p>';
+    }
+
+    return '<span class="ck-linha__valor">' + escapar(totais.frete.valorFormatado || '—') + '</span>';
+  }
+
+  /* Cupom aplicado — vem do carrinho, via assets/graciou-store.js. */
+  function montarCupom(totais) {
+    var codigo = STORE.getCoupon();
+    var aplicado = totais.cupom && totais.cupom.valido && codigo;
+
+    if (aplicado) {
+      return '<div class="ck-cupom-aplicado"><span>' + escapar(codigo) + ' aplicado</span>' +
+        '<span>- ' + escapar(totais.descontoFormatado || 'R$ 0,00') + '</span></div>';
+    }
+
+    return '<p class="ck-cupom-vazio">' +
+      (codigo ? 'Cupom ' + escapar(codigo) + ' não pôde ser aplicado.' :
+        'Nenhum cupom aplicado. Aplique no carrinho e ele vale aqui.') + '</p>';
+  }
+
+  var totaisAtuais = null;
+
+  function renderizar() {
+    var forma = STORE.getPayment();
+    var estado = normalizarEstado(document.getElementById('ck-estado').value);
+    var totais = STORE.totalizar(forma, undefined, estado);
+    totaisAtuais = totais;
+
+    marcarFormaAtiva(forma);
+
+    /* Itens */
+    elItens.innerHTML = totais.linhas.map(montarItem).join('');
+
+    /* Cupom, frete e totais */
+    elCupom.innerHTML = montarCupom(totais);
+    elFrete.innerHTML = montarFrete(totais);
+
+    elSubtotal.textContent = totais.subtotalFormatado || '—';
+    elPecas.textContent = String(totais.pecas);
+
+    var aplicado = totais.cupom && totais.cupom.valido && STORE.getCoupon();
+    linhaDesconto.hidden = !aplicado;
+    elCupomCodigo.textContent = aplicado ? '(' + STORE.getCoupon() + ')' : '';
+    elDesconto.textContent = aplicado ? '-' + (totais.descontoFormatado || 'R$ 0,00') : '—';
+
+    elValorFrete.textContent = totais.frete.gratis
+      ? 'Grátis'
+      : (totais.frete.valor === null ? 'Informe uma UF válida'
+                                     : (totais.frete.valorFormatado || '—'));
+
+    elTotal.textContent = totais.totalFormatado || '—';
+    elAviso.textContent = totais.frete.erro
+      ? 'Informe uma UF válida do Brasil para calcular o frete.'
+      : 'Subtotal, desconto e frete calculados a partir do catálogo central.';
+  }
+
+  /* ════════════════════════════════════════════════
+     4. PEDIDO TEMPORÁRIO (localStorage)
+     Estrutura pedida, sem nenhum dado de cartão.
+     ════════════════════════════════════════════════ */
+  function gerarIdPedido() {
+    var agora = new Date();
+    var pad = function (n, tamanho) {
+      var s = String(n);
+      while (s.length < (tamanho || 2)) s = '0' + s;
+      return s;
+    };
+    var selo = String(agora.getFullYear()) + pad(agora.getMonth() + 1) + pad(agora.getDate()) +
+      '-' + pad(agora.getHours()) + pad(agora.getMinutes()) + pad(agora.getSeconds());
+    var aleatorio = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return 'GR-' + selo + '-' + aleatorio;
+  }
+
+  function montarPedido(totais) {
+    var forma = totais.formaPagamento;
+    var codigoCupom = STORE.getCoupon();
+    var cupomAplicado = totais.cupom && totais.cupom.valido && codigoCupom;
+
+    /* Os valores de dinheiro daqui servem apenas para exibir na confirmação
+       e para o registro local. A API os ignora por completo e recalcula
+       tudo a partir do catálogo central. */
+    var itens = totais.linhas.map(function (linha) {
+      return {
+        productId: linha.productId,
+        nome: linha.nome,
+        tamanho: linha.tamanho,
+        cor: linha.cor,
+        quantidade: linha.quantidade,
+        precoUnitario: linha.unitario,
+        subtotal: linha.totalLinha
+      };
+    });
+
+    var pedido = {
+      id: gerarIdPedido(),
+      criadoEm: new Date().toISOString(),
+      cliente: {
+        nome: inputDe(campoPorNome('nome')).value.trim(),
+        email: inputDe(campoPorNome('email')).value.trim(),
+        telefone: inputDe(campoPorNome('telefone')).value.trim(),
+        cpf: inputDe(campoPorNome('cpf')).value.trim()
+      },
+      endereco: {
+        cep: inputDe(campoPorNome('cep')).value.trim(),
+        estado: normalizarEstado(inputDe(campoPorNome('estado')).value),
+        cidade: inputDe(campoPorNome('cidade')).value.trim(),
+        bairro: inputDe(campoPorNome('bairro')).value.trim(),
+        rua: inputDe(campoPorNome('rua')).value.trim(),
+        numero: inputDe(campoPorNome('numero')).value.trim(),
+        complemento: inputDe(campoPorNome('complemento')).value.trim()
+      },
+      itens: itens,
+      pagamento: {
+        forma: forma,
+        status: 'aguardando'
+      },
+      cupom: cupomAplicado
+        ? { codigo: codigoCupom, tipo: totais.cupom.tipo, valor: totais.cupom.valor }
+        : null,
+      subtotal: totais.subtotal,
+      desconto: totais.desconto,
+      frete: totais.frete.valor,
+      total: totais.total,
+      statusPedido: 'aguardando_pagamento'
+    };
+
+    return pedido;
+  }
+
+  function salvarPedido(pedido) {
+    try { localStorage.setItem(PEDIDO_KEY, JSON.stringify(pedido)); } catch (_) {}
+    window.dispatchEvent(new CustomEvent('graciou:pedido-criado', { detail: pedido }));
+  }
+
+  function lerPedido() {
+    try { return JSON.parse(localStorage.getItem(PEDIDO_KEY)) || null; }
+    catch (_) { return null; }
+  }
+
+  /* Remove o pedido local SOMENTE depois que a API confirma que gravou.
+     Enquanto a resposta não chega, o localStorage é a única cópia. */
+  function removerPedidoLocal() {
+    try { localStorage.removeItem(PEDIDO_KEY); } catch (_) {}
+  }
+
+  /** Extrai a mensagem mais útil da resposta de erro da API. */
+  function mensagemDaApi(dados) {
+    if (!dados) return '';
+    if (Array.isArray(dados.campos) && dados.campos.length) {
+      return dados.campos.map(function (c) {
+        return c.mensagem || c.campo;
+      }).join(' ');
+    }
+    return dados.erro || dados.error || '';
+  }
+
+  /* ── Envia o pedido para POST /api/orders ──
+     Corpo enxuto: só o que o servidor precisa. A API recalcula preço,
+     desconto, frete, peças e total — e gera o número do pedido.
+     NENHUM dado de cartão existe aqui. */
+  function enviarParaApi(pedido) {
+    var corpo = {
+      cliente: pedido.cliente,
+      endereco: pedido.endereco,
+      itens: pedido.itens.map(function (item) {
+        return {
+          productId: item.productId,
+          tamanho: item.tamanho,
+          cor: item.cor,
+          quantidade: item.quantidade
+        };
+      }),
+      pagamento: { forma: pedido.pagamento.forma },
+      cupom: pedido.cupom ? { codigo: pedido.cupom.codigo } : null
+    };
+
+    var controlador = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    var temporizador = controlador
+      ? window.setTimeout(function () { controlador.abort(); }, API_TIMEOUT_MS)
+      : null;
+
+    return window.fetch(API_PEDIDOS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(corpo),
+      signal: controlador ? controlador.signal : undefined
+    }).then(function (resposta) {
+      if (temporizador) window.clearTimeout(temporizador);
+
+      return resposta.json().catch(function () { return null; }).then(function (dados) {
+        if (!resposta.ok || !dados || dados.ok !== true || !dados.numero) {
+          var detalhe = mensagemDaApi(dados);
+          var erro = new Error(detalhe || ('HTTP ' + resposta.status));
+          erro.statusHttp = resposta.status;
+          /* 4xx = o pedido não serve (dados/produto). 5xx = problema no
+             servidor. A mensagem mostrada ao cliente é a mesma nos dois
+             casos; o detalhe só vai para o console. */
+          erro.recusaDoServidor = resposta.status >= 400 && resposta.status < 500;
+          throw erro;
+        }
+        return dados;
+      });
+    }).catch(function (erro) {
+      if (temporizador) window.clearTimeout(temporizador);
+      /* API desligada, sem rede, DNS, CORS ou timeout caem aqui. */
+      throw erro;
+    });
+  }
+
+  /* Cria a preferência usando somente o ID devolvido pelo servidor.
+     Nenhum total ou item calculado pelo navegador é enviado nesta chamada. */
+  function criarPreferencia(numeroPedido) {
+    return window.fetch(API_PREFERENCIA, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: numeroPedido })
+    }).then(function (resposta) {
+      return resposta.json().catch(function () { return null; }).then(function (dados) {
+        if (!resposta.ok || !dados || dados.ok !== true || !dados.init_point) {
+          var erro = new Error(mensagemDaApi(dados) || ('HTTP ' + resposta.status));
+          erro.statusHttp = resposta.status;
+          throw erro;
+        }
+        return dados;
+      });
+    });
+  }
+
+  /* Aviso de falha de envio — separado do aviso de validação,
+     porque aqui o formulário está correto e o problema é de rede/
+     servidor. O que foi digitado permanece todo no lugar. */
+  function mostrarErroDeEnvio(detalhe) {
+    alerta.innerHTML = escapar(MSG_FALHA_API) +
+      '<span class="ck-alerta__dica">' +
+      escapar('Confira se a API está no ar (backend: npm run dev). Seus dados continuam preenchidos.') +
+      '</span>';
+    alerta.hidden = false;
+    alerta.setAttribute('data-motivo', detalhe || 'falha-de-rede');
+    alerta.scrollIntoView({ block: 'center' });
+  }
+
+  function limparErroDeEnvio() {
+    if (alerta.getAttribute('data-motivo')) {
+      alerta.removeAttribute('data-motivo');
+      alerta.innerHTML = '';
+      alerta.hidden = true;
+    }
+  }
+
+  function nomeDaForma(forma) {
+    return forma === 'cartao' ? 'Cartão' : 'Pix';
+  }
+
+  /* ════════════════════════════════════════════════
+     5. CONFIRMAÇÃO — pedido registrado na API
+     O número exibido é o que o SERVIDOR gerou.
+     ════════════════════════════════════════════════ */
+  function mostrarConfirmacao(pedido, respostaApi) {
+    var numeroServidor = respostaApi && (respostaApi.numero || respostaApi.id);
+
+    document.getElementById('ck-conf-id').textContent = numeroServidor || pedido.id;
+    document.getElementById('ck-conf-cliente').textContent =
+      pedido.cliente.nome + ' · ' + pedido.cliente.email;
+
+    var end = pedido.endereco;
+    document.getElementById('ck-conf-endereco').textContent =
+      end.rua + ', ' + end.numero +
+      (end.complemento ? ' — ' + end.complemento : '') +
+      ' · ' + end.bairro + ', ' + end.cidade + '/' + end.estado + ' · CEP ' + end.cep;
+
+    document.getElementById('ck-conf-pagamento').textContent =
+      nomeDaForma(pedido.pagamento.forma) + ' · ' + pedido.pagamento.status;
+
+    /* Diz de onde o pedido veio, sem jargão: a API guardou ou só o navegador. */
+    document.getElementById('ck-conf-recebimento').textContent = numeroServidor
+      ? 'Registrado na API GRACIOU'
+      : 'Salvo apenas neste navegador';
+
+    document.getElementById('ck-conf-frete').textContent = totaisAtuais && totaisAtuais.frete.gratis
+      ? 'Frete grátis'
+      : 'Será calculado antes do pagamento';
+
+    document.getElementById('ck-conf-total').textContent = totaisAtuais && totaisAtuais.totalPendente
+      ? (totaisAtuais.subtotalComDescontoFormatado || '—') + ' + frete a calcular'
+      : (pedido.total === null ? '—' : STORE.formatarPreco(pedido.total));
+
+    document.getElementById('ck-conf-status').textContent = pedido.statusPedido;
+
+    formSecao.hidden = true;
+    elResumo.hidden = true;
+    confirmacao.hidden = false;
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  /* ════════════════════════════════════════════════
+     6. ENVIO — valida, salva local, manda para a API e confirma
+
+     ORDEM DAS COISAS (importante):
+       1) valida o formulário;
+       2) monta o pedido e grava no localStorage — ainda é a ÚNICA cópia;
+       3) envia para POST /api/orders;
+       4) SÓ remove o pedido do localStorage depois que a API confirma.
+     Se a API estiver desligada, o pedido local continua intacto e o
+     cliente vê uma mensagem clara, podendo tentar de novo.
+     ════════════════════════════════════════════════ */
+  var enviando = false;
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (enviando) return;
+
+    var invalidos = validarFormulario();
+
+    if (invalidos.length) {
+      var emailInvalido = invalidos.filter(function (i) { return i.campo.nome === 'email'; }).length > 0;
+      alerta.removeAttribute('data-motivo');
+      alerta.textContent =
+        (emailInvalido ? 'Confira o e-mail informado. ' : '') +
+        'Preencha corretamente os campos obrigatórios destacados abaixo.';
+      alerta.hidden = false;
+
+      var primeiro = invalidos[0].campo;
+      var inp = inputDe(primeiro);
+      if (inp) {
+        inp.scrollIntoView({ block: 'center' });
+        inp.focus();
+      }
+      return;
+    }
+
+    limparErroDeEnvio();
+    salvarRascunho();
+
+    var pedido = montarPedido(totaisAtuais || STORE.totalizar(STORE.getPayment(), undefined, normalizarEstado(document.getElementById('ck-estado').value)));
+
+    /* (2) Cópia local ANTES de qualquer rede. */
+    salvarPedido(pedido);
+
+    /* (3) Envio para a API. */
+    enviando = true;
+    var btn = document.getElementById('ck-continuar');
+    var rotuloOriginal = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'REGISTRANDO PEDIDO...'; }
+
+    enviarParaApi(pedido).then(function (resposta) {
+      /* O pedido já existe no banco, mas o carrinho permanece local até
+         a preferência ser criada. Se o MP falhar, o cliente pode tentar
+         novamente sem perder os itens. */
+      btn.textContent = 'ABRINDO MERCADO PAGO...';
+      return criarPreferencia(resposta.pedido.id).then(function (preferencia) {
+        salvarPedido(Object.assign({}, pedido, {
+          id: resposta.pedido.id,
+          numeroApi: resposta.pedido.id,
+          preferenceId: preferencia.preferenceId,
+          registroEm: new Date().toISOString()
+        }));
+        removerPedidoLocal();
+        STORE.clearCart();
+        window.location.assign(preferencia.init_point);
+      });
+    }).catch(function (erro) {
+      window.console.error('[checkout] falha ao criar pagamento:', erro && erro.message);
+      alerta.innerHTML = escapar(MSG_FALHA_PAGAMENTO) +
+        '<span class="ck-alerta__dica">' + escapar('O pedido continua salvo. Você pode tentar novamente.') + '</span>';
+      alerta.hidden = false;
+      alerta.setAttribute('data-motivo', 'falha-pagamento');
+      if (btn) { btn.disabled = false; btn.textContent = rotuloOriginal; }
+      enviando = false;
+    });
+  });
+
+  /* Trocar de forma de pagamento NÃO perde o formulário. */
+  window.addEventListener('graciou:pagamento-updated', renderizar);
+  /* Se o carrinho mudar em outra aba, o resumo acompanha. */
+  window.addEventListener('graciou:cart-updated', renderizar);
+
+  /* Header com sombra ao rolar — mesmo comportamento do resto do site. */
+  var header = document.getElementById('site-header');
+  window.addEventListener('scroll', function () {
+    header.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+
+  /* ════════════════════════════════════════════════
+     7. INICIALIZAÇÃO
+
+     Um pedido no localStorage significa que a API NÃO confirmou a
+     gravação (porque no sucesso ele é removido). Então NÃO pulamos
+     para a confirmação: o formulário volta preenchido pelo rascunho
+     e o cliente pode reenviar.
+
+     A exceção é o pedido que já foi registrado numa sessão anterior:
+     nesse caso existe `numeroApi`, e aí sim mostramos a confirmação
+     com o número oficial, em vez de registrar tudo de novo.
+     ════════════════════════════════════════════════ */
+  function iniciar() {
+    restaurarRascunho();
+    try {
+      var ufCarrinho = localStorage.getItem('graciou-uf-v1');
+      var estadoInput = document.getElementById('ck-estado');
+      if (estadoInput && !estadoInput.value && ufCarrinho) estadoInput.value = String(ufCarrinho).toUpperCase();
+    } catch (_) {}
+    renderizar();
+
+    var pedidoSalvo = lerPedido();
+    var retorno = new URLSearchParams(window.location.search).get('pagamento');
+
+    if (retornoMercadoPago && pedidoSalvo && pedidoSalvo.numeroApi) {
+      window.fetch(API_STATUS + encodeURIComponent(pedidoSalvo.numeroApi))
+        .then(function (resposta) { return resposta.json(); })
+        .then(function (estado) {
+          var pagamento = Object.assign({}, pedidoSalvo.pagamento, {
+            status: estado.statusPagamento || (retorno === 'sucesso' ? 'aguardando' : 'pendente')
+          });
+          mostrarConfirmacao({
+            id: pedidoSalvo.numeroApi,
+            cliente: pedidoSalvo.cliente,
+            endereco: pedidoSalvo.endereco,
+            pagamento: pagamento,
+            total: pedidoSalvo.total,
+            statusPedido: estado.statusPedido || pedidoSalvo.statusPedido
+          }, { numero: pedidoSalvo.numeroApi });
+          document.getElementById('ck-conf-status').textContent =
+            estado.statusPagamento === 'pago' ? 'Pagamento aprovado' :
+            estado.statusPagamento === 'recusado' ? 'Pagamento recusado' :
+            'Pagamento pendente de confirmação';
+        })
+        .catch(function () {
+          mostrarConfirmacao(pedidoSalvo, { numero: pedidoSalvo.numeroApi });
+          document.getElementById('ck-conf-status').textContent = 'Aguardando confirmação do pagamento';
+        });
+      return;
+    }
+
+    if (pedidoSalvo && pedidoSalvo.numeroApi && totaisAtuais && totaisAtuais.pecas > 0) {
+      mostrarConfirmacao({
+        id: pedidoSalvo.numeroApi,
+        cliente: pedidoSalvo.cliente,
+        endereco: pedidoSalvo.endereco,
+        pagamento: pedidoSalvo.pagamento,
+        total: pedidoSalvo.total,
+        statusPedido: pedidoSalvo.statusPedido
+      }, { numero: pedidoSalvo.numeroApi });
+      return;
+    }
+
+    if (pedidoSalvo) {
+      /* Houve tentativa anterior que não chegou a ser registrada. */
+      mostrarErroDeEnvio('tentativa-anterior-nao-registrada');
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', iniciar);
+  } else {
+    iniciar();
+  }
+})();
+</script>
+</body>
+</html>

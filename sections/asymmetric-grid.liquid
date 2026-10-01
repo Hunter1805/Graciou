@@ -1,0 +1,186 @@
+{% comment %}
+  ============================================================
+  Seção: asymmetric-grid.liquid
+  Marca: GRACIOU
+  Descrição: Grid de produtos assimétrico estilo editorial premium.
+              Alterna entre layouts Large-Small e Small-Large.
+              Conectado à Collection API do Shopify via Liquid loop.
+  ============================================================
+{% endcomment %}
+
+{%- liquid
+  assign grid_collection = collections[section.settings.collection]
+  assign products_to_show = section.settings.products_to_show | default: 6
+  assign section_title = section.settings.section_title | default: 'DROP 01'
+-%}
+
+<section
+  id="asymmetric-grid"
+  class="asymmetric-grid py-16 md:py-24"
+  aria-labelledby="asymmetric-grid-heading"
+  data-animate
+>
+  <div class="container mx-auto px-6 md:px-12 lg:px-16">
+
+    <!-- Cabeçalho da seção -->
+    <div class="asymmetric-grid__header flex items-end justify-between mb-10 md:mb-14">
+      <h2
+        id="asymmetric-grid-heading"
+        class="asymmetric-grid__title font-heading text-5xl md:text-7xl text-ecru uppercase leading-none"
+      >
+        {{ section_title }}
+      </h2>
+      {%- if section.settings.view_all_label != blank and grid_collection != blank -%}
+        <a
+          href="{{ grid_collection.url }}"
+          class="asymmetric-grid__view-all text-sm tracking-widest text-moss-light hover:text-ecru transition-colors uppercase"
+          aria-label="Ver todos os produtos de {{ section_title }}"
+        >
+          {{ section.settings.view_all_label }} &rarr;
+        </a>
+      {%- endif -%}
+    </div>
+
+    <!-- Grid Assimétrico -->
+    {%- if grid_collection != blank and grid_collection.products_count > 0 -%}
+      <div class="asymmetric-grid__wrapper">
+        {%- assign product_list = grid_collection.products | limit: products_to_show -%}
+        {%- assign row_index = 0 -%}
+        {%- assign col_index = 0 -%}
+        {%- assign pair_count = product_list.size | divided_by: 2 -%}
+
+        {%- for i in (1..pair_count) -%}
+          {%- assign offset = forloop.index0 | times: 2 -%}
+          {%- assign product_a = product_list[offset] -%}
+          {%- assign product_b = product_list[offset | plus: 1] -%}
+          {%- assign is_reversed = forloop.index0 | modulo: 2 -%}
+
+          <div class="asymmetric-grid__row {% if is_reversed == 1 %}asymmetric-grid__row--reversed{% endif %}">
+
+            <!-- Produto GRANDE (destaque) -->
+            {%- if product_a != blank -%}
+              <article class="asymmetric-grid__item asymmetric-grid__item--large" data-animate-child>
+                {% render 'product-card',
+                  product: product_a,
+                  size: 'large',
+                  show_vendor: section.settings.show_vendor,
+                  show_quick_add: section.settings.show_quick_add
+                %}
+              </article>
+            {%- endif -%}
+
+            <!-- Produto PEQUENO -->
+            {%- if product_b != blank -%}
+              <article class="asymmetric-grid__item asymmetric-grid__item--small" data-animate-child>
+                {% render 'product-card',
+                  product: product_b,
+                  size: 'small',
+                  show_vendor: section.settings.show_vendor,
+                  show_quick_add: section.settings.show_quick_add
+                %}
+              </article>
+            {%- endif -%}
+
+          </div>
+        {%- endfor -%}
+
+        <!-- Produto extra se número ímpar -->
+        {%- assign remaining = product_list.size | modulo: 2 -%}
+        {%- if remaining == 1 -%}
+          {%- assign last_index = product_list.size | minus: 1 -%}
+          {%- assign last_product = product_list[last_index] -%}
+          <div class="asymmetric-grid__row asymmetric-grid__row--single">
+            <article class="asymmetric-grid__item asymmetric-grid__item--full" data-animate-child>
+              {% render 'product-card',
+                product: last_product,
+                size: 'full',
+                show_vendor: section.settings.show_vendor,
+                show_quick_add: section.settings.show_quick_add
+              %}
+            </article>
+          </div>
+        {%- endif -%}
+      </div>
+
+    {%- elsif grid_collection == blank -%}
+      <!-- Estado vazio: coleção não atribuída no admin -->
+      <div class="asymmetric-grid__empty-state text-center py-20">
+        <p class="text-moss-light tracking-wider uppercase text-sm">
+          Selecione uma coleção nas configurações desta seção.
+        </p>
+      </div>
+    {%- else -%}
+      <!-- Coleção existe mas está vazia -->
+      <div class="asymmetric-grid__empty-state text-center py-20">
+        <p class="text-moss-light tracking-wider uppercase text-sm">
+          Nenhum produto encontrado nesta coleção.
+        </p>
+      </div>
+    {%- endif -%}
+
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Grid Assimétrico",
+  "tag": "section",
+  "class": "section-asymmetric-grid",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Título da seção",
+      "default": "DROP 01"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Coleção de produtos"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 2,
+      "max": 12,
+      "step": 2,
+      "default": 6,
+      "label": "Número de produtos a exibir"
+    },
+    {
+      "type": "text",
+      "id": "view_all_label",
+      "label": "Texto do link 'Ver Todos'",
+      "default": "View All"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_vendor",
+      "default": false,
+      "label": "Exibir fornecedor/marca"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_add",
+      "default": true,
+      "label": "Exibir botão de adição rápida"
+    },
+    {
+      "type": "select",
+      "id": "section_background",
+      "label": "Cor de fundo da seção",
+      "options": [
+        { "value": "moss", "label": "Verde Musgo (padrão)" },
+        { "value": "ecru", "label": "Ecru / Off-white" },
+        { "value": "navy", "label": "Preto Profundo" }
+      ],
+      "default": "moss"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Grid Assimétrico de Produtos"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="GRACIOU — Streetwear elevado com propósito. Premium brand from Brazil." />
+  <title>GRACIOU — Grace in Every Thread</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ═══════════════════════════════════════
+       TOKENS DE DESIGN — GRACIOU
+    ═══════════════════════════════════════ */
+    :root {
+      --ecru:       #FDFDD0;
+      --moss:       #4F5D3A;
+      --moss-light: #6B7A50;
+      --moss-dark:  #3A4529;
+      --navy:       #1A1A1A;
+      --ecru-70:    rgba(253,253,208,0.7);
+      --ecru-40:    rgba(253,253,208,0.4);
+      --navy-10:    rgba(26,26,26,0.1);
+      --moss-10:    rgba(79,93,58,0.10);
+
+      --f-head: 'Barlow Condensed', sans-serif;
+      --f-body: 'DM Sans', sans-serif;
+
+      --ease: cubic-bezier(0.4,0,0.2,1);
+      --slow: 0.65s var(--ease);
+    }
+
+    /* ═══════════════════════════════════════
+       RESET
+    ═══════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--f-body);
+      background: var(--ecru);
+      color: var(--navy);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    img { max-width:100%; display:block; }
+    a   { color:inherit; text-decoration:none; }
+    ul  { list-style:none; }
+    h1,h2,h3,h4 { font-family: var(--f-head); font-weight:800; line-height:1; }
+
+    /* ═══════════════════════════════════════
+       HEADER
+    ═══════════════════════════════════════ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--ecru);
+      border-bottom: 1px solid rgba(26,26,26,0.08);
+      transition: box-shadow 0.3s;
+    }
+    .header.scrolled { box-shadow: 0 4px 24px rgba(0,0,0,0.10); }
+    .header__inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 3rem;
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+    }
+    .header__logo {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+    }
+    .header__logo-text {
+      font-family: 'Oswald', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--moss);
+      transform: scaleY(1.1);
+      transform-origin: bottom;
+    }
+    .header__nav {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+    }
+    .header__nav a {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      position: relative;
+      padding-bottom: 2px;
+      transition: color 0.2s;
+    }
+    .header__nav a::after {
+      content:'';
+      position:absolute;
+      bottom:-1px; left:0; right:0;
+      height:1px;
+      background: var(--moss);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s;
+    }
+    .header__nav a:hover { color: var(--moss); }
+    .header__nav a:hover::after,
+    .header__nav a.active::after { transform: scaleX(1); }
+    .header__nav a.active { color: var(--moss); }
+
+    .header__actions { display:flex; align-items:center; gap:0.75rem; }
+    .header__icon-btn {
+      width:40px; height:40px;
+      display:flex; align-items:center; justify-content:center;
+      border:none; background:none; cursor:pointer;
+      color:var(--navy); border-radius:2px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .header__icon-btn:hover { color:var(--moss); background:var(--moss-10); }
+
+    .cart-badge {
+      position:relative;
+    }
+    .cart-badge__count {
+      position:absolute;
+      top:-5px; right:-5px;
+      min-width:18px; height:18px;
+      background:var(--moss);
+      color:var(--ecru);
+      font-size:0.6rem; font-weight:700;
+      border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-family: var(--f-body);
+    }
+
+    /* ═══════════════════════════════════════
+       HERO EDITORIAL
+    ═══════════════════════════════════════ */
+    .hero {
+      position: relative;
+      min-height: 88vh;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+      background: var(--navy);
+    }
+    .hero__bg {
+      position:absolute; inset:0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 20%, rgba(79,93,58,0.35) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 80% at 20% 80%, rgba(79,93,58,0.2) 0%, transparent 60%),
+        linear-gradient(135deg, #1e2a14 0%, #0f1509 50%, #1a1a1a 100%);
+    }
+    /* Textura grain sutil */
+    .hero__bg::before {
+      content:'';
+      position:absolute; inset:0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity:0.4;
+    }
+    .hero__overlay {
+      position:absolute; inset:0;
+      background: linear-gradient(to bottom, transparent 30%, rgba(10,14,6,0.7) 100%);
+    }
+
+    /* Elemento decorativo: árvore gigante fantasma */
+    .hero__tree-ghost {
+      position:absolute;
+      right: -20%;
+      bottom: -35%;
+      width: 120vw;
+      max-width: 1500px;
+      opacity: 0.12; /* Aumentado de 0.045 para 0.12 para ficar um pouco mais visível */
+      pointer-events:none;
+      transform: rotate(5deg);
+    }
+
+    .hero__content {
+      position:relative; z-index:2;
+      width:100%; max-width:1400px;
+      margin:0 auto;
+      padding: 0 3rem 10rem;
+      text-align:center;
+    }
+
+    .hero__kicker {
+      display:inline-block;
+      font-size:0.65rem;
+      letter-spacing:0.28em;
+      text-transform:uppercase;
+      color: var(--ecru-70);
+      margin-bottom:1.25rem;
+      border: 1px solid var(--ecru-40);
+      padding: 0.3rem 1rem;
+      opacity:0;
+      animation: fadeUp 0.8s 0.3s forwards;
+    }
+    .hero__heading {
+      font-size: clamp(3rem, 9vw, 8rem);
+      font-weight:800;
+      text-transform:uppercase;
+      color: var(--ecru);
+      line-height:0.9;
+      letter-spacing:-0.01em;
+      margin-bottom:1.5rem;
+      text-shadow: 0 4px 40px rgba(0,0,0,0.4);
+      opacity:0;
+      animation: fadeUp 0.9s 0.5s forwards;
+    }
+    .hero__heading em {
+      font-style:normal;
+      color: #8fa572;
+    }
+    .hero__sub {
+      font-size:1rem;
+      font-weight:300;
+      letter-spacing:0.18em;
+      color: var(--ecru-70);
+      margin-bottom:2.75rem;
+      opacity:0;
+      animation: fadeUp 0.8s 0.7s forwards;
+    }
+    .hero__sub em { font-style:normal; color:var(--ecru); }
+    .hero__ctas {
+      display:flex; align-items:center; justify-content:center;
+      gap:1rem; flex-wrap:wrap;
+      opacity:0;
+      animation: fadeUp 0.8s 0.9s forwards;
+    }
+    .hero__scroll {
+      position:absolute;
+      bottom:1.75rem; left:50%;
+      transform:translateX(-50%);
+      z-index:2;
+      display:flex; flex-direction:column; align-items:center; gap:0.5rem;
+    }
+    .hero__scroll span {
+      font-size:0.55rem;
+      letter-spacing:0.25em;
+      text-transform:uppercase;
+      color:var(--ecru-40);
+    }
+    .hero__scroll-line {
+      width:1px; height:50px;
+      background:linear-gradient(to bottom, var(--ecru-40), transparent);
+      animation: scrollPulse 2s ease-in-out infinite;
+    }
+    @keyframes scrollPulse {
+      0%,100%{ transform:scaleY(1); opacity:0.4; }
+      50%{ transform:scaleY(0.5); opacity:1; }
+    }
+
+    /* ═══════════════════════════════════════
+       BOTÕES
+    ═══════════════════════════════════════ */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:0.5rem;
+      padding: 0.9rem 2.5rem;
+      font-family:var(--f-head);
+      font-size:0.78rem;
+      font-weight:700;
+      letter-spacing:0.2em;
+      text-transform:uppercase;
+      border:1.5px solid transparent;
+      cursor:pointer;
+      transition: all 0.25s;
+      white-space:nowrap;
+    }
+    .btn--primary { background:var(--navy); color:var(--ecru); border-color:var(--navy); }
+    .btn--primary:hover { background:var(--moss); border-color:var(--moss); }
+    .btn--ghost { background:transparent; color:var(--ecru); border-color:var(--ecru-40); }
+    .btn--ghost:hover { background:var(--ecru-40); }
+    .btn--outline { background:transparent; color:var(--moss); border-color:var(--moss); }
+    .btn--outline:hover { background:var(--moss); color:var(--ecru); }
+    .btn--ecru { background:var(--ecru); color:var(--navy); border-color:var(--ecru); }
+    .btn--ecru:hover { background:transparent; color:var(--ecru); border-color:var(--ecru); }
+
+    /* ═══════════════════════════════════════
+       SEÇÃO: TICKER (Faixa animada)
+    ═══════════════════════════════════════ */
+    .ticker {
+      background:var(--moss);
+      overflow:hidden;
+      padding: 0.75rem 0;
+      white-space:nowrap;
+    }
+    .ticker__track {
+      display:inline-flex;
+      animation: ticker 25s linear infinite;
+    }
+    .ticker__item {
+      font-family:var(--f-head);
+      font-size:0.75rem;
+      font-weight:700;
+      letter-spacing:0.18em;
+      text-transform:uppercase;
+      color:var(--ecru-70);
+      padding: 0 2.5rem;
+    }
+    .ticker__item span { color:var(--ecru); }
+    @keyframes ticker {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    /* ═══════════════════════════════════════
+       SEÇÃO: DROP 01 — GRID ASSIMÉTRICO
+    ═══════════════════════════════════════ */
+    .section-drop {
+      background: var(--moss-dark);
+      padding: 5rem 0 6rem;
+    }
+    .section-drop__inner {
+      max-width:1400px;
+      margin:0 auto;
+      padding:0 3rem;
+    }
+    .section-drop__header {
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      margin-bottom:3rem;
+    }
+    .section-drop__title {
+      font-size: clamp(3.5rem,7vw,6rem);
+      color:var(--ecru);
+      text-transform:uppercase;
+      line-height:1;
+    }
+    .section-drop__title sup {
+      font-size:0.45em;
+      letter-spacing:0.1em;
+      color:var(--moss-light);
+      vertical-align:super;
+      margin-left:0.3em;
+    }
+    .view-all {
+      font-size:0.7rem;
+      letter-spacing:0.2em;
+      text-transform:uppercase;
+      color:var(--moss-light);
+      transition:color 0.2s;
+      border-bottom:1px solid transparent;
+      padding-bottom:1px;
+    }
+    .view-all:hover { color:var(--ecru); border-color:var(--ecru-40); }
+
+    /* Grid assimétrico */
+    .asym-grid { display:flex; flex-direction:column; gap:1rem; }
+    .asym-row {
+      display:grid;
+      gap:1rem;
+      align-items:start;
+    }
+    .asym-row--normal   { grid-template-columns: 3fr 2fr; }
+    .asym-row--reversed { grid-template-columns: 2fr 3fr; }
+
+    .product-card {
+      position:relative;
+      cursor:pointer;
+    }
+    .product-card__img-wrap {
+      position:relative;
+      overflow:hidden;
+      background:rgba(253,253,208,0.05);
+    }
+    .asym-row--normal   .product-card:first-child .product-card__img-wrap { aspect-ratio:3/4; }
+    .asym-row--normal   .product-card:last-child  .product-card__img-wrap { aspect-ratio:3/4; margin-top:3rem; }
+    .asym-row--reversed .product-card:first-child .product-card__img-wrap { aspect-ratio:3/4; margin-top:3rem; }
+    .asym-row--reversed .product-card:last-child  .product-card__img-wrap { aspect-ratio:3/4; }
+
+    .product-card__img-placeholder {
+      width:100%; height:100%;
+      display:flex; align-items:center; justify-content:center;
+      flex-direction:column; gap:1rem;
+      padding:2rem;
+    }
+    .product-card__img-placeholder svg { opacity:0.25; }
+    .product-card__img-placeholder-label {
+      font-family:var(--f-head);
+      font-size:1.1rem;
+      font-weight:700;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      color:var(--ecru-40);
+      text-align:center;
+    }
+
+    /* Imagens reais com gradiente de cor */
+    .product-card__img-real {
+      width:100%; height:100%;
+      object-fit:cover;
+      transition:transform 0.7s var(--ease);
+    }
+    .product-card__img-wrap:hover .product-card__img-real {
+      transform:scale(1.04);
+    }
+
+    /* Overlay quick-add */
+    .product-card__quick {
+      position:absolute; bottom:0; left:0; right:0;
+      background:linear-gradient(to top, rgba(10,14,6,0.75), transparent);
+      padding:1.25rem 1rem 1rem;
+      transform:translateY(100%);
+      transition:transform 0.3s var(--ease);
+    }
+    .product-card__img-wrap:hover .product-card__quick { transform:translateY(0); }
+    .product-card__quick-btn {
+      width:100%;
+      padding:0.6rem;
+      background:var(--ecru);
+      color:var(--navy);
+      font-family:var(--f-head);
+      font-size:0.72rem;
+      font-weight:700;
+      letter-spacing:0.18em;
+      text-transform:uppercase;
+      border:none; cursor:pointer;
+      transition:background 0.2s, color 0.2s;
+    }
+    .product-card__quick-btn:hover { background:var(--moss); color:var(--ecru); }
+
+    /* Badge */
+    .product-card__badge {
+      position:absolute; top:0.75rem; left:0.75rem; z-index:2;
+      padding:0.25rem 0.6rem;
+      font-family:var(--f-body);
+      font-size:0.58rem;
+      font-weight:700;
+      letter-spacing:0.12em;
+      text-transform:uppercase;
+      background:var(--navy);
+      color:var(--ecru);
+    }
+    .product-card__badge--new { background:var(--moss); }
+
+    /* Info */
+    .product-card__info { margin-top:1rem; padding:0 0.25rem; }
+    .product-card__cat {
+      font-size:0.6rem;
+      letter-spacing:0.2em;
+      text-transform:uppercase;
+      color:var(--moss-light);
+      margin-bottom:0.3rem;
+    }
+    .product-card__name {
+      font-family:var(--f-body);
+      font-size:0.875rem;
+      font-weight:400;
+      letter-spacing:0.04em;
+      color:var(--ecru);
+      margin-bottom:0.4rem;
+    }
+    .product-card__price { font-size:0.85rem; color:var(--ecru-70); font-weight:300; }
+    .product-card__price strong { color:var(--ecru); font-weight:500; }
+
+    /* Preço ainda não confirmado pela YouDraw.
+       A interface nunca inventa valor: mostra este rótulo.
+       Controlado por META.avisoPreco em dados/catalogo.js. */
+    .product-card__price-pendente {
+      display:inline-block;
+      font-family:var(--f-head); font-size:0.68rem; font-weight:700;
+      letter-spacing:0.16em; text-transform:uppercase;
+      color:var(--ecru);
+      border:1px solid var(--ecru-40);
+      padding:0.2rem 0.5rem;
+    }
+
+    /* ── Cores por produto (de dados/catalogo.js) ── */
+    .product-card__img-placeholder--creme            { background:linear-gradient(145deg,#FDFDD0,#EAE7C2); }
+    .product-card__img-placeholder--off-white        { background:linear-gradient(145deg,#F2F0E4,#DEDBC8); }
+    .product-card__img-placeholder--preto            { background:linear-gradient(145deg,#1A1A1A,#2E2E2E); }
+    .product-card__img-placeholder--verde-musgo      { background:linear-gradient(145deg,#2A3520,#1E2916); }
+    .product-card__img-placeholder--verde-musgo-claro{ background:linear-gradient(145deg,#4F5D3A,#3A4529); }
+    .product-card__img-placeholder--verde-musgo-escuro{ background:linear-gradient(145deg,#3A4529,#2E3820); }
+    .product-card__img-placeholder--marrom           { background:linear-gradient(145deg,#8B7355,#6F5A42); }
+    .product-card__img-placeholder--verde-militar    { background:linear-gradient(145deg,#4A5D3A,#38472C); }
+    .product-card__img-placeholder--padrao           { background:linear-gradient(145deg,#3A4529,#1A1A1A); }
+
+    /* Cor do glifo da árvore conforme o fundo */
+    .product-card__img-placeholder[data-invert] svg      { color:#FDFDD0; }
+    .product-card__img-placeholder:not([data-invert]) svg { color:#4F5D3A; }
+
+    /* Faixa de status do catálogo central (etapa de organização) */
+    .catalogo-status {
+      margin-top:2rem; padding:0.9rem 1rem;
+      border-left:2px solid var(--moss-light);
+      background:rgba(79,93,58,0.18);
+      font-size:0.62rem; letter-spacing:0.16em; text-transform:uppercase;
+      color:var(--ecru-70);
+    }
+
+    /* ═══════════════════════════════════════
+       SEÇÃO: FILOSOFIA
+    ═══════════════════════════════════════ */
+    .section-philosophy {
+      background:var(--ecru);
+      padding:7rem 0;
+      overflow:hidden;
+    }
+    .section-philosophy__inner {
+      max-width:1400px;
+      margin:0 auto;
+      padding:0 3rem;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:5rem;
+      align-items:center;
+    }
+    .philosophy__label {
+      display:flex; align-items:center; gap:0.75rem;
+      margin-bottom:2rem;
+    }
+    .philosophy__label-line { width:3rem; height:1px; background:var(--moss); }
+    .philosophy__label-text {
+      font-size:0.65rem;
+      letter-spacing:0.28em;
+      text-transform:uppercase;
+      color:var(--moss);
+      font-weight:500;
+    }
+    .philosophy__heading {
+      font-size:clamp(2.5rem,5vw,5rem);
+      text-transform:uppercase;
+      color:var(--navy);
+      line-height:0.95;
+      margin-bottom:1.75rem;
+    }
+    .philosophy__body {
+      font-size:1rem;
+      font-weight:300;
+      line-height:1.85;
+      letter-spacing:0.02em;
+      color:rgba(26,26,26,0.75);
+      max-width:38ch;
+      margin-bottom:2.5rem;
+    }
+    .philosophy__body strong { font-weight:600; color:var(--moss); }
+    .philosophy__stats {
+      display:grid; grid-template-columns:repeat(3,1fr);
+      gap:1.5rem;
+      padding-top:2rem;
+      border-top:1px solid var(--navy-10);
+      margin-bottom:2.5rem;
+    }
+    .stat__number {
+      display:block;
+      font-family:var(--f-head);
+      font-size:2.5rem;
+      color:var(--moss);
+    }
+    .stat__label {
+      display:block;
+      font-size:0.65rem;
+      letter-spacing:0.18em;
+      text-transform:uppercase;
+      color:rgba(26,26,26,0.5);
+      margin-top:0.25rem;
+      font-weight:300;
+    }
+
+    /* Árvore SVG */
+    .philosophy__tree-col {
+      display:flex; align-items:center; justify-content:center;
+      position:relative;
+    }
+    .philosophy__tree-bg {
+      position:absolute;
+      width:480px; height:480px;
+      background:radial-gradient(circle, rgba(79,93,58,0.08) 0%, transparent 65%);
+      border-radius:50%;
+    }
+    .philosophy__tree-svg {
+      position:relative; z-index:1;
+      width:100%; max-width:420px;
+      height:auto;
+      filter:drop-shadow(0 8px 40px rgba(79,93,58,0.15));
+      animation: treeSway 10s ease-in-out infinite;
+    }
+    @keyframes treeSway {
+      0%,100%{ transform:rotate(0deg) translateY(0); }
+      30%{ transform:rotate(0.4deg) translateY(-3px); }
+      70%{ transform:rotate(-0.4deg) translateY(2px); }
+    }
+
+    /* ═══════════════════════════════════════
+       SEÇÃO: EDITORIAL FULL-WIDTH
+    ═══════════════════════════════════════ */
+    .section-editorial {
+      background:var(--navy);
+      padding:7rem 0;
+      position:relative;
+      overflow:hidden;
+    }
+    .section-editorial__pattern {
+      position:absolute; inset:0;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 40px,
+        rgba(79,93,58,0.04) 40px,
+        rgba(79,93,58,0.04) 41px
+      );
+    }
+    .section-editorial__inner {
+      max-width:1400px;
+      margin:0 auto;
+      padding:0 3rem;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:5rem;
+      align-items:center;
+      position:relative; z-index:1;
+    }
+    .editorial__eyebrow {
+      font-size:0.65rem;
+      letter-spacing:0.28em;
+      text-transform:uppercase;
+      color:var(--moss-light);
+      margin-bottom:1.25rem;
+    }
+    .editorial__heading {
+      font-size:clamp(2.5rem,5vw,5.5rem);
+      text-transform:uppercase;
+      color:var(--ecru);
+      line-height:0.92;
+      margin-bottom:1.5rem;
+    }
+    .editorial__heading em {
+      font-style:normal;
+      color:var(--moss-light);
+    }
+    .editorial__body {
+      font-size:0.95rem;
+      font-weight:300;
+      line-height:1.8;
+      color:var(--ecru-70);
+      margin-bottom:2rem;
+    }
+    .editorial__img-col {
+      position:relative;
+    }
+    .editorial__img-frame {
+      aspect-ratio:3/4;
+      background:linear-gradient(135deg, rgba(79,93,58,0.3), rgba(79,93,58,0.05));
+      border:1px solid rgba(79,93,58,0.2);
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+      position:relative;
+    }
+    .editorial__img-frame::before {
+      content:'';
+      position:absolute; inset:0;
+      background: radial-gradient(ellipse at center, rgba(79,93,58,0.25) 0%, transparent 70%);
+    }
+    .editorial__img-label {
+      font-family:var(--f-head);
+      font-size:0.7rem;
+      letter-spacing:0.25em;
+      text-transform:uppercase;
+      color:var(--moss-light);
+      position:relative; z-index:1;
+    }
+    .editorial__img-corner {
+      position:absolute;
+      width:20px; height:20px;
+      border-color:var(--moss);
+      border-style:solid;
+    }
+    .editorial__img-corner--tl { top:1rem; left:1rem; border-width:1px 0 0 1px; }
+    .editorial__img-corner--br { bottom:1rem; right:1rem; border-width:0 1px 1px 0; }
+
+    /* ═══════════════════════════════════════
+       SEÇÃO: BANNER DROP
+    ═══════════════════════════════════════ */
+    .section-banner {
+      background:var(--moss);
+      padding:6rem 0;
+      position:relative;
+      overflow:hidden;
+    }
+    .section-banner__tree-ghost {
+      position:absolute;
+      right:-5%;
+      top:50%;
+      transform:translateY(-50%);
+      opacity:0.06;
+      pointer-events:none;
+      width:40%;
+      max-width:420px;
+    }
+    .section-banner__tree-ghost-left {
+      position:absolute;
+      left:-8%;
+      top:50%;
+      transform:translateY(-50%) scaleX(-1);
+      opacity:0.04;
+      pointer-events:none;
+      width:30%;
+      max-width:320px;
+    }
+    .section-banner__inner {
+      max-width:900px;
+      margin:0 auto;
+      padding:0 3rem;
+      text-align:center;
+      position:relative; z-index:1;
+    }
+    .banner__badge {
+      display:inline-block;
+      padding:0.3rem 1rem;
+      border:1px solid var(--ecru-40);
+      color:var(--ecru-70);
+      font-size:0.6rem;
+      letter-spacing:0.28em;
+      text-transform:uppercase;
+      margin-bottom:1.5rem;
+    }
+    .banner__heading {
+      font-size:clamp(3rem,8vw,7rem);
+      text-transform:uppercase;
+      color:var(--ecru);
+      line-height:0.9;
+      margin-bottom:1rem;
+    }
+    .banner__sub {
+      font-size:0.8rem;
+      letter-spacing:0.2em;
+      text-transform:uppercase;
+      color:var(--ecru-70);
+      font-weight:300;
+      margin-bottom:2.5rem;
+    }
+
+    /* ═══════════════════════════════════════
+       SEÇÃO: TICKER 2 (meio da página)
+    ═══════════════════════════════════════ */
+    .ticker--light {
+      background: var(--ecru);
+      border-top: 1px solid var(--navy-10);
+      border-bottom: 1px solid var(--navy-10);
+      padding: 1rem 0;
+    }
+    .ticker--light .ticker__item { color: rgba(26,26,26,0.25); }
+    .ticker--light .ticker__item span { color: var(--moss); }
+    .ticker--reverse .ticker__track { animation-direction:reverse; animation-duration:30s; }
+
+    /* ═══════════════════════════════════════
+       FOOTER
+    ═══════════════════════════════════════ */
+    .footer { background: var(--navy); }
+
+    .footer__newsletter {
+      padding:5rem 0;
+      border-bottom:1px solid rgba(253,253,208,0.08);
+    }
+    .footer__newsletter-inner {
+      max-width:1400px;
+      margin:0 auto;
+      padding:0 3rem;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:4rem;
+      align-items:center;
+    }
+    .footer__nl-heading {
+      font-size:clamp(2rem,4vw,3.5rem);
+      text-transform:uppercase;
+      color:var(--ecru);
+      margin-bottom:0.5rem;
+    }
+    .footer__nl-sub {
+      font-size:0.8rem;
+      letter-spacing:0.1em;
+      color:rgba(253,253,208,0.4);
+      font-weight:300;
+    }
+    .footer__form {
+      display:flex;
+      border-bottom:1.5px solid rgba(253,253,208,0.25);
+      gap:1rem;
+    }
+    .footer__input {
+      flex:1;
+      background:none; border:none; outline:none;
+      font-family:var(--f-body);
+      font-size:0.9rem;
+      color:var(--ecru);
+      padding:0.75rem 0;
+      letter-spacing:0.04em;
+    }
+    .footer__input::placeholder { color:rgba(253,253,208,0.25); }
+    .footer__submit {
+      background:none; border:none; cursor:pointer;
+      font-family:var(--f-head);
+      font-size:0.72rem; font-weight:700;
+      letter-spacing:0.2em;
+      text-transform:uppercase;
+      color:var(--ecru);
+      padding:0.75rem 0;
+      white-space:nowrap;
+      transition:color 0.2s;
+    }
+    .footer__submit:hover { color:var(--moss-light); }
+
+    .footer__links {
+      padding:4rem 0;
+      border-bottom:1px solid rgba(253,253,208,0.06);
+    }
+    .footer__links-inner {
+      max-width:1400px;
+      margin:0 auto;
+      padding:0 3rem;
+      display:grid;
+      grid-template-columns:2fr 1fr 1fr 1fr;
+      gap:3rem;
+    }
+    .footer__brand-logo {
+      display:flex; align-items:center; gap:0.5rem;
+      margin-bottom:1rem;
+    }
+    .footer__brand-name {
+      font-family:var(--f-head);
+      font-size:1.5rem;
+      font-weight:800;
+      letter-spacing:0.2em;
+      color:var(--ecru);
+      text-transform:uppercase;
+    }
+    .footer__tagline {
+      font-size:0.7rem;
+      letter-spacing:0.18em;
+      text-transform:uppercase;
+      color:rgba(253,253,208,0.3);
+      font-weight:300;
+      line-height:1.6;
+    }
+    .footer__col-title {
+      font-family:var(--f-body);
+      font-size:0.6rem;
+      font-weight:600;
+      letter-spacing:0.22em;
+      text-transform:uppercase;
+      color:rgba(253,253,208,0.3);
+      margin-bottom:1.25rem;
+    }
+    .footer__col-links { display:flex; flex-direction:column; gap:0.75rem; }
+    .footer__col-links a {
+      font-size:0.85rem;
+      font-weight:300;
+      color:rgba(253,253,208,0.6);
+      letter-spacing:0.03em;
+      transition:color 0.2s;
+    }
+    .footer__col-links a:hover { color:var(--ecru); }
+
+    .footer__bottom {
+      padding:1.75rem 0;
+    }
+    .footer__bottom-inner {
+      max-width:1400px;
+      margin:0 auto;
+      padding:0 3rem;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1rem;
+    }
+    .footer__copy {
+      font-size:0.68rem;
+      letter-spacing:0.1em;
+      color:rgba(253,253,208,0.25);
+    }
+    .footer__social { display:flex; align-items:center; gap:1rem; }
+    .footer__social a {
+      width:34px; height:34px;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid rgba(253,253,208,0.1);
+      border-radius:50%;
+      color:rgba(253,253,208,0.4);
+      transition:color 0.2s, border-color 0.2s;
+    }
+    .footer__social a:hover { color:var(--ecru); border-color:rgba(253,253,208,0.35); }
+    .footer__legal { display:flex; align-items:center; gap:1rem; }
+    .footer__legal a {
+      font-size:0.65rem;
+      letter-spacing:0.08em;
+      color:rgba(253,253,208,0.25);
+      transition:color 0.2s;
+    }
+    .footer__legal a:hover { color:rgba(253,253,208,0.6); }
+
+    /* ═══════════════════════════════════════
+       ANIMAÇÕES
+    ═══════════════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(20px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    [data-reveal] {
+      opacity:0;
+      transform:translateY(28px);
+      transition: opacity 0.75s var(--ease), transform 0.75s var(--ease);
+    }
+    [data-reveal].revealed {
+      opacity:1;
+      transform:translateY(0);
+    }
+    [data-reveal-delay="1"].revealed { transition-delay:0.1s; }
+    [data-reveal-delay="2"].revealed { transition-delay:0.2s; }
+    [data-reveal-delay="3"].revealed { transition-delay:0.3s; }
+    [data-reveal-delay="4"].revealed { transition-delay:0.4s; }
+    [data-reveal-delay="5"].revealed { transition-delay:0.5s; }
+    [data-reveal-delay="6"].revealed { transition-delay:0.6s; }
+
+    /* ═══════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════ */
+    @media(max-width:1024px){
+      .section-philosophy__inner,
+      .section-editorial__inner,
+      .footer__links-inner { grid-template-columns:1fr; gap:3rem; }
+      .footer__newsletter-inner { grid-template-columns:1fr; gap:2rem; }
+      .philosophy__tree-col { display:none; }
+    }
+    @media(max-width:768px){
+      .header__inner { padding:0 1.5rem; }
+      .header__nav   { display:none; }
+      .hero__content,
+      .section-drop__inner,
+      .section-philosophy__inner,
+      .section-editorial__inner,
+      .section-banner__inner,
+      .footer__newsletter-inner,
+      .footer__links-inner,
+      .footer__bottom-inner { padding:0 1.5rem; }
+
+      .asym-row--normal,
+      .asym-row--reversed { grid-template-columns:1fr; }
+      .asym-row--normal .product-card:last-child  .product-card__img-wrap,
+      .asym-row--reversed .product-card:first-child .product-card__img-wrap { margin-top:0; }
+
+      .footer__links-inner { grid-template-columns:1fr 1fr; }
+      .footer__bottom-inner { flex-direction:column; text-align:center; }
+    }
+
+    /* Mobile menu */
+    .mobile-menu-btn {
+      display:none;
+    }
+    @media(max-width:768px){
+      .mobile-menu-btn { display:flex; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<header class="header" id="site-header">
+  <div class="header__inner">
+
+    <!-- Logo -->
+    <a href="#" class="header__logo" aria-label="GRACIOU — início">
+      <img src="assets/tree-icon.png" alt="Tree" style="height:48px; width:auto; mix-blend-mode:multiply; margin-right:-4px; margin-top:-2px;" aria-hidden="true" />
+      <span class="header__logo-text">GRACIOU</span>
+    </a>
+
+    <!-- Nav Desktop -->
+    <nav class="header__nav" aria-label="Navegação principal">
+      <a href="collection.html" class="header__nav-link">Loja</a>
+      <a href="collection.html" class="header__nav-link">Drops</a>
+      <a href="#philosophy">Missão</a>
+      <a href="#">Lookbook</a>
+    </nav>
+
+    <!-- Ações -->
+    <div class="header__actions">
+      <button class="header__icon-btn" aria-label="Buscar">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+      <a href="#" class="header__icon-btn cart-badge" aria-label="Carrinho — 2 itens">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span class="cart-badge__count">2</span>
+      </a>
+      <button class="header__icon-btn mobile-menu-btn" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+
+<!-- ══════════════════════════════════════════
+     HERO EDITORIAL
+══════════════════════════════════════════ -->
+<section class="hero" aria-label="Hero principal">
+  <div class="hero__bg"></div>
+  <div class="hero__overlay"></div>
+
+  <!-- Árvore decorativa fantasma -->
+  <div class="hero__tree-ghost" aria-hidden="true">
+    <img src="assets/tree-icon.png" alt="" style="width:100%; height:100%; object-fit:contain; opacity:0.1; filter:contrast(200%) grayscale(100%) invert(100%); mix-blend-mode:screen;" />
+  </div>
+
+  <div class="hero__content">
+    <p class="hero__kicker">2026 — Drop 01 Disponível Agora</p>
+    <h1 class="hero__heading">GRAÇA<br>EM CADA<br><em>FIO</em></h1>
+    <p class="hero__sub">Streetwear elevado <em>com propósito.</em></p>
+    <div class="hero__ctas">
+      <a href="#drop" class="btn btn--primary" id="hero-cta">VER DROP 01</a>
+      <a href="#philosophy" class="btn btn--ghost">NOSSA MISSÃO</a>
+    </div>
+  </div>
+
+  <div class="hero__scroll" aria-hidden="true">
+    <span>Descer</span>
+    <div class="hero__scroll-line"></div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     TICKER 1
+══════════════════════════════════════════ -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker__track">
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Drop 01 Disponível</span>
+    <span class="ticker__item"><span>Streetwear</span> com propósito</span>
+    <span class="ticker__item">✦ Frete Grátis acima de R$400</span>
+    <span class="ticker__item"><span>Materiais</span> conscientes</span>
+    <span class="ticker__item">✦ Edição limitada</span>
+    <!-- Duplicado para loop contínuo -->
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Drop 01 Disponível</span>
+    <span class="ticker__item"><span>Streetwear</span> com propósito</span>
+    <span class="ticker__item">✦ Frete Grátis acima de R$400</span>
+    <span class="ticker__item"><span>Materiais</span> conscientes</span>
+    <span class="ticker__item">✦ Edição limitada</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     GRID ASSIMÉTRICO — DROP 01
+══════════════════════════════════════════ -->
+<section class="section-drop" id="drop" aria-labelledby="drop-heading">
+  <div class="section-drop__inner">
+    <div class="section-drop__header" data-reveal>
+      <h2 class="section-drop__title" id="drop-heading">DROP<sup>01</sup></h2>
+      <a href="collection.html" class="view-all">Ver Tudo &rarr;</a>
+    </div>
+
+    <!-- Prova de carregamento: confirma na própria página que os produtos vêm
+         do catálogo central. Preenchida por script; fica vermelha se falhar. -->
+    <p class="catalogo-status" id="catalogo-status">Catálogo central: verificando…</p>
+
+    <!-- Grid assimétrico do Drop 01.
+         Os 4 cards abaixo são RENDERIZADOS pelo catálogo central
+         (dados/catalogo.js) — não escrever produtos à mão aqui.
+         As classes de cor estão no <style> do <head>. -->
+    <div class="asym-grid" id="graciou-drop-grid">
+
+      <!-- Linha 1: Grande Esquerda + Pequena Direita -->
+      <div class="asym-row asym-row--normal" hidden>
+        <!-- marcador da Linha 1 (não apagar) -->
+      </div>
+
+      <!-- Linha 2: Pequena Esquerda + Grande Direita -->
+      <div class="asym-row asym-row--reversed" hidden>
+        <!-- marcador da Linha 2 (não apagar) -->
+      </div>
+
+    </div>
+
+    <!-- Cards originais do protótipo DESATIVADOS.
+         Não faziam parte do catálogo oficial do Drop 01:
+         Hoodie Oversized Raízes, Tee Essential Ecru, Cargo Pant Shadow,
+         Coach Jacket Floresta. Mantidos abaixo, ocultos, como registro
+         histórico. NÃO apagar. -->
+    <div class="asym-grid-legado" hidden aria-hidden="true">
+      <div class="asym-grid">
+        <!-- Produto 1 — Grande -->
+        <div class="product-card" data-reveal data-reveal-delay="1">
+          <div class="product-card__img-wrap">
+            <span class="product-card__badge product-card__badge--new">Novo</span>
+            <div class="product-card__img-placeholder" style="background:linear-gradient(145deg,#2a3520,#1e2916)">
+              <svg width="80" height="100" viewBox="0 0 400 500" fill="none">
+                <path d="M200 420 Q200 445 200 470" stroke="#FDFDD0" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#FDFDD0" stroke-width="14" stroke-linecap="round"/>
+                <path d="M198 300 C185 285 165 270 140 260" stroke="#FDFDD0" stroke-width="7" stroke-linecap="round"/>
+                <path d="M202 300 C215 285 235 270 260 260" stroke="#FDFDD0" stroke-width="7" stroke-linecap="round"/>
+                <path d="M200 220 C195 200 188 178 175 155" stroke="#FDFDD0" stroke-width="5" stroke-linecap="round"/>
+                <path d="M200 220 C205 200 212 178 225 155" stroke="#FDFDD0" stroke-width="5" stroke-linecap="round"/>
+                <path d="M200 220 C200 198 200 175 200 150" stroke="#FDFDD0" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+              <p class="product-card__img-placeholder-label">Hoodie Oversized<br>Moss Green</p>
+            </div>
+            <div class="product-card__quick">
+              <button class="product-card__quick-btn" onclick="this.textContent='✓ ADICIONADO'; this.style.background='#4F5D3A'; this.style.color='#FDFDD0'; setTimeout(()=>{this.textContent='+ ADICIONAR'; this.style.background=''; this.style.color='';},2000)">
+                + ADICIONAR
+              </button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <p class="product-card__cat">Moletom</p>
+            <p class="product-card__name">Hoodie Oversized "Raízes"</p>
+            <p class="product-card__price"><strong>R$ 389,00</strong></p>
+          </div>
+        </div>
+
+        <!-- Produto 2 — Pequeno -->
+        <div class="product-card" data-reveal data-reveal-delay="2">
+          <div class="product-card__img-wrap">
+            <span class="product-card__badge">Sale</span>
+            <div class="product-card__img-placeholder" style="background:linear-gradient(145deg,#e8e4d0,#d4cebc)">
+              <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+                <path d="M200 420 Q200 445 200 470" stroke="#4F5D3A" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#4F5D3A" stroke-width="14" stroke-linecap="round"/>
+                <path d="M198 300 C185 285 165 270 140 260" stroke="#4F5D3A" stroke-width="7" stroke-linecap="round"/>
+                <path d="M202 300 C215 285 235 270 260 260" stroke="#4F5D3A" stroke-width="7" stroke-linecap="round"/>
+                <path d="M200 220 C195 200 188 178 175 155" stroke="#4F5D3A" stroke-width="5" stroke-linecap="round"/>
+                <path d="M200 220 C205 200 212 178 225 155" stroke="#4F5D3A" stroke-width="5" stroke-linecap="round"/>
+              </svg>
+              <p class="product-card__img-placeholder-label" style="color:rgba(26,26,26,0.3)">Camiseta<br>Off-White</p>
+            </div>
+            <div class="product-card__quick">
+              <button class="product-card__quick-btn" onclick="this.textContent='✓ ADICIONADO'; this.style.background='#4F5D3A'; this.style.color='#FDFDD0'; setTimeout(()=>{this.textContent='+ ADICIONAR'; this.style.background=''; this.style.color='';},2000)">
+                + ADICIONAR
+              </button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <p class="product-card__cat">Camiseta</p>
+            <p class="product-card__name">Tee Essential "Ecru"</p>
+            <p class="product-card__price"><span style="text-decoration:line-through;opacity:0.4;margin-right:0.5rem">R$ 189,00</span><strong style="color:#8fa572">R$ 149,00</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linha 2: Pequena Esquerda + Grande Direita -->
+      <div class="asym-row asym-row--reversed">
+        <!-- Produto 3 — Pequeno -->
+        <div class="product-card" data-reveal data-reveal-delay="2">
+          <div class="product-card__img-wrap">
+            <div class="product-card__img-placeholder" style="background:linear-gradient(145deg,#1a1a1a,#2d2d2d)">
+              <svg width="60" height="75" viewBox="0 0 400 500" fill="none">
+                <path d="M200 420 Q200 445 200 470" stroke="#6B7A50" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="#6B7A50" stroke-width="14" stroke-linecap="round"/>
+                <path d="M198 300 C185 285 165 270 140 260" stroke="#6B7A50" stroke-width="7" stroke-linecap="round"/>
+                <path d="M202 300 C215 285 235 270 260 260" stroke="#6B7A50" stroke-width="7" stroke-linecap="round"/>
+                <path d="M200 220 C200 198 200 175 200 150" stroke="#6B7A50" stroke-width="4" stroke-linecap="round"/>
+              </svg>
+              <p class="product-card__img-placeholder-label" style="color:rgba(253,253,208,0.25)">Calça Cargo<br>Black</p>
+            </div>
+            <div class="product-card__quick">
+              <button class="product-card__quick-btn" onclick="this.textContent='✓ ADICIONADO'; this.style.background='#4F5D3A'; this.style.color='#FDFDD0'; setTimeout(()=>{this.textContent='+ ADICIONAR'; this.style.background=''; this.style.color='';},2000)">
+                + ADICIONAR
+              </button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <p class="product-card__cat">Calça</p>
+            <p class="product-card__name">Cargo Pant "Shadow"</p>
+            <p class="product-card__price"><strong>R$ 449,00</strong></p>
+          </div>
+        </div>
+
+        <!-- Produto 4 — Grande -->
+        <div class="product-card" data-reveal data-reveal-delay="1">
+          <div class="product-card__img-wrap">
+            <span class="product-card__badge product-card__badge--new">Drop 01</span>
+            <div class="product-card__img-placeholder" style="background:linear-gradient(145deg,#3a4529,#4f5d3a)">
+              <svg width="80" height="100" viewBox="0 0 400 500" fill="none">
+                <path d="M200 420 Q200 445 200 470" stroke="rgba(253,253,208,0.5)" stroke-width="3.5" stroke-linecap="round"/>
+                <path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="rgba(253,253,208,0.5)" stroke-width="14" stroke-linecap="round"/>
+                <path d="M198 300 C185 285 165 270 140 260" stroke="rgba(253,253,208,0.5)" stroke-width="7" stroke-linecap="round"/>
+                <path d="M202 300 C215 285 235 270 260 260" stroke="rgba(253,253,208,0.5)" stroke-width="7" stroke-linecap="round"/>
+                <path d="M140 260 C120 250 100 245 75 248" stroke="rgba(253,253,208,0.5)" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M260 260 C280 250 300 245 325 248" stroke="rgba(253,253,208,0.5)" stroke-width="4.5" stroke-linecap="round"/>
+                <path d="M200 220 C195 200 188 178 175 155" stroke="rgba(253,253,208,0.5)" stroke-width="5" stroke-linecap="round"/>
+                <path d="M200 220 C205 200 212 178 225 155" stroke="rgba(253,253,208,0.5)" stroke-width="5" stroke-linecap="round"/>
+                <path d="M175 155 C165 140 152 128 140 118" stroke="rgba(253,253,208,0.5)" stroke-width="2.5" stroke-linecap="round"/>
+                <path d="M225 155 C235 140 248 128 260 118" stroke="rgba(253,253,208,0.5)" stroke-width="2.5" stroke-linecap="round"/>
+              </svg>
+              <p class="product-card__img-placeholder-label">Jaqueta Coach<br>Moss Edition</p>
+            </div>
+            <div class="product-card__quick">
+              <button class="product-card__quick-btn" onclick="this.textContent='✓ ADICIONADO'; this.style.background='#4F5D3A'; this.style.color='#FDFDD0'; setTimeout(()=>{this.textContent='+ ADICIONAR'; this.style.background=''; this.style.color='';},2000)">
+                + ADICIONAR
+              </button>
+            </div>
+          </div>
+          <div class="product-card__info">
+            <p class="product-card__cat">Jaqueta</p>
+            <p class="product-card__name">Coach Jacket "Floresta"</p>
+            <p class="product-card__price"><strong>R$ 679,00</strong></p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- /Cards originais desativados -->
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     TICKER 2 (sentido invertido)
+══════════════════════════════════════════ -->
+<div class="ticker ticker--light ticker--reverse" aria-hidden="true">
+  <div class="ticker__track">
+    <span class="ticker__item">Drop 01 — <span>8 peças oficiais</span></span>
+    <span class="ticker__item">✦ Apenas 120 unidades</span>
+    <span class="ticker__item">Feito com <span>consciência</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+    <span class="ticker__item">Streetwear com <span>propósito</span></span>
+    <span class="ticker__item">✦ Coleção Drop 01</span>
+    <span class="ticker__item">Drop 01 — <span>8 peças oficiais</span></span>
+    <span class="ticker__item">✦ Apenas 120 unidades</span>
+    <span class="ticker__item">Feito com <span>consciência</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+    <span class="ticker__item">Streetwear com <span>propósito</span></span>
+    <span class="ticker__item">✦ Coleção Drop 01</span>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     FILOSOFIA DA MARCA
+══════════════════════════════════════════ -->
+<section class="section-philosophy" id="philosophy" aria-labelledby="philosophy-heading">
+  <div class="section-philosophy__inner">
+
+    <!-- Texto -->
+    <div class="philosophy__text">
+      <div class="philosophy__label" data-reveal>
+        <span class="philosophy__label-line"></span>
+        <span class="philosophy__label-text">Nossa Filosofia</span>
+      </div>
+      <h2 class="philosophy__heading" id="philosophy-heading" data-reveal>
+        VESTIDO<br>COM<br>PROPÓSITO
+      </h2>
+      <p class="philosophy__body" data-reveal>
+        GRACIOU nasce da crença de que a moda pode ser um <strong>ato de intenção</strong>. Cada peça é criada com consciência — dos materiais à silhueta — para que você vista não apenas um estilo, mas um manifesto.<br><br>
+        Somos streetwear. Somos brasilidade. Somos <strong>propósito em cada fio</strong>.
+      </p>
+      <div class="philosophy__stats" data-reveal>
+        <div>
+          <span class="stat__number">100%</span>
+          <span class="stat__label">Materiais Conscientes</span>
+        </div>
+        <div>
+          <span class="stat__number">01</span>
+          <span class="stat__label">Drop Limitado</span>
+        </div>
+        <div>
+          <span class="stat__number">∞</span>
+          <span class="stat__label">Impacto</span>
+        </div>
+      </div>
+      <a href="#" class="btn btn--outline" data-reveal>NOSSA HISTÓRIA</a>
+    </div>
+
+    <!-- Árvore SVG -->
+    <div class="philosophy__tree-col" aria-hidden="true" data-reveal>
+      <div class="philosophy__tree-bg"></div>
+        <img src="assets/tree-icon.png" class="philosophy__tree-svg" alt="Tree of Life" style="width:100%; height:auto; max-width:550px; mix-blend-mode:multiply; filter:contrast(1.2); transform:scale(1.1);" />
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     EDITORIAL SPLIT
+══════════════════════════════════════════ -->
+<section class="section-editorial" aria-label="Campanha Editorial">
+  <div class="section-editorial__pattern" aria-hidden="true"></div>
+  <div class="section-editorial__inner">
+    <div>
+      <p class="editorial__eyebrow" data-reveal>Campanha SS'26</p>
+      <h2 class="editorial__heading" data-reveal>
+        RAÍZES<br>QUE<br><em>VESTEM</em>
+      </h2>
+      <p class="editorial__body" data-reveal>
+        Cada coleção da GRACIOU é uma exploração — das raízes, do território, da identidade brasileira reimaginada através da roupa. Drop 01 é sobre pertencer a algo maior do que uma tendência.
+      </p>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;" data-reveal>
+        <a href="#" class="btn btn--ecru">VER LOOKBOOK</a>
+        <a href="#drop" class="btn btn--ghost">COMPRAR DROP 01</a>
+      </div>
+    </div>
+    <div class="editorial__img-col" data-reveal>
+      <div class="editorial__img-frame">
+        <div class="editorial__img-corner editorial__img-corner--tl"></div>
+        <div class="editorial__img-corner editorial__img-corner--br"></div>
+        <p class="editorial__img-label">Imagem editorial<br>SS'26 Campaign</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     BANNER — DROP 02
+══════════════════════════════════════════ -->
+<section class="section-banner" aria-labelledby="banner-heading">
+  <!-- Árvores decorativas -->
+  <div class="section-banner__tree-ghost" aria-hidden="true">
+    <img src="assets/tree-icon.png" alt="" style="width:600px; height:auto; object-fit:contain; opacity:0.1; filter:contrast(200%) grayscale(100%) invert(100%); mix-blend-mode:screen;" />
+  </div>
+  <div class="section-banner__tree-ghost-left" aria-hidden="true">
+    <img src="assets/tree-icon.png" alt="" style="width:550px; height:auto; object-fit:contain; opacity:0.07; filter:contrast(200%) grayscale(100%) invert(100%); mix-blend-mode:screen; transform:scaleX(-1);" />
+  </div>
+
+  <div class="section-banner__inner">
+    <p class="banner__badge" data-reveal>Em Breve</p>
+    <h2 class="banner__heading" id="banner-heading" data-reveal>DROP 02<br>INVERNO '26</h2>
+    <p class="banner__sub" data-reveal>Entre na lista e seja o primeiro a saber.</p>
+    <a href="#" class="btn btn--ecru" data-reveal id="waitlist-cta">ENTRAR NA LISTA</a>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="footer">
+  <!-- Newsletter -->
+  <div class="footer__newsletter">
+    <div class="footer__newsletter-inner">
+      <div data-reveal>
+        <h2 class="footer__nl-heading">ENTRE<br>NA LISTA</h2>
+        <p class="footer__nl-sub">Primeiras notícias. Sem spam.</p>
+      </div>
+      <div data-reveal>
+        <form class="footer__form" onsubmit="handleNewsletter(event)">
+          <label for="footer-email" style="position:absolute;opacity:0;pointer-events:none">Email</label>
+          <input
+            id="footer-email"
+            type="email"
+            class="footer__input"
+            placeholder="seu@email.com"
+            required
+          />
+          <button type="submit" class="footer__submit">ENTRAR →</button>
+        </form>
+        <p id="nl-success" style="display:none;font-size:0.8rem;color:#8fa572;margin-top:0.75rem;letter-spacing:0.08em;">
+          ✓ Perfeito! Você está na lista.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Links -->
+  <div class="footer__links">
+    <div class="footer__links-inner">
+      <!-- Brand -->
+      <div data-reveal>
+        <div class="footer__brand-logo">
+          <img src="assets/tree-icon.png" alt="Tree" style="height:64px; width:auto; filter:contrast(200%) grayscale(100%) invert(100%); mix-blend-mode:screen; opacity:0.9;" />
+          <span class="footer__brand-name" style="font-family:'Oswald', sans-serif; font-size:2rem; font-weight:600; letter-spacing:0.05em; transform:scaleY(1.1); margin-left:0.5rem; color:var(--ecru);">GRACIOU</span>
+        </div>
+        <p class="footer__tagline">Graça em cada fio.<br>Streetwear elevado com propósito.</p>
+      </div>
+
+      <!-- Shop -->
+      <div data-reveal>
+        <p class="footer__col-title">Loja</p>
+        <ul class="footer__col-links">
+          <li><a href="#">Todos os produtos</a></li>
+          <li><a href="#">Drop 01</a></li>
+          <li><a href="#">Drop 02 — Em breve</a></li>
+          <li><a href="#">Lookbook</a></li>
+        </ul>
+      </div>
+
+      <!-- Marca -->
+      <div data-reveal>
+        <p class="footer__col-title">Marca</p>
+        <ul class="footer__col-links">
+          <li><a href="#">Nossa história</a></li>
+          <li><a href="#">Missão</a></li>
+          <li><a href="#">Sustentabilidade</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+
+      <!-- Suporte -->
+      <div data-reveal>
+        <p class="footer__col-title">Suporte</p>
+        <ul class="footer__col-links">
+          <li><a href="#">FAQ</a></li>
+          <li><a href="#">Trocas e devoluções</a></li>
+          <li><a href="#">Guia de tamanhos</a></li>
+          <li><a href="#">Contato</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom -->
+  <div class="footer__bottom">
+    <div class="footer__bottom-inner">
+      <p class="footer__copy">&copy; 2026 GRACIOU. Todos os direitos reservados.</p>
+
+      <div class="footer__social">
+        <a href="#" aria-label="Instagram">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="TikTok">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.89a8.22 8.22 0 0 0 4.8 1.54V7a4.85 4.85 0 0 1-1.03-.31z"/>
+          </svg>
+        </a>
+        <a href="#" aria-label="Twitter / X">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </a>
+      </div>
+
+      <nav class="footer__legal">
+        <a href="#">Privacidade</a>
+        <a href="#">Termos</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════ -->
+<script>
+  /* ── Header Scroll ── */
+  const header = document.getElementById('site-header');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+
+  /* ── Reveal on Scroll ── */
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  /* Elementos [data-reveal] que chegam DEPOIS (catálogo renderizado)
+     são observados por iniciarReveal(), definida no script do catálogo. */
+  document.querySelectorAll('[data-reveal]').forEach(el => {
+    revealObserver.observe(el);
+  });
+  window.__GRACIOU_PREVIEW_REVEAL_OBSERVER__ = revealObserver;
+
+  /* ═══════════════════════════════════════════
+     GRID DO DROP 01 — renderizado pelo catálogo central
+     (dados/catalogo.js). Não há produtos escritos à mão aqui.
+     Mostra 4 dos 8 produtos oficiais, em grid assimétrico.
+     ═══════════════════════════════════════════ */
+  const QUANTOS_NO_PREVIEW = 4;
+
+  function classeCorPreview(nomeCor) {
+    const mapa = {
+      'verde-musgo': 'verde-musgo',
+      'verde musgo': 'verde-musgo',
+      'verde-militar': 'verde-militar',
+      'verde militar': 'verde-militar',
+      'off-white': 'off-white',
+      'off white': 'off-white',
+      'creme': 'creme', 'ecru': 'creme',
+      'preto': 'preto', 'black': 'preto',
+      'marrom': 'marrom'
+    };
+    const chave = String(nomeCor || '').trim().toLowerCase();
+    return mapa[chave] || 'padrao';
+  }
+
+  const CORES_ESCURAS_PREVIEW = ['preto', 'verde-musgo', 'verde-militar', 'marrom', 'verde-musgo-escuro'];
+
+  function blocoPrecoPreview(produto) {
+    if (produto.precoConfirmado && produto.precoVenda !== null) {
+      return '<p class="product-card__price"><strong>' +
+        GRACIOU_CATALOGO.formatarPreco(produto.precoVenda) + '</strong></p>';
+    }
+    return '<p class="product-card__price"><span class="product-card__price-pendente">' +
+      GRACIOU_CATALOGO.META.avisoPreco + '</span></p>';
+  }
+
+  /* Glifo da árvore — padrão de marca usado como placeholder de imagem,
+     já que não existem fotos reais (imagemFrente/imagemCostas = null). */
+  const ARVORE_SVG = '<svg width="80" height="100" viewBox="0 0 400 500" fill="none" aria-hidden="true">' +
+    '<path d="M200 420 Q200 445 200 470" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>' +
+    '<path d="M195 420 C193 380 190 340 192 300 C193 270 196 240 200 220" stroke="currentColor" stroke-width="14" stroke-linecap="round"/>' +
+    '<path d="M198 300 C185 285 165 270 140 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+    '<path d="M202 300 C215 285 235 270 260 260" stroke="currentColor" stroke-width="7" stroke-linecap="round"/>' +
+    '<path d="M200 220 C195 200 188 178 175 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+    '<path d="M200 220 C205 200 212 178 225 155" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>' +
+    '</svg>';
+
+  function construirCardPreview(produto, tamanho, delay) {
+    const cor = classeCorPreview(produto.corPrincipal);
+    const escura = CORES_ESCURAS_PREVIEW.indexOf(cor) !== -1;
+    const badge = '<span class="product-card__badge' +
+      (produto.categoriaId === 'graciou-move' ? ' product-card__badge--new' : '') + '">' +
+      produto.categoria + '</span>';
+
+    return [
+      '<div class="product-card" data-produto-id="' + produto.id + '"',
+        ' data-reveal data-reveal-delay="' + delay + '">',
+        '<div class="product-card__img-wrap">',
+          badge,
+          '<div class="product-card__img-placeholder product-card__img-placeholder--' + cor + '"',
+            (escura ? ' data-invert' : '') + '>',
+            ARVORE_SVG,
+            '<p class="product-card__img-placeholder-label">' + produto.nome + '</p>',
+          '</div>',
+          '<div class="product-card__quick">',
+            '<button class="product-card__quick-btn" onclick="this.textContent=\'✓ ADICIONADO\'; this.style.background=\'#4F5D3A\'; this.style.color=\'#FDFDD0\'; setTimeout(()=>{this.textContent=\'+ ADICIONAR\'; this.style.background=\'\'; this.style.color=\'\';},2000)">',
+              '+ ADICIONAR',
+            '</button>',
+          '</div>',
+        '</div>',
+        '<div class="product-card__info">',
+          '<p class="product-card__cat">' + produto.categoria + '</p>',
+          '<p class="product-card__name">' + produto.nome + '</p>',
+          blocoPrecoPreview(produto),
+        '</div>',
+      '</div>'
+    ].join('');
+  }
+
+  function renderizarDropPreview() {
+    const grid = document.getElementById('graciou-drop-grid');
+    if (!grid) return false;
+    if (typeof GRACIOU_CATALOGO === 'undefined' || !GRACIOU_CATALOGO) return false;
+    if (window.__GRACIOU_PREVIEW_RENDERIZADO__) return true;
+
+    const produtos = GRACIOU_CATALOGO.lista().slice(0, QUANTOS_NO_PREVIEW);
+    const linhas = grid.querySelectorAll('.asym-row');
+    if (linhas.length < 2) return false;
+
+    /* Duas linhas de dois produtos, alternando grande/pequena —
+       mantém exatamente o ritmo visual do grid assimétrico original. */
+    linhas[0].innerHTML =
+      construirCardPreview(produtos[0], 'large', 1) +
+      construirCardPreview(produtos[1], 'small', 2);
+    linhas[1].innerHTML =
+      construirCardPreview(produtos[2], 'small', 2) +
+      construirCardPreview(produtos[3], 'large', 1);
+
+    linhas[0].hidden = false;
+    linhas[1].hidden = false;
+
+    window.__GRACIOU_PREVIEW_RENDERIZADO__ = true;
+
+    /* Os cards chegaram depois do observer: observar os novos [data-reveal].
+       O observer está exposto no window pelo script do topo. */
+    const obs = window.__GRACIOU_PREVIEW_REVEAL_OBSERVER__;
+    if (obs) grid.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
+    return true;
+  }
+
+  /* NÃO assumimos ordem de execução: o catálogo pode carregar depois. */
+  (function iniciarDropPreview() {
+    if (renderizarDropPreview()) return;
+    if (window.__GRACIOU_PREVIEW_AGUARDANDO__) return;
+    window.__GRACIOU_PREVIEW_AGUARDANDO__ = true;
+
+    let tentativas = 0;
+    const timer = setInterval(() => {
+      tentativas++;
+      if (renderizarDropPreview() || tentativas >= 60) clearInterval(timer);
+    }, 250);
+  })();
+
+  /* ═══════════════════════════════════════════
+     REVEAL GLOBAL — rodado por ÚLTIMO, de propósito.
+     Os cards do catálogo são inseridos no DOM depois de tudo, e começam
+     com [data-reveal] (opacity: 0). Se ninguém os observar, ficam
+     invisíveis para sempre abaixo da dobra. Por isso este bloco:
+       1) reaplica o reveal a TODOS os [data-reveal] pendentes;
+       2) deixa um MutationObserver cobrindo inserções futuras.
+     ═══════════════════════════════════════════ */
+  function aplicarRevealGlobal() {
+    document.querySelectorAll('[data-reveal]:not(.revealed)').forEach(el => {
+      revealObserver.observe(el);
+    });
+  }
+  window.__GRACIOU_PREVIEW_REVEAL__ = aplicarRevealGlobal;
+
+  new MutationObserver(aplicarRevealGlobal).observe(document.body, {
+    childList: true,
+    subtree: true
+  });
+
+  aplicarRevealGlobal();
+  document.addEventListener('DOMContentLoaded', aplicarRevealGlobal);
+  window.addEventListener('load', aplicarRevealGlobal);
+
+  /* Rede de segurança: se algum elemento ficou com opacity 0 sem entrar
+     na viewport (ex.: layout mudou após o render), forçamos a revelação. */
+  setTimeout(function () {
+    document.querySelectorAll('[data-reveal]:not(.revealed)').forEach(el => {
+      const r = el.getBoundingClientRect();
+      if (r.top < window.innerHeight) el.classList.add('revealed');
+    });
+  }, 1200);
+
+  /* ── Newsletter ── */
+  function handleNewsletter(e) {
+    e.preventDefault();
+    const form    = e.target;
+    const success = document.getElementById('nl-success');
+    form.style.display   = 'none';
+    success.style.display = 'block';
+  }
+
+  /* ── Smooth Scroll para âncoras ── */
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+
+<!-- Catálogo central: FONTE ÚNICA dos produtos do GRACIOU.
+     A ordem não importa: a renderização espera o catálogo por polling. -->
+<script src="dados/catalogo.js"></script>
+<script>
+  window.addEventListener('load', function () {
+    var box = document.getElementById('catalogo-status');
+    if (!box) return;
+    var c = window.GRACIOU_CATALOGO;
+    if (!c) {
+      box.textContent = 'Catálogo central: NÃO carregou (dados/catalogo.js)';
+      box.style.borderLeftColor = '#b43c3c';
+      box.style.color = '#f0b4b4';
+      return;
+    }
+    var r = c.resumo();
+    box.textContent = 'Catálogo central · ' + r.total + ' produtos · IDs únicos: ' +
+      (r.todosIdsUnicos ? 'sim' : 'NÃO') + ' · mostrando ' + QUANTOS_NO_PREVIEW +
+      ' no preview · preços: aguardando YouDraw · ' + c.META.avisoPreco;
+  });
+</script>
+
+</body>
+<script src="assets/graciou-store.js" defer></script>
+</html>

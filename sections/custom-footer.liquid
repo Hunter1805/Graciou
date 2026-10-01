@@ -1,0 +1,299 @@
+{% comment %}
+  ============================================================
+  Seção: custom-footer.liquid
+  Marca: GRACIOU
+  Descrição: Footer completo com:
+    - Logo e tagline
+    - Links de navegação por colunas
+    - Newsletter via {% form 'customer' %} nativo Shopify
+    - Redes sociais configuráveis via settings
+    - Copyright dinâmico
+  ============================================================
+{% endcomment %}
+
+<footer id="graciou-footer" class="graciou-footer" role="contentinfo">
+
+  <!-- Newsletter Row -->
+  <div class="footer__newsletter-row">
+    <div class="container mx-auto px-6 md:px-12 lg:px-16 py-14 md:py-20">
+      <div class="footer__newsletter-inner grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+
+        <div class="footer__newsletter-text">
+          <h2 class="font-heading text-4xl md:text-5xl text-ecru uppercase leading-none mb-3">
+            {{ section.settings.newsletter_heading | default: 'ENTRE NA LISTA' }}
+          </h2>
+          <p class="text-ecru/60 text-sm tracking-wider font-body font-light">
+            {{ section.settings.newsletter_subtext | default: 'Primeiras notícias dos drops. Sem spam.' }}
+          </p>
+        </div>
+
+        <!-- Formulário newsletter Shopify nativo -->
+        <div class="footer__newsletter-form">
+          {%- form 'customer', id: 'graciou-newsletter-form', class: 'newsletter-form' -%}
+            <input type="hidden" name="contact[tags]" value="newsletter,graciou" />
+
+            {%- if form.posted_successfully? -%}
+              <p class="newsletter-form__success" role="status" aria-live="polite">
+                ✓ {{ section.settings.newsletter_success | default: 'Perfeito! Você está na lista.' }}
+              </p>
+            {%- else -%}
+              <div class="newsletter-form__group">
+                <label for="newsletter-email" class="sr-only">Seu e-mail</label>
+                <input
+                  id="newsletter-email"
+                  type="email"
+                  name="contact[email]"
+                  class="newsletter-form__input"
+                  placeholder="{{ section.settings.newsletter_placeholder | default: 'seu@email.com' }}"
+                  required
+                  autocomplete="email"
+                  {% if form.errors %}aria-invalid="true" aria-describedby="newsletter-error"{% endif %}
+                />
+                <button type="submit" class="newsletter-form__btn" id="newsletter-submit">
+                  {{ section.settings.newsletter_cta | default: 'ENTRAR' }}
+                </button>
+              </div>
+              {%- if form.errors -%}
+                <p id="newsletter-error" class="newsletter-form__error" role="alert">
+                  {{ form.errors | default_errors }}
+                </p>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endform -%}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Divisor -->
+  <div class="footer__divider" aria-hidden="true"></div>
+
+  <!-- Links Row -->
+  <div class="footer__links-row">
+    <div class="container mx-auto px-6 md:px-12 lg:px-16 py-14 md:py-20">
+      <div class="footer__links-grid grid grid-cols-2 md:grid-cols-4 gap-10">
+
+        <!-- Coluna 1: Logo + Tagline -->
+        <div class="footer__brand-col col-span-2 md:col-span-1">
+          <a href="{{ routes.root_url }}" class="footer__logo flex flex-col gap-2 mb-5" aria-label="{{ shop.name }} — início">
+            {% render 'icon-tree', width: 40, color: '#FDFDD0' %}
+            <span class="font-heading text-2xl text-ecru uppercase tracking-widest">{{ shop.name }}</span>
+          </a>
+          <p class="footer__tagline text-xs text-ecru/50 tracking-widest uppercase font-light">
+            {{ section.settings.tagline | default: 'Grace in every thread.' }}
+          </p>
+        </div>
+
+        <!-- Coluna 2: Shop -->
+        <div class="footer__nav-col">
+          <h3 class="footer__nav-heading">{{ section.settings.col2_heading | default: 'Shop' }}</h3>
+          <ul class="footer__nav-list">
+            {%- for link in linklists['footer-shop'].links -%}
+              <li><a href="{{ link.url }}" class="footer__nav-link">{{ link.title }}</a></li>
+            {%- else -%}
+              <li><a href="{{ routes.all_products_collection_url }}" class="footer__nav-link">Todos os produtos</a></li>
+              <li><a href="/collections/drop-01" class="footer__nav-link">Drop 01</a></li>
+              <li><a href="/collections/drop-02" class="footer__nav-link">Drop 02</a></li>
+            {%- endfor -%}
+          </ul>
+        </div>
+
+        <!-- Coluna 3: Marca -->
+        <div class="footer__nav-col">
+          <h3 class="footer__nav-heading">{{ section.settings.col3_heading | default: 'Marca' }}</h3>
+          <ul class="footer__nav-list">
+            {%- for link in linklists['footer-brand'].links -%}
+              <li><a href="{{ link.url }}" class="footer__nav-link">{{ link.title }}</a></li>
+            {%- else -%}
+              <li><a href="/pages/sobre" class="footer__nav-link">Nossa história</a></li>
+              <li><a href="/pages/missao" class="footer__nav-link">Missão</a></li>
+              <li><a href="/pages/sustentabilidade" class="footer__nav-link">Sustentabilidade</a></li>
+            {%- endfor -%}
+          </ul>
+        </div>
+
+        <!-- Coluna 4: Suporte -->
+        <div class="footer__nav-col">
+          <h3 class="footer__nav-heading">{{ section.settings.col4_heading | default: 'Suporte' }}</h3>
+          <ul class="footer__nav-list">
+            {%- for link in linklists['footer-support'].links -%}
+              <li><a href="{{ link.url }}" class="footer__nav-link">{{ link.title }}</a></li>
+            {%- else -%}
+              <li><a href="/pages/faq" class="footer__nav-link">FAQ</a></li>
+              <li><a href="/pages/trocas-e-devolucoes" class="footer__nav-link">Trocas e Devoluções</a></li>
+              <li><a href="/pages/contato" class="footer__nav-link">Contato</a></li>
+            {%- endfor -%}
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Row: Copyright + Social + Legal -->
+  <div class="footer__bottom-row">
+    <div class="container mx-auto px-6 md:px-12 lg:px-16 py-6">
+      <div class="footer__bottom-inner flex flex-col md:flex-row items-center justify-between gap-4">
+
+        <!-- Copyright -->
+        <p class="footer__copyright text-xs text-ecru/40 tracking-wider">
+          &copy; {{ 'now' | date: '%Y' }} {{ shop.name }}. Todos os direitos reservados.
+        </p>
+
+        <!-- Redes Sociais -->
+        <div class="footer__social flex items-center gap-5" aria-label="Redes sociais">
+          {%- if section.settings.social_instagram != blank -%}
+            <a
+              href="{{ section.settings.social_instagram }}"
+              class="footer__social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Instagram da {{ shop.name }}"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+              </svg>
+            </a>
+          {%- endif -%}
+          {%- if section.settings.social_tiktok != blank -%}
+            <a
+              href="{{ section.settings.social_tiktok }}"
+              class="footer__social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="TikTok da {{ shop.name }}"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.89a8.22 8.22 0 0 0 4.8 1.54V7a4.85 4.85 0 0 1-1.03-.31z"/>
+              </svg>
+            </a>
+          {%- endif -%}
+          {%- if section.settings.social_twitter != blank -%}
+            <a
+              href="{{ section.settings.social_twitter }}"
+              class="footer__social-link"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="X/Twitter da {{ shop.name }}"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
+          {%- endif -%}
+        </div>
+
+        <!-- Links legais -->
+        <nav class="footer__legal" aria-label="Links legais">
+          <a href="{{ shop.privacy_policy.url }}" class="footer__legal-link">Privacidade</a>
+          <span class="footer__legal-sep" aria-hidden="true">&middot;</span>
+          <a href="{{ shop.terms_of_service.url }}" class="footer__legal-link">Termos</a>
+        </nav>
+
+      </div>
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Rodapé",
+  "tag": "section",
+  "class": "section-footer",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Newsletter"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_heading",
+      "label": "Título da newsletter",
+      "default": "ENTRE NA LISTA"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_subtext",
+      "label": "Subtexto",
+      "default": "Primeiras notícias dos drops. Sem spam."
+    },
+    {
+      "type": "text",
+      "id": "newsletter_placeholder",
+      "label": "Placeholder do campo de e-mail",
+      "default": "seu@email.com"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_cta",
+      "label": "Texto do botão",
+      "default": "ENTRAR"
+    },
+    {
+      "type": "text",
+      "id": "newsletter_success",
+      "label": "Mensagem de sucesso",
+      "default": "Perfeito! Você está na lista."
+    },
+    {
+      "type": "header",
+      "content": "Colunas de Links"
+    },
+    {
+      "type": "text",
+      "id": "col2_heading",
+      "label": "Título coluna 2",
+      "default": "Shop"
+    },
+    {
+      "type": "text",
+      "id": "col3_heading",
+      "label": "Título coluna 3",
+      "default": "Marca"
+    },
+    {
+      "type": "text",
+      "id": "col4_heading",
+      "label": "Título coluna 4",
+      "default": "Suporte"
+    },
+    {
+      "type": "header",
+      "content": "Identidade"
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "Tagline da marca",
+      "default": "Grace in every thread."
+    },
+    {
+      "type": "header",
+      "content": "Redes Sociais"
+    },
+    {
+      "type": "url",
+      "id": "social_instagram",
+      "label": "URL do Instagram"
+    },
+    {
+      "type": "url",
+      "id": "social_tiktok",
+      "label": "URL do TikTok"
+    },
+    {
+      "type": "url",
+      "id": "social_twitter",
+      "label": "URL do X (Twitter)"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Rodapé GRACIOU"
+    }
+  ]
+}
+{% endschema %}
