@@ -615,6 +615,10 @@ app.use((err, req, res, next) => {
    INICIALIZAÇÃO
    ───────────────────────────────────────────── */
 function iniciar() {
+  /* A Vercel importa `app` como handler; nunca abre listener HTTP lá. */
+  if (process.env.VERCEL) {
+    throw new Error('iniciar() não deve ser chamado dentro da Vercel Function.');
+  }
   /* Produção na Vercel exige Supabase; SQLite fica restrito ao desenvolvimento local. */
   if (process.env.VERCEL && !repositorio.usandoSupabase()) {
     throw new Error('Supabase é obrigatório na Vercel.');
@@ -650,8 +654,8 @@ function iniciar() {
   return servidor;
 }
 
-/* Só sobe sozinho se for executado direto (permite importar em teste). */
-if (require.main === module) {
+/* Só sobe sozinho se for executado diretamente fora da Vercel. */
+if (require.main === module && !process.env.VERCEL) {
   iniciar();
 }
 

@@ -6,7 +6,8 @@
     "dev": "vite --open --port 3000",
     "build": "vite build",
     "verificar:catalogo": "node scripts/verificar-catalogo.js",
-    "testar:vercel": "node scripts/testar-vercel-functions.mjs"
+    "testar:vercel": "node scripts/testar-vercel-functions.mjs",
+    "testar:vercel:handler": "node scripts/testar-vercel-handler.mjs"
   },
   "devDependencies": {
     "vite": "^5.2.0"
