@@ -13,6 +13,7 @@
     "vite": "^5.2.0"
   },
   "dependencies": {
-    "@supabase/server": "^1.9.0"
+    "@supabase/server": "^1.9.0",
+    "express": "^4.22.3"
   }
 }

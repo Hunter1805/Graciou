@@ -5,9 +5,10 @@ const crypto = require('node:crypto');
 /* Repositório único da persistência. Supabase é preferido quando a chave
    server_role existe; SQLite permanece como fallback local. A chave nunca
    sai deste módulo. */
-/* SQLite só é carregado fora da Vercel. Isso impede que node:sqlite seja
-   empacotado/executado no ambiente serverless de produção. */
-const sqlite = process.env.VERCEL ? null : require('./db');
+/* SQLite só é carregado fora da Vercel. O require condicional mantém o
+   módulo fora do caminho de inicialização serverless. */
+let sqlite = null;
+if (!process.env.VERCEL) sqlite = require('./db');
 const supabase = require('./supabase');
 const catalogo = require('./regras').CATALOGO;
 

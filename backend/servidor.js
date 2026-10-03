@@ -21,7 +21,8 @@
 
 'use strict';
 
-require('./env').carregar();
+/* O .env é apenas um recurso local; na Vercel as variáveis vêm do ambiente. */
+if (!process.env.VERCEL) require('./env').carregar();
 
 const express = require('express');
 const path = require('node:path');
