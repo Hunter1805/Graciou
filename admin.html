@@ -567,7 +567,9 @@
     /* A API da GRACIOU roda em http://localhost:3001 por padrão.
        Se ela estiver em outra porta, abre-se o painel com
        ?api=http://localhost:3002 — útil quando a 3001 está ocupada. */
-    var API_BASE = 'http://localhost:3001';
+    var API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3001'
+      : window.location.origin;
     (function () {
       try {
         /* O valor vem codificado na query string (?api=http%3A%2F%2F...),

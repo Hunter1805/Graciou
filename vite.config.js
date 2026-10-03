@@ -137,6 +137,19 @@ export default defineConfig({
     include: [/\.(ts|tsx|jsx|mts|cts)$/]
   },
 
+  build: {
+    rollupOptions: {
+      input: {
+        index: resolve(RAIZ, 'index.html'),
+        preview: resolve(RAIZ, 'preview.html'),
+        collection: resolve(RAIZ, 'collection.html'),
+        cart: resolve(RAIZ, 'cart.html'),
+        checkout: resolve(RAIZ, 'checkout.html'),
+        admin: resolve(RAIZ, 'admin.html')
+      }
+    }
+  },
+
   server: {
     port: 3000,
     strictPort: false

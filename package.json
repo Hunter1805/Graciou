@@ -4,9 +4,14 @@
   "description": "Preview environment for GRACIOU storefront prototypes",
   "scripts": {
     "dev": "vite --open --port 3000",
-    "verificar:catalogo": "node scripts/verificar-catalogo.js"
+    "build": "vite build",
+    "verificar:catalogo": "node scripts/verificar-catalogo.js",
+    "testar:vercel": "node scripts/testar-vercel-functions.mjs"
   },
   "devDependencies": {
     "vite": "^5.2.0"
+  },
+  "dependencies": {
+    "@supabase/server": "^1.9.0"
   }
 }

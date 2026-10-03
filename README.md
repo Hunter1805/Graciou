@@ -3,7 +3,8 @@
 > Streetwear premium. Loja própria, sem Shopify e sem Nuvemshop.
 
 A GRACIOU é uma loja independente: frontend estático servido pelo Vite, API
-própria em Node.js + SQLite, carrinho persistente, checkout, cupons e um painel
+serverless compatível com Vercel usando Supabase em produção (SQLite somente
+no desenvolvimento local), carrinho persistente, checkout, cupons e um painel
 de pedidos para a operação. A produção é feita na **YouDraw**, por lançamento
 manual de um pedido formatado — o sistema gera o resumo, o operador cola.
 
@@ -28,11 +29,14 @@ GRACIOU/
 │   ├── graciou-store.js  # Navegação e apoio de UI das páginas
 │   └── tree-icon.png     # Asset da marca
 │
-├── backend/            # API + banco (ver backend/README.md)
-│   ├── servidor.js     # Express: rotas, CORS restrito, logs seguros
-│   ├── regras.js       # Validação e recálculo no servidor
-│   ├── admin.js        # Sessões, validação do painel, resumo da YouDraw
-│   └── db.js           # SQLite (node:sqlite, sem dependência externa)
+├── api/[...path].js     # Vercel Function catch-all para /api/*
+├── vercel.json          # Build e configuração da Function
+├── backend/             # API local + repositório
+│   ├── servidor.js      # Express: rotas, CORS restrito, logs seguros
+│   ├── repositorio.js   # Supabase em produção; SQLite local como fallback
+│   ├── regras.js        # Validação e recálculo no servidor
+│   ├── admin.js         # Sessões, validação do painel, resumo da YouDraw
+│   └── db.js            # SQLite somente no desenvolvimento local
 │
 ├── scripts/            # Verificações e ferramentas de QA
 ├── logs/               # Capturas de tela das verificações
@@ -66,10 +70,11 @@ Precisa de **Node.js 22.5 ou superior** (o SQLite vem embutido no Node).
 npm install
 cd backend && npm install && cd ..
 
-# 2. API — terminal 1
+# 2. API local — terminal 1
 cd backend
 npm run dev
 # → [graciou-api] API no ar em http://localhost:3001
+# Em produção, a API é carregada por api/[...path].js na Vercel.
 
 # 3. Frontend — terminal 2, na raiz
 npm run dev

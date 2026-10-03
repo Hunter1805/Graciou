@@ -27,12 +27,13 @@ const express = require('express');
 const path = require('node:path');
 const os = require('node:os');
 
-const banco = require('./db');
+const banco = process.env.VERCEL ? null : require('./db');
+const repositorio = require('./repositorio');
 const regras = require('./regras');
 const admin = require('./admin');
 const pagamentos = require('./pagamentos');
 
-const PORTA = Number(process.env.PORT) || 3001;
+const PORTA = Number(process.env.PORT) || (process.env.VERCEL ? 0 : 3001);
 const CATALOGO = regras.CATALOGO;
 
 const app = express();
@@ -58,6 +59,8 @@ for (const porta of PORTAS_FRONT) {
     ORIGENS_PERMITIDAS.add(`http://${host}:${porta}`);
   }
 }
+const basePublica = String(process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+if (basePublica) ORIGENS_PERMITIDAS.add(basePublica);
 
 /* Abrir o checkout direto do disco manda Origin: null.
    Aceitamos esse caso porque é o protótipo local — não há
@@ -136,11 +139,15 @@ app.use((req, res, next) => {
 /* ─────────────────────────────────────────────
    GET /api/health — teste de vida
    ───────────────────────────────────────────── */
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
   let bancoOk = false;
   try {
-    const db = banco.abrir();
-    db.prepare('SELECT 1 AS ok').get();
+    if (repositorio.usandoSupabase()) {
+      await repositorio.testarConexao();
+    } else {
+      const db = banco.abrir();
+      db.prepare('SELECT 1 AS ok').get();
+    }
     bancoOk = true;
   } catch (e) {
     bancoOk = false;
@@ -155,8 +162,8 @@ app.get('/api/health', (req, res) => {
     versao: '1.0.0',
     etapa: 'pedidos + Checkout Pro (se configurado)',
     banco: {
-      tipo: 'sqlite',
-      arquivo: path.basename(banco.CAMINHO_BANCO),
+      tipo: repositorio.usandoSupabase() ? 'supabase' : 'sqlite',
+      arquivo: repositorio.usandoSupabase() ? null : path.basename(banco.CAMINHO_BANCO),
       conectado: bancoOk
     },
     catalogo: {
@@ -180,7 +187,7 @@ app.get('/api/health', (req, res) => {
 /* ─────────────────────────────────────────────
    POST /api/orders — cria o pedido
    ───────────────────────────────────────────── */
-app.post('/api/orders', (req, res) => {
+app.post('/api/orders', async (req, res) => {
   let entrada;
   try {
     entrada = regras.validarCorpo(req.body);
@@ -211,8 +218,8 @@ app.post('/api/orders', (req, res) => {
 
   const pedido = montado.pedido;
 
-  /* Id gerado pelo BANCO, nunca pelo navegador. */
-  const id = banco.gerarIdPedido();
+  /* Id gerado pelo repositório, nunca pelo navegador. */
+  const id = repositorio.gerarIdPedido();
 
   const agora = new Date();
 
@@ -225,7 +232,7 @@ app.post('/api/orders', (req, res) => {
 
   let registro;
   try {
-    registro = banco.inserirPedido({
+    registro = await repositorio.inserirPedido({
       id: id,
       criado_em: montado.criadoEm,
       cliente_nome: pedido.cliente.nome,
@@ -273,14 +280,14 @@ app.post('/api/orders', (req, res) => {
 /* ─────────────────────────────────────────────
    GET /api/orders/:id — consulta por id
    ───────────────────────────────────────────── */
-app.get('/api/orders/:id', (req, res) => {
+app.get('/api/orders/:id', async (req, res) => {
   const id = String(req.params.id || '').trim();
 
   if (!id) {
     return res.status(400).json({ ok: false, erro: 'Informe o número do pedido.' });
   }
 
-  const pedido = banco.buscarPedido(id);
+  const pedido = await repositorio.buscarPedido(id);
 
   if (!pedido) {
     return res.status(404).json({
@@ -302,7 +309,7 @@ app.get('/api/orders/:id', (req, res) => {
 app.post('/api/payments/create-preference', async (req, res) => {
   const id = String(req.body && (req.body.orderId || req.body.id) || '').trim();
   if (!id) return res.status(400).json({ ok: false, erro: 'Informe o ID do pedido.' });
-  const pedido = banco.buscarPedido(id);
+  const pedido = await repositorio.buscarPedido(id);
   if (!pedido) return res.status(404).json({ ok: false, erro: 'Pedido não encontrado.', id: id });
   if (pedido.total === null || pedido.frete === null) return res.status(409).json({ ok: false, erro: 'O pedido ainda tem frete pendente e não pode iniciar o pagamento.' });
   if (pedido.pagamento.status === 'pago') return res.status(409).json({ ok: false, erro: 'Este pedido já foi pago.' });
@@ -312,7 +319,7 @@ app.post('/api/payments/create-preference', async (req, res) => {
     else {
       preferencia = await pagamentos.criarPreferencia(pedido);
       if (!preferencia.id || !preferencia.initPoint) throw new pagamentos.ErroPagamento('Mercado Pago não devolveu um link de checkout.', 502);
-      banco.associarPreferencia(id, preferencia.id);
+      await repositorio.associarPreferencia(id, preferencia.id);
     }
     return res.status(201).json({ ok: true, orderId: id, preferenceId: preferencia.id, init_point: preferencia.initPoint, sandbox_init_point: preferencia.sandboxInitPoint || null });
   } catch (erro) {
@@ -329,13 +336,13 @@ app.post('/api/payments/webhook', async (req, res) => {
     const pagamento = await pagamentos.consultarPagamento(paymentId);
     const externalReference = String(pagamento.external_reference || '').trim();
     if (!externalReference || !/^GR-/.test(externalReference)) return res.status(400).json({ ok: false, erro: 'Pagamento sem referência externa válida.' });
-    const pedido = banco.buscarPedido(externalReference);
+    const pedido = await repositorio.buscarPedido(externalReference);
     if (!pedido) return res.status(404).json({ ok: false, erro: 'Pedido da notificação não encontrado.' });
     if (pedido.mercadoPago && pedido.mercadoPago.preferenceId && pagamento.preference_id && String(pagamento.preference_id) !== String(pedido.mercadoPago.preferenceId)) return res.status(409).json({ ok: false, erro: 'Preferência não corresponde ao pedido.' });
     if (pagamento.currency_id && String(pagamento.currency_id) !== 'BRL') return res.status(409).json({ ok: false, erro: 'Moeda do pagamento não corresponde ao pedido.' });
     if (pagamento.transaction_amount !== undefined && Math.round(Number(pagamento.transaction_amount) * 100) !== Number(pedido.total)) return res.status(409).json({ ok: false, erro: 'Valor do pagamento não corresponde ao pedido.' });
     const status = pagamentos.statusInterno(String(pagamento.status || '').toLowerCase());
-    const atualizado = banco.atualizarPagamento(externalReference, { mpPaymentId: paymentId, mpStatus: String(pagamento.status || ''), statusPagamento: status.pagamento });
+    const atualizado = await repositorio.atualizarPagamento(externalReference, { mpPaymentId: paymentId, mpStatus: String(pagamento.status || ''), statusPagamento: status.pagamento });
     log(`webhook Mercado Pago processado para ${externalReference} — status=${status.pagamento}`);
     return res.status(200).json({ ok: true, id: externalReference, statusPagamento: atualizado.pagamento.status });
   } catch (erro) {
@@ -344,9 +351,9 @@ app.post('/api/payments/webhook', async (req, res) => {
   }
 });
 
-app.get('/api/payments/status/:orderId', (req, res) => {
+app.get('/api/payments/status/:orderId', async (req, res) => {
   const id = String(req.params.orderId || '').trim();
-  const pagamento = banco.pagamentoDoPedido(id);
+  const pagamento = await repositorio.pagamentoDoPedido(id);
   if (!pagamento) return res.status(404).json({ ok: false, erro: 'Pedido não encontrado.', id: id });
   return res.json({ ok: true, orderId: id, statusPagamento: pagamento.status_pagamento, statusPedido: pagamento.status_pedido, mercadoPago: { preferenceId: pagamento.mp_preference_id || null, paymentId: pagamento.mp_payment_id || null, status: pagamento.mp_status || null, pagoEm: pagamento.pago_em || null } });
 });
@@ -456,7 +463,7 @@ app.post('/api/admin/logout', exigirAdmin, (req, res) => {
 /* ─────────────────────────────────────────────
    GET /api/admin/orders — lista (com filtro por status)
    ───────────────────────────────────────────── */
-app.get('/api/admin/orders', exigirAdmin, (req, res) => {
+app.get('/api/admin/orders', exigirAdmin, async (req, res) => {
   const statusBruto = String(req.query.status || '').trim();
   const status = statusBruto && statusBruto !== 'todos' ? statusBruto : null;
 
@@ -471,8 +478,8 @@ app.get('/api/admin/orders', exigirAdmin, (req, res) => {
   let pedidos;
   let contagem;
   try {
-    pedidos = banco.listarResumoPedidos({ status: status, limite: req.query.limite });
-    contagem = banco.contagemPorStatus(admin.STATUS_PERMITIDOS);
+    pedidos = await repositorio.listarResumoPedidos({ status: status, limite: req.query.limite });
+    contagem = await repositorio.contagemPorStatus(admin.STATUS_PERMITIDOS);
   } catch (erro) {
     log('ERRO ao listar pedidos:', erro.message);
     return res.status(500).json({ ok: false, erro: 'Não foi possível listar os pedidos.' });
@@ -498,14 +505,14 @@ app.get('/api/admin/orders', exigirAdmin, (req, res) => {
 /* ─────────────────────────────────────────────
    GET /api/admin/orders/:id — detalhe completo
    ───────────────────────────────────────────── */
-app.get('/api/admin/orders/:id', exigirAdmin, (req, res) => {
+app.get('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
   const id = String(req.params.id || '').trim();
 
   if (!id) {
     return res.status(400).json({ ok: false, erro: 'Informe o número do pedido.' });
   }
 
-  const pedido = banco.buscarPedido(id);
+  const pedido = await repositorio.buscarPedido(id);
 
   if (!pedido) {
     return res.status(404).json({ ok: false, erro: 'Pedido não encontrado.', id: id });
@@ -531,7 +538,7 @@ app.get('/api/admin/orders/:id', exigirAdmin, (req, res) => {
    PATCH /api/admin/orders/:id — atualização parcial
    Só altera os campos enviados; o resto permanece intacto.
    ───────────────────────────────────────────── */
-app.patch('/api/admin/orders/:id', exigirAdmin, (req, res) => {
+app.patch('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
   const id = String(req.params.id || '').trim();
 
   if (!id) {
@@ -550,7 +557,7 @@ app.patch('/api/admin/orders/:id', exigirAdmin, (req, res) => {
 
   let pedido;
   try {
-    pedido = banco.atualizarPedido(id, validacao.alteracoes);
+    pedido = await repositorio.atualizarPedido(id, validacao.alteracoes);
   } catch (erro) {
     log(`ERRO ao atualizar pedido ${id}:`, erro.message);
     return res.status(500).json({ ok: false, erro: 'Não foi possível atualizar o pedido.' });
@@ -608,13 +615,17 @@ app.use((err, req, res, next) => {
    INICIALIZAÇÃO
    ───────────────────────────────────────────── */
 function iniciar() {
+  /* Produção na Vercel exige Supabase; SQLite fica restrito ao desenvolvimento local. */
+  if (process.env.VERCEL && !repositorio.usandoSupabase()) {
+    throw new Error('Supabase é obrigatório na Vercel.');
+  }
   /* Abre o banco e sincroniza o espelho de cupons com o catálogo. */
-  banco.abrir();
-  const n = banco.sincronizarCupons(CATALOGO);
+  if (!repositorio.usandoSupabase()) banco.abrir();
+  const n = repositorio.usandoSupabase() ? 0 : banco.sincronizarCupons(CATALOGO);
 
   const servidor = app.listen(PORTA, () => {
     log(`API no ar em http://localhost:${PORTA}`);
-    log(`banco: ${banco.CAMINHO_BANCO}`);
+    log(`banco: ${repositorio.usandoSupabase() ? 'supabase' : banco.CAMINHO_BANCO}`);
     log(`catalogo: ${CATALOGO.lista().length} produtos · cupons sincronizados: ${n}`);
     log(process.env.MP_ACCESS_TOKEN && process.env.PUBLIC_BASE_URL
       ? 'Mercado Pago: Checkout Pro configurado (webhook server-side).'
@@ -631,7 +642,7 @@ function iniciar() {
 
   const encerrar = () => {
     log('encerrando...');
-    servidor.close(() => { banco.fechar(); process.exit(0); });
+    servidor.close(() => { if (banco) banco.fechar(); process.exit(0); });
   };
   process.on('SIGINT', encerrar);
   process.on('SIGTERM', encerrar);
