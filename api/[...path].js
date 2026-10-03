@@ -10,10 +10,10 @@ let app;
 let erroDeInicializacao = null;
 try {
   app = require('../backend/servidor').app;
-  } catch (erro) {
-    erroDeInicializacao = erro;
-    console.error('[graciou-api] falha ao carregar Function:', erro && erro.name ? erro.name : 'Error');
-  }
+} catch (erro) {
+  erroDeInicializacao = erro;
+  console.error('[graciou-api] falha ao carregar Function:', erro && erro.name ? erro.name : 'Error');
+}
 
 function ehHealth(req) {
   const caminho = String(req && req.url || '').split('?')[0];
