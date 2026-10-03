@@ -151,6 +151,7 @@ app.get('/api/health', async (req, res) => {
     bancoOk = true;
   } catch (e) {
     bancoOk = false;
+    log('health: falha técnica no repositório:', e && e.name ? e.name : 'Error');
   }
 
   const problemas = CATALOGO.verificarIntegridade();
@@ -606,7 +607,7 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-  log('ERRO interno:', err && err.message);
+  log('ERRO interno:', err && err.name ? err.name : 'Error');
   if (res.headersSent) return next(err);
   return res.status(500).json({ ok: false, erro: 'Erro interno no servidor.' });
 });
