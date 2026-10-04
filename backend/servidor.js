@@ -181,7 +181,11 @@ app.get('/api/health', async (req, res) => {
       duracaoSessaoMinutos: Math.floor(admin.DURACAO_SESSAO_MS / 60000)
     },
     rotaAdmin: '/admin.html',
-    origemFrontPermitida: ['http://localhost:3000', 'http://localhost:3100'],
+    origemFrontPermitida: [
+      'http://localhost:3000',
+      'http://localhost:3100',
+      ...(basePublica ? [basePublica] : [])
+    ],
     horario: new Date().toISOString()
   });
 });
