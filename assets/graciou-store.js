@@ -48,11 +48,9 @@
 
   function produtosDoCatalogo() {
     const catalogo = lerCatalogo();
-    if (!catalogo) return SEM_CATALOGO;
-    /* Aceita tanto PRODUTOS (lista crua) quanto uma lista já filtrada. */
-    if (Array.isArray(catalogo.PRODUTOS)) return catalogo.PRODUTOS;
-    if (typeof catalogo.lista === 'function') return catalogo.lista();
-    return SEM_CATALOGO;
+    if (!catalogo || typeof catalogo.lista !== 'function') return SEM_CATALOGO;
+    /* A lista pública é a única API de produtos consumida pelo frontend. */
+    return catalogo.lista();
   }
 
   /* ─────────────────────────────────────────────

@@ -2178,26 +2178,26 @@ function toggleWish(btn) {
     adicionarAoCarrinho(btn);
   });
 
-  /* ── Espera o catálogo.
-     assets/graciou-store.js usa defer, então pode rodar depois deste script.
-     Tentamos agora e, se preciso, aguardamos por polling curto. ── */
+  /* ── Espera as duas APIs públicas antes de renderizar. ── */
   function iniciar() {
-    if (renderizar()) return true;
     if (window.__GRACIOU_GRID_AGUARDANDO__) return false;
     window.__GRACIOU_GRID_AGUARDANDO__ = true;
 
     var tentativas = 0;
     var timer = setInterval(function () {
       tentativas++;
-      if (renderizar()) { clearInterval(timer); return; }
+      if (window.GRACIOU_CATALOGO && typeof window.GRACIOU_CATALOGO.lista === 'function' &&
+          window.GRACIOU_STORE && Array.isArray(window.GRACIOU_STORE.products) &&
+          renderizar()) {
+        clearInterval(timer);
+        return;
+      }
       if (tentativas >= 60) {                       /* ~15s */
         clearInterval(timer);
-        console.warn('[GRACIOU] ' + FONTE + ' não expôs window.GRACIOU_STORE.products ' +
-          'a tempo; o grid ficou como estava.');
+        console.warn('[GRACIOU] catálogo central ou store não ficou disponível a tempo.');
       }
     }, 250);
 
-    window.addEventListener('load', renderizar);
     return false;
   }
 
