@@ -55,6 +55,7 @@ const RAIZ = fileURLToPath(new URL('.', import.meta.url));
    Comparação feita sobre o pathname normalizado, com e sem barra inicial,
    e aceitando sufixo de query (?t=...) que o Vite às vezes acrescenta. */
 const JS_ESTATICO = ['dados/catalogo.js', 'assets/graciou-store.js'];
+const ARQUIVOS_PUBLICOS = [...JS_ESTATICO, 'assets/tree-icon.png'];
 
 function ehJsEstatico(url) {
   const pathname = String(url || '').split('?')[0].split('#')[0];
@@ -109,6 +110,18 @@ function jsEstaticoPuro() {
     transform(code, id) {
       if (!ehJsEstatico(id)) return null;
       return { code, map: null };
+    },
+    /* O build do Vite não copia scripts clássicos referenciados por src.
+       Em produção, publique esses arquivos nos mesmos caminhos usados pelo
+       HTML, sem transformar o catálogo nem a store. */
+    generateBundle() {
+      for (const rel of ARQUIVOS_PUBLICOS) {
+        this.emitFile({
+          type: 'asset',
+          fileName: rel,
+          source: readFileSync(resolve(RAIZ, rel.split('/').join(sep)))
+        });
+      }
     }
   };
 }
