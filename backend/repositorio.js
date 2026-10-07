@@ -12,6 +12,12 @@ if (!process.env.VERCEL) sqlite = require('./db');
 const supabase = require('./supabase');
 const catalogo = require('./regras').CATALOGO;
 
+/* Acesso direto ao SQLite para os dois campos de controle de e-mail.
+   Passa pelo mesmo módulo de banco (e pelas mesmas migrações) — não é
+   uma segunda conexão. */
+const db_marcarEmailConfirmacao = (id, messageId) => sqlite.marcarEmailConfirmacao(id, messageId);
+const db_emailConfirmacaoDoPedido = (id) => sqlite.emailConfirmacaoDoPedido(id);
+
 const usaSupabase = () => supabase.validarConfiguracao().completa;
 const agora = () => new Date().toISOString();
 
@@ -203,6 +209,39 @@ async function listarCuponsSupabase() {
   return request('cupons?select=codigo,tipo,valor,ativo,valor_minimo_centavos,validade,limite_usos&order=codigo.asc');
 }
 
+/* ─────────────────────────────────────────────
+   E-MAIL DE CONFIRMAÇÃO (idempotência)
+   Marca no pedido que a confirmação já saiu. O filtro
+   `email_confirmacao_enviado_em=is.null` torna a operação atômica:
+   duas requisições simultâneas não conseguem marcar/enviar duas
+   vezes — apenas a primeira encontra a linha livre.
+   ───────────────────────────────────────────── */
+async function marcarEmailConfirmacaoSupabase(codigo, messageId) {
+  const linhas = await request(
+    'pedidos?codigo=eq.' + encodeURIComponent(codigo) + '&email_confirmacao_enviado_em=is.null',
+    {
+      method: 'PATCH',
+      body: {
+        email_confirmacao_enviado_em: agora(),
+        email_confirmacao_id: messageId || null
+      }
+    }
+  );
+  return Array.isArray(linhas) && linhas.length > 0;
+}
+
+async function emailConfirmacaoDoPedidoSupabase(codigo) {
+  const linhas = await request(
+    'pedidos?codigo=eq.' + encodeURIComponent(codigo) + '&select=email_confirmacao_enviado_em,email_confirmacao_id'
+  );
+  const row = Array.isArray(linhas) ? linhas[0] : null;
+  if (!row) return null;
+  return {
+    enviado_em: row.email_confirmacao_enviado_em || null,
+    message_id: row.email_confirmacao_id || null
+  };
+}
+
 module.exports = {
   CAMINHO_BANCO: sqlite ? sqlite.CAMINHO_BANCO : null,
   abrir: () => sqlite ? sqlite.abrir() : null,
@@ -237,5 +276,11 @@ module.exports = {
     await request('pedidos?codigo=eq.' + encodeURIComponent(id), { method: 'PATCH', body: { mp_preference_id: preferenceId, updated_at: agora() } });
     return buscarSupabase(id);
   },
-  usandoSupabase: usaSupabase
+  usandoSupabase: usaSupabase,
+  marcarEmailConfirmacao: (id, messageId) => usaSupabase()
+    ? marcarEmailConfirmacaoSupabase(id, messageId)
+    : db_marcarEmailConfirmacao(id, messageId),
+  emailConfirmacaoDoPedido: (id) => usaSupabase()
+    ? emailConfirmacaoDoPedidoSupabase(id)
+    : db_emailConfirmacaoDoPedido(id)
 };

@@ -67,7 +67,9 @@ CREATE TABLE IF NOT EXISTS orders (
   mp_preference_id  TEXT,
   mp_payment_id     TEXT,
   mp_status         TEXT,
-  pago_em           TEXT
+  pago_em           TEXT,
+  email_confirmacao_enviado_em TEXT,
+  email_confirmacao_id         TEXT
 );
 `;
 
@@ -109,7 +111,12 @@ const COLUNAS_NOVAS = [
   { nome: 'mp_preference_id', sql: 'ALTER TABLE orders ADD COLUMN mp_preference_id TEXT;' },
   { nome: 'mp_payment_id', sql: 'ALTER TABLE orders ADD COLUMN mp_payment_id TEXT;' },
   { nome: 'mp_status', sql: 'ALTER TABLE orders ADD COLUMN mp_status TEXT;' },
-  { nome: 'pago_em', sql: 'ALTER TABLE orders ADD COLUMN pago_em TEXT;' }
+  { nome: 'pago_em', sql: 'ALTER TABLE orders ADD COLUMN pago_em TEXT;' },
+  /* Controle de e-mail transacional (Brevo). Guardamos apenas QUANDO
+     foi enviado e o id da mensagem — o conteúdo do e-mail não é
+     persistido, e nada disso é exposto como dado financeiro. */
+  { nome: 'email_confirmacao_enviado_em', sql: 'ALTER TABLE orders ADD COLUMN email_confirmacao_enviado_em TEXT;' },
+  { nome: 'email_confirmacao_id', sql: 'ALTER TABLE orders ADD COLUMN email_confirmacao_id TEXT;' }
 ];
 
 /** Nomes das colunas existentes em `orders` (introspecção do SQLite). */
@@ -523,6 +530,9 @@ function linhaParaPedido(linha) {
     observacoes: linha.observacoes,
     pedidoYouDraw: linha.pedido_youdraw || null,
     atualizadoEm: linha.atualizado_em || null,
+    /* Uso interno: a API não devolve estes dois campos ao frontend. */
+    emailConfirmacaoEnviadoEm: linha.email_confirmacao_enviado_em || null,
+    emailConfirmacaoId: linha.email_confirmacao_id || null,
     mercadoPago: {
       preferenceId: linha.mp_preference_id || null,
       paymentId: linha.mp_payment_id || null,
@@ -549,6 +559,33 @@ function listarCupons() {
   return db.prepare('SELECT * FROM coupons ORDER BY codigo').all();
 }
 
+/* ─────────────────────────────────────────────
+   E-MAIL DE CONFIRMAÇÃO (idempotência)
+   Marca no pedido que a confirmação já saiu. O UPDATE condicional
+   (`WHERE ... IS NULL`) só afeta a primeira chamada: uma segunda
+   tentativa para o mesmo pedido devolve `false` e não reenvia. É o
+   que impede e-mail duplicado mesmo com cliques repetidos.
+   ───────────────────────────────────────────── */
+function marcarEmailConfirmacao(id, messageId) {
+  const db = abrir();
+  const resultado = db.prepare(
+    'UPDATE orders SET email_confirmacao_enviado_em = :quando, email_confirmacao_id = :msg\n' +
+    ' WHERE id = :id AND email_confirmacao_enviado_em IS NULL'
+  ).run({
+    id: id,
+    quando: agoraLocalISO(),
+    msg: messageId || null
+  });
+  return Number(resultado && resultado.changes) > 0;
+}
+
+function emailConfirmacaoDoPedido(id) {
+  const db = abrir();
+  return db.prepare(
+    'SELECT email_confirmacao_enviado_em AS enviado_em, email_confirmacao_id AS message_id FROM orders WHERE id = :id'
+  ).get({ id: id }) || null;
+}
+
 module.exports = {
   CAMINHO_BANCO: CAMINHO_BANCO,
   abrir: abrir,
@@ -565,7 +602,9 @@ module.exports = {
   atualizarPedido: atualizarPedido,
   atualizarPagamento: atualizarPagamento,
   pagamentoDoPedido: pagamentoDoPedido,
-  associarPreferencia: associarPreferencia
+  associarPreferencia: associarPreferencia,
+  marcarEmailConfirmacao: marcarEmailConfirmacao,
+  emailConfirmacaoDoPedido: emailConfirmacaoDoPedido
 };
 
 /* Expostos acima para manter a API de persistência explícita. */

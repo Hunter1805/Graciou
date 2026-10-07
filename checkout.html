@@ -778,11 +778,17 @@
   </div>
 </div>
 
-<!-- Mesma ordem de scripts do cart.html:
+<!-- Mesma ordem de scripts do cart.html, mais os dois validadores:
      1) dados/catalogo.js — fonte única dos produtos e das regras;
-     2) assets/graciou-store.js — carrinho persistente (localStorage). -->
+     2) assets/graciou-store.js — carrinho persistente (localStorage);
+     3) assets/graciou-cpf.js — máscara e dígitos verificadores do CPF;
+     4) assets/graciou-cep.js — máscara e consulta ao ViaCEP.
+     CPF e CEP são módulos puros, sem dependência de DOM, por isso
+     também podem ser testados pelo Node. -->
 <script src="dados/catalogo.js"></script>
 <script src="assets/graciou-store.js"></script>
+<script src="assets/graciou-cpf.js"></script>
+<script src="assets/graciou-cep.js"></script>
 
 <script>
 (function () {
@@ -790,6 +796,8 @@
 
   var STORE    = window.GRACIOU_STORE;
   var CATALOGO = window.GRACIOU_CATALOGO;
+  var CPF      = window.GRACIOU_CPF;
+  var CEP      = window.GRACIOU_CEP;
   if (!STORE || !CATALOGO) return;
 
   /* ══════════════════════════════════════════════════════════════
@@ -957,18 +965,25 @@
     return '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
   }
 
+  /* CEP e CPF usam os módulos dedicados (assets/graciou-cep.js e
+     assets/graciou-cpf.js), que são os mesmos cobertos pela suíte
+     `node scripts/testar-validacao-checkout.js`. Se por algum motivo o
+     arquivo não carregar, caímos no comportamento antigo (só formato)
+     para o checkout não ficar inutilizável. */
   function mascaraCep(valor) {
+    if (CEP && typeof CEP.mascara === 'function') return CEP.mascara(valor);
     var d = somenteDigitos(valor).slice(0, 8);
     if (d.length <= 5) return d;
     return d.slice(0, 5) + '-' + d.slice(5);
   }
 
   function mascaraCpf(valor) {
-    var d = somenteDigitos(valor).slice(0, 11);
-    if (d.length <= 3)  return d;
-    if (d.length <= 6)  return d.slice(0, 3) + '.' + d.slice(3);
-    if (d.length <= 9)  return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6);
-    return d.slice(0, 3) + '.' + d.slice(3, 6) + '.' + d.slice(6, 9) + '-' + d.slice(9);
+    if (CPF && typeof CPF.mascara === 'function') return CPF.mascara(valor);
+    var c = somenteDigitos(valor).slice(0, 11);
+    if (c.length <= 3)  return c;
+    if (c.length <= 6)  return c.slice(0, 3) + '.' + c.slice(3);
+    if (c.length <= 9)  return c.slice(0, 3) + '.' + c.slice(3, 6) + '.' + c.slice(6);
+    return c.slice(0, 3) + '.' + c.slice(3, 6) + '.' + c.slice(6, 9) + '-' + c.slice(9);
   }
 
   /* Estado: só letras, no máximo 2 (UF), sempre em maiúsculas. */
@@ -999,7 +1014,10 @@
     return '';
   }
 
+  /* Usa a validação real dos dígitos verificadores (módulo 11) e recusa
+     sequências repetidas — a mesma regra de assets/graciou-cpf.js. */
   function validarCpf(valor) {
+    if (CPF && typeof CPF.mensagem === 'function') return CPF.mensagem(valor);
     var d = somenteDigitos(valor);
     if (!d) return 'Informe seu CPF.';
     if (d.length !== 11) return 'CPF inválido. Use 11 dígitos.';
@@ -1115,8 +1133,60 @@
     if (!String(alvo.value || '').trim()) return;
     var mensagem = validarCampo(campo);
     if (mensagem) marcarErro(campo, mensagem); else limparErro(campo);
+
+    /* Ao sair do CEP com 8 dígitos, tenta preencher o endereço sozinho.
+       A consulta NUNCA bloqueia nada: se o ViaCEP falhar, o cliente
+       apenas digita o endereço à mão. */
+    if (alvo.id === 'ck-cep' && !mensagem) consultarCep(alvo.value);
   }
   form.addEventListener('blur', aoSair, true);
+
+  /* ════════════════════════════════════════════════
+     AUTOCOMPLETAR ENDEREÇO PELO CEP (ViaCEP)
+     Preenche estado, cidade, bairro e rua. NUNCA sobrescreve um campo
+     que o cliente já preencheu; campo vazio recebe o valor do ViaCEP.
+     ════════════════════════════════════════════════ */
+  var cepConsultado = '';
+  var cepBuscando = false;
+
+  function preencherSeVazio(nome, valor) {
+    if (!valor) return;
+    var campo = campoPorNome(nome);
+    var inp = campo ? inputDe(campo) : null;
+    if (!inp || String(inp.value || '').trim()) return;
+    inp.value = valor;
+    limparErro(campo);
+  }
+
+  function consultarCep(valor) {
+    if (!CEP || typeof CEP.consultar !== 'function') return;
+    var d = CEP.somenteDigitos(valor);
+    if (d.length !== 8 || d === cepConsultado || cepBuscando) return;
+
+    var campo = campoPorNome('cep');
+    cepBuscando = true;
+    cepConsultado = d;
+    if (campo) marcarErro(campo, 'Buscando o endereço pelo CEP...');
+
+    CEP.consultar(d).then(function (r) {
+      cepBuscando = false;
+      if (campo) limparErro(campo);
+      /* Falha ou CEP inexistente: libera nova tentativa e segue em
+         silêncio — o cliente digita o endereço à mão. */
+      if (!r || !r.ok) { cepConsultado = ''; return; }
+
+      preencherSeVazio('estado', r.estado);
+      preencherSeVazio('cidade', r.cidade);
+      preencherSeVazio('bairro', r.bairro);
+      preencherSeVazio('rua', r.rua);
+
+      salvarRascunho();
+      if (r.estado) {
+        try { localStorage.setItem('graciou-uf-v1', normalizarEstado(r.estado)); } catch (_) {}
+      }
+      renderizar();
+    });
+  }
 
   /* ════════════════════════════════════════════════
      3. RENDERIZAÇÃO DO RESUMO

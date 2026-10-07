@@ -131,6 +131,8 @@ Para mudar o arquivo do banco: defina `GRACIOU_DB` com o caminho desejado.
 | `observacoes` | TEXT | Notas internas (o painel acrescenta ou substitui) |
 | `pedido_youdraw` | TEXT | Número do pedido na YouDraw, preenchido pelo painel |
 | `atualizado_em` | TEXT | Data/hora da última alteração feita pelo painel |
+| `email_confirmacao_enviado_em` | TEXT | Quando o e-mail de confirmação saiu (`NULL` = não enviado). Uso interno — nunca devolvido pela API |
+| `email_confirmacao_id` | TEXT | Id da mensagem na Brevo. Uso interno — nunca devolvido pela API |
 
 > **Não existe coluna de cartão.** Não há número, CVV, validade nem bandeira —
 > nem no schema, nem no código.
@@ -204,9 +206,14 @@ Resposta:
   "id": "GR-20260928-0002-YBJ4",
   "pedido": { "...": "pedido completo, já recalculado" },
   "recalculadoNoServidor": true,
-  "valoresRecebidosDoClienteIgnorados": []
+  "valoresRecebidosDoClienteIgnorados": [],
+  "emailConfirmacao": { "enviado": true }
 }
 ```
+
+> `emailConfirmacao.enviado` informa **só se** o e-mail de confirmação saiu.
+> Quando a Brevo não está configurada, vem `{ "enviado": false }` — e o pedido
+> é criado do mesmo jeito (ver seção 13).
 
 ### `GET /api/orders/:id`
 
@@ -390,9 +397,12 @@ sozinho, sem mudar mais nada.
 - **Mercado Pago sem credenciais não é ativado**; quando configurado, o
   Checkout Pro não recebe nem armazena dados de cartão.
 
-> ⚠️ **Ainda não é para produção.** Não há autenticação, rate limiting, HTTPS,
-> validação de CPF por dígito verificador nem política de retenção de dados
-> (LGPD). Isso entra antes de qualquer uso real.
+> ⚠️ **Ainda não é para produção.** Não há autenticação, rate limiting, HTTPS
+> nem política de retenção de dados (LGPD). Isso entra antes de qualquer uso
+> real.
+>
+> ✅ O CPF já é validado no navegador pelos **dígitos verificadores** (módulo 11)
+> e o CEP consulta o ViaCEP para preencher o endereço — ver §9.
 
 ---
 
@@ -429,6 +439,7 @@ GRACIOU/
     ├── admin.js          # sessões, validação do painel e resumo da YouDraw
     ├── regras.js         # validação + recálculo no servidor (o coração)
     ├── db.js             # SQLite: schema, conexão e acesso a orders/coupons
+    ├── email.js          # e-mail transacional (Brevo) — server-side
     ├── README.md         # este arquivo
     └── data/
         └── graciou.sqlite # banco (criado no primeiro start)
@@ -451,6 +462,8 @@ preços, cupons e regra de frete em todo o projeto.
 | Painel diz "Painel administrativo não configurado" (`503`) | Faltam `ADMIN_EMAIL` e `ADMIN_PASSWORD` no ambiente da API. Defina as duas e reinicie. |
 | Painel mostra "A API não respondeu em http://localhost:3001" | A API não está no ar, ou está em outra porta. Suba o backend, ou abra `admin.html?api=http://localhost:<porta>`. |
 | Painel volta para o login sozinho | A sessão expirou (30 min) ou a API foi reiniciada — as sessões vivem só em memória. Entre novamente. |
+| `emailConfirmacao: { enviado: false }` na resposta | A Brevo não está configurada (`BREVO_API_KEY`/`BREVO_SENDER_EMAIL`) ou o envio falhou. O console da API mostra o motivo. **O pedido foi criado normalmente.** |
+| Cliente não recebeu o e-mail | Confirme que `BREVO_SENDER_EMAIL` é um remetente verificado na Brevo e veja no console se o motivo foi `brevo_recusou` (traz o status HTTP). |
 
 ---
 
@@ -485,10 +498,81 @@ credenciais de teste e um túnel HTTPS de desenvolvimento; não publique em
 produção. Os testes automatizados do projeto usam o cliente MP simulado e não
 fazem cobrança real.
 
-## 13. Próximos passos (fora desta etapa)
+## 13. E-mail transacional (Brevo)
 
-1. **UX de pedido:** validar CPF por dígito verificador, máscara de CEP e
-   consulta de endereço.
+Depois que o pedido é gravado, `backend/email.js` envia ao cliente um e-mail de
+confirmação pela **API oficial da Brevo** (`POST /v3/smtp/email`), via `fetch`
+server-side — sem SDK e sem nenhuma chave no frontend.
+
+O e-mail contém: **nome do cliente**, **número do pedido**, **itens** (tamanho,
+cor e quantidade), **total** (com subtotal, desconto, frete e forma de
+pagamento), **endereço de entrega** e o aviso de que o **rastreio será enviado
+depois**, em um e-mail separado.
+
+### Variáveis de ambiente (apenas no backend)
+
+| Variável | Obrigatória | Para que serve |
+|---|---|---|
+| `BREVO_API_KEY` | Sim | Autentica a chamada à Brevo. **Nunca** vai ao frontend, a log ou a resposta da API. |
+| `BREVO_SENDER_EMAIL` | Sim | Remetente verificado na Brevo. |
+| `BREVO_SENDER_NAME` | Não | Nome exibido no remetente (padrão: `GRACIOU`). |
+
+Sem `BREVO_API_KEY` + `BREVO_SENDER_EMAIL`, o envio é simplesmente pulado:
+`/api/health` responde `emailTransacional: { provedor: 'brevo', configurado: false }`
+e o boot avisa no console, **sem imprimir valores**.
+
+### Garantias
+
+- **O pedido nunca depende do e-mail.** O envio acontece depois do `INSERT` e
+  qualquer falha (rede, HTTP 4xx/5xx, configuração ausente) vira apenas um log —
+  a resposta continua sendo `201` com o pedido criado.
+- **Sem envio duplicado.** Antes de chamar a Brevo, o pedido é marcado com um
+  `UPDATE` condicional (`... WHERE email_confirmacao_enviado_em IS NULL`). Só a
+  primeira requisição consegue marcar; as seguintes recebem `ja_enviado` e não
+  geram um segundo e-mail.
+- **Sem vazamento de segredo.** A chave é lida só dentro de `backend/email.js`,
+  nunca entra em log e nunca aparece em resposta HTTP. Os dois campos de controle
+  vivem apenas no banco.
+- **Nada de dinheiro é recalculado** aqui: o e-mail só formata o que o servidor
+  já calculou em `regras.js`.
+
+### Logs
+
+O console mostra o número do pedido e o resultado (`enviado`, `ja_enviado`,
+`nao_configurado`, `brevo_recusou`, `falha_de_rede`). Nenhum nome, e-mail, CPF,
+endereço ou trecho do corpo do e-mail é registrado.
+
+### Teste automatizado
+
+Sobe uma API com banco **temporário**, aplica um `fetch` interceptado (nada sai
+para a internet), cria **um** pedido de teste, confere conteúdo, segurança da
+resposta e idempotência — e **remove o pedido e o banco no final**:
+
+```bash
+node --no-warnings scripts/testar-email-brevo.mjs
+```
+
+### Validação do checkout (CPF e CEP)
+
+Não sobe servidor e não toca em serviço externo: o ViaCEP é substituído por um
+`fetch` falso. Cobre CPF válido, CPF com dígito verificador errado, sequências
+repetidas, CPF incompleto, CEP válido (preenchendo estado, cidade, bairro e
+rua), CEP inexistente, cache e ViaCEP fora do ar:
+
+```bash
+node scripts/testar-validacao-checkout.js
+```
+
+Os módulos testados são os mesmos carregados pelo `checkout.html`:
+`assets/graciou-cpf.js` e `assets/graciou-cep.js`.
+
+---
+
+## 14. Próximos passos (fora desta etapa)
+
+1. **UX de pedido:** o CPF já é validado por dígito verificador e o CEP já
+   consulta o ViaCEP (ver §9). Falta apenas validar essas mesmas regras
+   **no servidor**, para não depender do navegador.
 2. **Mercado Pago:** preferência de pagamento (Checkout Pro) + webhook de
    confirmação, atualizando `status_pagamento` para `pago` automaticamente —
    hoje essa mudança é feita à mão, pelo painel.

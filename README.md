@@ -27,6 +27,8 @@ GRACIOU/
 │
 ├── assets/
 │   ├── graciou-store.js  # Navegação e apoio de UI das páginas
+│   ├── graciou-cpf.js    # Máscara e validação do CPF (dígito verificador)
+│   ├── graciou-cep.js    # Máscara do CEP e consulta ao ViaCEP
 │   └── tree-icon.png     # Asset da marca
 │
 ├── api/[...path].js     # Vercel Function catch-all para /api/*
@@ -128,13 +130,15 @@ collection.html → cart.html → checkout.html → API /api/orders
                                                      ↓
                                          pedido gravado (aguardando_pagamento)
                                                      ↓
-                                  API /api/payments/create-preference
+                                  e-mail de confirmação (Brevo, idempotente)
                                                      ↓
-                                      Checkout Pro Mercado Pago
+                                   API /api/payments/create-preference
                                                      ↓
-                                   webhook assinado → consulta MP → pago
+                                       Checkout Pro Mercado Pago
                                                      ↓
-                                    admin.html: operador lança na YouDraw
+                                    webhook assinado → consulta MP → pago
+                                                     ↓
+                                     admin.html: operador lança na YouDraw
 ```
 
 Estados do pedido: `aguardando_pagamento → pago → encomendar_na_youdraw →
@@ -148,7 +152,9 @@ pedido_na_youdraw → em_producao → enviado → entregue` (ou `cancelado`).
   de teste, mas não deve ser publicado ainda. O pagamento só vira `pago` após
   webhook assinado e consulta server-side à API do Mercado Pago.
 - **Conta de cliente.** A compra usa apenas os dados do checkout, sem cadastro.
-- **E-mails transacionais, nota fiscal e LGPD.** Nada disso está implementado.
+- **E-mail de rastreio, nota fiscal e LGPD.** O e-mail de **confirmação do
+  pedido** já sai pela Brevo (`backend/email.js`, idempotente); falta o e-mail de
+  rastreio, a emissão fiscal e a política de retenção de dados.
 - **Preços e imagens reais.** Os preços vêm da tabela da YouDraw; as fotos de
   frente/costas/detalhes dependem de ensaio. Enquanto faltarem, a loja não deve
   ir ao ar.
@@ -176,9 +182,11 @@ projeto. O caminho é a loja independente descrita acima.
 ## 🔧 Verificações
 
 ```bash
-npm run verificar:catalogo          # integridade do catálogo
-node scripts/testar-backend.mjs     # suíte da API (com a API no ar)
-node scripts/rodar-qa-admin.mjs     # painel de pedidos num navegador real
+npm run verificar:catalogo                # integridade do catálogo
+node scripts/testar-validacao-checkout.js # CPF (dígito verificador) e CEP (ViaCEP)
+node scripts/testar-backend.mjs           # suíte da API (com a API no ar)
+node scripts/testar-email-brevo.mjs       # e-mail de confirmação (API temporária)
+node scripts/rodar-qa-admin.mjs           # painel de pedidos num navegador real
 ```
 
 ---

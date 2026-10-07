@@ -33,6 +33,7 @@ const repositorio = require('./repositorio');
 const regras = require('./regras');
 const admin = require('./admin');
 const pagamentos = require('./pagamentos');
+const email = require('./email');
 
 const PORTA = Number(process.env.PORT) || (process.env.VERCEL ? 0 : 3001);
 const CATALOGO = regras.CATALOGO;
@@ -138,6 +139,72 @@ app.use((req, res, next) => {
 });
 
 /* ─────────────────────────────────────────────
+   E-MAIL DE CONFIRMAÇÃO — ENVIO ÚNICO
+   ─────────────────────────────────────────────
+   Marca o pedido ANTES de enviar. O `marcarEmailConfirmacao` é um
+   UPDATE condicional: só devolve `true` na primeira vez. Se outra
+   requisição já marcou, nem chamamos a Brevo — é assim que evitamos
+   e-mail duplicado (clique repetido, retry do navegador, etc.).
+
+   Se o envio falhar, o pedido continua criado e a marca fica
+   registrada: a falha não vira reenvio automático em loop.
+   ───────────────────────────────────────────── */
+async function enviarConfirmacaoSeNovo(registro) {
+  if (!email.validarConfiguracao().completa) {
+    log(`e-mail de confirmacao NAO enviado para ${registro.id}: Brevo nao configurado`);
+    return { enviado: false, motivo: 'nao_configurado' };
+  }
+
+  let podeEnviar = false;
+  try {
+    podeEnviar = await repositorio.marcarEmailConfirmacao(registro.id, null);
+  } catch (erro) {
+    /* Sem conseguir marcar, não enviamos: melhor não mandar do que
+       arriscar duplicar em uma próxima tentativa. */
+    log(`e-mail de confirmacao NAO enviado para ${registro.id}: falha ao registrar envio`);
+    return { enviado: false, motivo: 'falha_de_registro' };
+  }
+
+  if (!podeEnviar) {
+    log(`e-mail de confirmacao ignorado para ${registro.id}: envio ja registrado`);
+    return { enviado: false, motivo: 'ja_enviado' };
+  }
+
+  let resultado;
+  try {
+    resultado = await email.enviarConfirmacaoPedido(registro);
+  } catch (erro) {
+    /* Defesa extra: o módulo não lança, mas se lançar o pedido segue de pé. */
+    log(`e-mail de confirmacao FALHOU para ${registro.id}: ${erro && erro.name ? erro.name : 'Error'}`);
+    return { enviado: false, motivo: 'erro_inesperado' };
+  }
+
+  if (resultado.enviado) {
+    /* Guarda o id da mensagem (mantém a marca já feita). */
+    if (resultado.messageId) {
+      try { await repositorio.marcarEmailConfirmacao(registro.id, resultado.messageId); } catch (_) {}
+    }
+    log(`e-mail de confirmacao enviado para ${registro.id}`);
+    return { enviado: true };
+  }
+
+  /* Log técnico sem dado pessoal: só o motivo e o id do pedido. */
+  log(`e-mail de confirmacao NAO enviado para ${registro.id}: ${resultado.motivo}` +
+    (resultado.status ? ` (HTTP ${resultado.status})` : ''));
+  return { enviado: false, motivo: resultado.motivo };
+}
+
+/* Os dois campos de controle de e-mail são uso interno: não entram nas
+   respostas da API (nem na criação nem na consulta do pedido). */
+function semUsoInternoDoEmail(pedido) {
+  if (!pedido || typeof pedido !== 'object') return pedido;
+  const copia = Object.assign({}, pedido);
+  delete copia.emailConfirmacaoEnviadoEm;
+  delete copia.emailConfirmacaoId;
+  return copia;
+}
+
+/* ─────────────────────────────────────────────
    GET /api/health — teste de vida
    ───────────────────────────────────────────── */
 app.get('/api/health', async (req, res) => {
@@ -175,6 +242,12 @@ app.get('/api/health', async (req, res) => {
     },
     pagamentoIntegrado: Boolean(process.env.MP_ACCESS_TOKEN && process.env.PUBLIC_BASE_URL),
     usuarioAdmin: admin.configurado(),
+    /* Só o FATO de a Brevo estar configurada — nunca a chave ou o
+       endereço do remetente. */
+    emailTransacional: {
+      provedor: 'brevo',
+      configurado: email.validarConfiguracao().completa
+    },
     painelAdmin: {
       configurado: admin.configurado(),
       sessoesAtivas: admin.sessoesAtivas(),
@@ -269,17 +342,26 @@ app.post('/api/orders', async (req, res) => {
   /* Log sem dado pessoal: só o id e o valor total. */
   log(`pedido criado ${registro.id} — ${registro.itens.length} linha(s), pecas=${registro.itens.reduce((s, i) => s + i.quantidade, 0)}`);
 
+  /* Confirmação por e-mail (Brevo). Roda DEPOIS do pedido gravado e
+     nunca bloqueia a resposta: falha vira log e o 201 sai do mesmo jeito.
+     O envio é idempotente — uma repetição para o mesmo pedido não gera
+     segundo e-mail (ver repositorio.marcarEmailConfirmacao). */
+  const emailConfirmacao = await enviarConfirmacaoSeNovo(registro);
+
   return res.status(201).json({
     ok: true,
     /* O número do pedido é o que o checkout mostra na confirmação. */
     numero: registro.id,
     id: registro.id,
-    pedido: registro,
+    pedido: semUsoInternoDoEmail(registro),
     recalculadoNoServidor: true,
     valoresRecebidosDoClienteIgnorados: pedido.camposDinheiroIgnorados,
     aviso: pedido.cupomRecusado
       ? `Cupom "${pedido.cupomRecusado.codigo}" não aplicado: ${pedido.cupomRecusado.motivo}`
-      : null
+      : null,
+    /* Só o fato de o e-mail ter saído. Nunca inclui chave, corpo ou
+       detalhe técnico da Brevo. */
+    emailConfirmacao: { enviado: emailConfirmacao.enviado }
   });
 });
 
@@ -303,7 +385,7 @@ app.get('/api/orders/:id', async (req, res) => {
     });
   }
 
-  return res.json({ ok: true, pedido: pedido });
+  return res.json({ ok: true, pedido: semUsoInternoDoEmail(pedido) });
 });
 
 /* ═════════════════════════════════════
@@ -530,7 +612,7 @@ app.get('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
 
   return res.json({
     ok: true,
-    pedido: pedido,
+    pedido: semUsoInternoDoEmail(pedido),
     meta: {
       statusPermitidos: admin.STATUS_PERMITIDOS,
       rotulosStatus: admin.ROTULOS_STATUS,
@@ -579,7 +661,7 @@ app.patch('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
 
   return res.json({
     ok: true,
-    pedido: pedido,
+    pedido: semUsoInternoDoEmail(pedido),
     alterado: Object.keys(validacao.alteracoes).filter((c) => c !== 'observacoesModo'),
     resumoYouDraw: admin.resumoParaYouDraw(pedido)
   });
@@ -601,9 +683,6 @@ app.use((req, res) => {
       'GET /api/admin/orders',
       'GET /api/admin/orders/:id',
       'PATCH /api/admin/orders/:id',
-      'POST /api/payments/create-preference',
-      'POST /api/payments/webhook',
-      'GET /api/payments/status/:orderId',
       'POST /api/payments/create-preference',
       'POST /api/payments/webhook',
       'GET /api/payments/status/:orderId'
@@ -640,6 +719,12 @@ function iniciar() {
     log(process.env.MP_ACCESS_TOKEN && process.env.PUBLIC_BASE_URL
       ? 'Mercado Pago: Checkout Pro configurado (webhook server-side).'
       : 'Mercado Pago: NAO configurado — defina MP_ACCESS_TOKEN e PUBLIC_BASE_URL.');
+
+    /* Avisamos apenas SE a Brevo está configurada. A chave e o
+       remetente nunca são impressos. */
+    log(email.validarConfiguracao().completa
+      ? 'E-mail transacional: Brevo configurado.'
+      : 'E-mail transacional: NAO configurado — defina BREVO_API_KEY e BREVO_SENDER_EMAIL.');
 
     /* Avisamos apenas SE o painel está configurado. O valor das
        variáveis nunca é impresso. */

@@ -4,9 +4,11 @@
  * ═══════════════════════════════════════
  *
  * REGRA DESTA CONFIGURAÇÃO:
- * os dois arquivos de dados/estado do catálogo —
+ * os arquivos de dados/estado e de validação do catálogo —
  *     dados/catalogo.js
  *     assets/graciou-store.js
+ *     assets/graciou-cpf.js
+ *     assets/graciou-cep.js
  *
  * — NÃO passam por transformação. São servidos como JavaScript
  * ESTÁTICO PURO (script clássico), byte a byte iguais ao arquivo em
@@ -16,7 +18,7 @@
  * COMO ISSO É GARANTIDO (três camadas independentes):
  *
  * 1) plugin `graciou:js-estatico` (abaixo)
- *    Intercepta os pedidos desses dois caminhos ANTES de qualquer
+ *    Intercepta os pedidos desses caminhos ANTES de qualquer
  *    pipeline de transformação e devolve o conteúdo do disco com
  *    Content-Type: text/javascript. Vale para dev E para preview.
  *
@@ -51,10 +53,18 @@ import { normalize, resolve, sep } from 'node:path';
 /* ── Raiz do projeto ── */
 const RAIZ = fileURLToPath(new URL('.', import.meta.url));
 
-/* ── Os DOIS arquivos que devem permanecer JavaScript estático puro ──
+/* ── Os arquivos que devem permanecer JavaScript estático puro ──
    Comparação feita sobre o pathname normalizado, com e sem barra inicial,
-   e aceitando sufixo de query (?t=...) que o Vite às vezes acrescenta. */
-const JS_ESTATICO = ['dados/catalogo.js', 'assets/graciou-store.js'];
+   e aceitando sufixo de query (?t=...) que o Vite às vezes acrescenta.
+   CPF e CEP entram aqui pelo mesmo motivo da store: são UMD que publicam
+   um global (window.GRACIOU_CPF / window.GRACIOU_CEP) e precisam chegar
+   ao navegador sem virarem módulo ESM. */
+const JS_ESTATICO = [
+  'dados/catalogo.js',
+  'assets/graciou-store.js',
+  'assets/graciou-cpf.js',
+  'assets/graciou-cep.js'
+];
 const ARQUIVOS_PUBLICOS = [...JS_ESTATICO, 'assets/tree-icon.png'];
 
 function ehJsEstatico(url) {
@@ -113,7 +123,7 @@ function jsEstaticoPuro() {
     },
     /* O build do Vite não copia scripts clássicos referenciados por src.
        Em produção, publique esses arquivos nos mesmos caminhos usados pelo
-       HTML, sem transformar o catálogo nem a store. */
+       HTML, sem transformar o catálogo, a store nem os validadores. */
     generateBundle() {
       for (const rel of ARQUIVOS_PUBLICOS) {
         this.emitFile({
@@ -136,7 +146,7 @@ const aliasEstatico = JS_ESTATICO.map((rel) => ({
 export default defineConfig({
   plugins: [jsEstaticoPuro()],
 
-  /* Nenhum dos dois arquivos entra em pré-bundle (esbuild). */
+  /* Nenhum desses arquivos entra em pré-bundle (esbuild). */
   optimizeDeps: {
     exclude: JS_ESTATICO.map((rel) => rel.split('/').join(sep))
   },
