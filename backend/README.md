@@ -127,12 +127,24 @@ Para mudar o arquivo do banco: defina `GRACIOU_DB` com o caminho desejado.
 | `frete` | INTEGER | Em centavos; `NULL` quando o valor não foi informado |
 | `total` | INTEGER | Em centavos; `NULL` enquanto o frete for `NULL` |
 | `status_pedido` | TEXT | Nasce como `aguardando_pagamento` |
-| `rastreio` | TEXT | Começa vazio; preenchido pelo painel |
-| `observacoes` | TEXT | Notas internas (o painel acrescenta ou substitui) |
+| `rastreio` | TEXT | Código de rastreio; começa vazio, preenchido pelo painel |
+| `transportadora` | TEXT | Nome da transportadora (ex.: Correios). Aparece na consulta do cliente |
+| `rastreio_url` | TEXT | Link de rastreio. O backend **só grava HTTPS** |
+| `observacoes` | TEXT | Notas **internas** (o painel acrescenta ou substitui). **Nunca** vai para o cliente |
+| `observacao_publica` | TEXT | Observação que o **cliente vê** em `rastreio.html` |
 | `pedido_youdraw` | TEXT | Número do pedido na YouDraw, preenchido pelo painel |
 | `atualizado_em` | TEXT | Data/hora da última alteração feita pelo painel |
 | `email_confirmacao_enviado_em` | TEXT | Quando o e-mail de confirmação saiu (`NULL` = não enviado). Uso interno — nunca devolvido pela API |
 | `email_confirmacao_id` | TEXT | Id da mensagem na Brevo. Uso interno — nunca devolvido pela API |
+
+### Tabela `order_events` (linha do tempo)
+
+`id` (PK), `pedido_id`, `tipo`, `status`, `titulo`, `descricao`, `publico` (1/0), `criado_em`.
+
+Guarda **cada etapa realmente registrada** do pedido (criação, mudança de status,
+rastreio informado, observação pública). É a **única fonte** da linha do tempo
+exibida em `rastreio.html`: etapa sem evento **não** recebe data — nada é inferido
+do status atual. Um evento por alteração do painel, com data/hora.
 
 > **Não existe coluna de cartão.** Não há número, CVV, validade nem bandeira —
 > nem no schema, nem no código.
@@ -239,6 +251,29 @@ Todas exigem sessão: `Authorization: Bearer <token>` (o token sai do login).
 
 Sem sessão válida a resposta é `401` e nada é devolvido.
 
+### `POST /api/orders/tracking` — acompanhamento público
+
+Consulta **sem sessão e sem conta**: recebe `{ "numero": "GR-…", "email": "…" }`
+(o e-mail vai **no corpo**, nunca na URL) e responde apenas o necessário para
+acompanhar o pedido.
+
+```bash
+curl -X POST http://localhost:3001/api/orders/tracking \
+  -H "Content-Type: application/json" \
+  -d '{ "numero": "GR-20261007-0001-A1B2", "email": "cliente@exemplo.com" }'
+```
+
+Regras desta rota:
+
+- valida número e e-mail no servidor;
+- **mensagem genérica** quando a combinação não casa (não revela se o número
+existe ou se o e-mail está errado) — resposta `404`;
+- **limita tentativas por IP** (10 em 10 minutos) → resposta `429`;
+- devolve só: número, status, datas, etapa atual, cidade/UF de destino,
+observação **pública** e rastreio (transportadora, código, link HTTPS);
+- **nunca** devolve CPF, telefone, e-mail, endereço completo, observações
+internas nem ids do Mercado Pago.
+
 ---
 
 ## 6. Painel de pedidos (`/admin.html`)
@@ -280,8 +315,11 @@ http://localhost:3000/admin.html?api=http://localhost:3002
    quantidade, unitário), totais, cupom e observações.
 3. **Copia o resumo da YouDraw** — texto puro, já formatado pelo servidor
    (`admin.js` → `resumoParaYouDraw`), pronto para colar na plataforma.
-4. **Atualiza o pedido:** status, status de pagamento, código de rastreio,
-   número do pedido na YouDraw e observação interna.
+4. **Atualiza o pedido:** status, status de pagamento, transportadora, código de
+   rastreio, **link de rastreio (só HTTPS)**, número do pedido na YouDraw,
+   **observação pública** (que o cliente vê) e observação **interna** (que o
+   cliente não vê). Cada alteração relevante vira uma linha no **histórico**
+   (`order_events`) com data e hora — e aparece na consulta do cliente.
 
 ### Regras que o painel respeita
 
@@ -433,12 +471,18 @@ total, consulta por ID e a ausência de qualquer dado de cartão no banco.
 ```
 GRACIOU/
 ├── admin.html            # painel de pedidos (na raiz, servido pelo Vite)
+├── rastreio.html         # consulta pública de acompanhamento (na raiz)
+├── supabase/
+│   ├── schema.sql        # referência das tabelas
+│   └── migrations/
+│       └── 20261007_acompanhamento_pedidos.sql  # migração incremental
 └── backend/
     ├── package.json      # dependências e scripts (dev, start, testar)
     ├── servidor.js       # Express: rotas, CORS restrito e logs seguros
     ├── admin.js          # sessões, validação do painel e resumo da YouDraw
+    ├── acompanhamento.js # consulta pública: resposta mínima, timeline, rate limit
     ├── regras.js         # validação + recálculo no servidor (o coração)
-    ├── db.js             # SQLite: schema, conexão e acesso a orders/coupons
+    ├── db.js             # SQLite: schema, migrações e acesso a orders/events/coupons
     ├── email.js          # e-mail transacional (Brevo) — server-side
     ├── README.md         # este arquivo
     └── data/
@@ -459,6 +503,9 @@ preços, cupons e regra de frete em todo o projeto.
 | `EADDRINUSE: address already in use :::3001` | Já existe algo na porta 3001. Feche o outro processo ou suba com `PORT=4001 npm start`. |
 | `Cannot find module 'express'` | Faltou `npm install` dentro de `backend/`. |
 | Checkout mostra "Não foi possível registrar o pedido." | A API está desligada. Suba com `npm run dev` e tente de novo — o carrinho e o pedido local continuam salvos. |
+| `rastreio.html` diz "Não foi possível consultar" / painel não grava | No Supabase, falta aplicar a migração `supabase/migrations/20261007_acompanhamento_pedidos.sql`. Sem as colunas/tabela novas, a persistência falha. |
+| Link de rastreio recusado pelo painel | Só **HTTPS** é aceito (`https://…`). Corrija o link ou deixe o campo vazio. |
+| Cliente vê a mesma mensagem para qualquer erro | Comportamento **proposital**: a consulta pública não revela se o número existe ou se o e-mail está errado. |
 | Painel diz "Painel administrativo não configurado" (`503`) | Faltam `ADMIN_EMAIL` e `ADMIN_PASSWORD` no ambiente da API. Defina as duas e reinicie. |
 | Painel mostra "A API não respondeu em http://localhost:3001" | A API não está no ar, ou está em outra porta. Suba o backend, ou abra `admin.html?api=http://localhost:<porta>`. |
 | Painel volta para o login sozinho | A sessão expirou (30 min) ou a API foi reiniciada — as sessões vivem só em memória. Entre novamente. |
@@ -568,7 +615,68 @@ Os módulos testados são os mesmos carregados pelo `checkout.html`:
 
 ---
 
-## 14. Próximos passos (fora desta etapa)
+## 14. Acompanhamento de pedido (`rastreio.html`)
+
+A página pública `rastreio.html` permite que o cliente acompanhe o pedido
+**sem criar conta**, informando **número do pedido + e-mail da compra**.
+
+### Como funciona
+
+1. O cliente preenche os dois campos. O e-mail vai **no corpo** da requisição
+   (`POST /api/orders/tracking`) — **nunca na URL** e nunca no `localStorage`.
+2. O backend valida os dois, casa número + e-mail (case-insensitive) e responde
+   só o necessário. Combinação errada → **mensagem genérica** + `404`.
+3. Tentativas são **limitadas por IP** (10 em 10 minutos) para evitar varredura.
+4. A **linha do tempo** (Pedido recebido → Pagamento confirmado → Em preparação
+   → Enviado → Entregue) é montada a partir de `order_events`. Etapa sem evento
+   **não recebe data** — nada é inventado.
+5. O **cancelamento** é tratado **à parte** da linha do tempo normal.
+6. O **rastreio** mostra transportadora, código (com botão copiar) e link
+   quando cadastrados. Sem código: *“O rastreio estará disponível após o envio.”*
+
+### O que a resposta NUNCA traz
+
+CPF, telefone, e-mail, endereço completo, observações internas, ids do Mercado
+Pago e os campos de controle de e-mail. Só sai cidade/UF do destino.
+
+### Histórico e atualizações manuais
+
+Toda alteração relevante do painel (status, rastreio, observação pública) grava
+uma linha em `order_events` com data e hora. O pagamento **não** é marcado como
+confirmado só porque o pedido foi criado: o pedido nasce em `aguardando_pagamento`
+e só muda com o webhook do Mercado Pago ou com ação do operador.
+
+### Link no e-mail de confirmação
+
+Quando `PUBLIC_BASE_URL` está definida, o e-mail de confirmação passa a incluir
+um botão **“Acompanhar pedido”** apontando para `PUBLIC_BASE_URL/rastreio.html`.
+Sem essa variável, o e-mail traz a instrução em texto — nunca um domínio inventado.
+
+### Migração necessária antes de publicar
+
+**Supabase (produção):** aplique
+`supabase/migrations/20261007_acompanhamento_pedidos.sql` no SQL Editor.
+Ela acrescenta as colunas `transportadora`, `rastreio_url`, `observacao_publica`
+em `pedidos` e cria a tabela `order_events` — **sem apagar nada** (idempotente).
+Sem ela, a consulta pública e o painel falham com erro de persistência.
+
+**SQLite (local):** nada a fazer. `backend/db.js` cria as mesmas colunas e a
+tabela automaticamente no boot (função `migrar`).
+
+### Teste automatizado
+
+```bash
+node --no-warnings scripts/testar-acompanhamento.mjs
+```
+
+Sobe uma API com banco temporário e cobre: consulta correta, combinação
+incorreta (mensagem genérica), pedido sem rastreio, atualização manual refletida
+na consulta, histórico cronológico, ausência de dado pessoal na resposta,
+recusa de link `http://`, cancelamento e limite de tentativas. Remove tudo no fim.
+
+---
+
+## 15. Próximos passos (fora desta etapa)
 
 1. **UX de pedido:** o CPF já é validado por dígito verificador e o CEP já
    consulta o ViaCEP (ver §9). Falta apenas validar essas mesmas regras

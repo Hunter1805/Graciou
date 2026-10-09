@@ -19,6 +19,7 @@ GRACIOU/
 ├── collection.html     # Coleção: grade, filtros, ordenação
 ├── cart.html           # Carrinho persistente
 ├── checkout.html       # Dados do cliente, endereço e revisão do pedido
+├── rastreio.html       # Acompanhamento público (número do pedido + e-mail)
 ├── admin.html          # Painel de pedidos (restrito, exige login)
 │
 ├── dados/
@@ -36,9 +37,12 @@ GRACIOU/
 ├── backend/             # API local + repositório
 │   ├── servidor.js      # Express: rotas, CORS restrito, logs seguros
 │   ├── repositorio.js   # Supabase em produção; SQLite local como fallback
+│   ├── acompanhamento.js# Consulta pública: resposta mínima, timeline, rate limit
 │   ├── regras.js        # Validação e recálculo no servidor
 │   ├── admin.js         # Sessões, validação do painel, resumo da YouDraw
 │   └── db.js            # SQLite somente no desenvolvimento local
+│
+├── supabase/migrations/ # Migrações incrementais (aplicar no Supabase)
 │
 ├── scripts/            # Verificações e ferramentas de QA
 ├── logs/               # Capturas de tela das verificações
@@ -143,6 +147,24 @@ collection.html → cart.html → checkout.html → API /api/orders
 
 Estados do pedido: `aguardando_pagamento → pago → encomendar_na_youdraw →
 pedido_na_youdraw → em_producao → enviado → entregue` (ou `cancelado`).
+
+### Acompanhamento do pedido
+
+O cliente abre `rastreio.html` e informa **número do pedido + e-mail da compra**
+(sem conta). A API (`POST /api/orders/tracking`) responde só o necessário:
+status, linha do tempo (etapas **realmente registradas**), cidade/UF de destino,
+observação pública e rastreio. O **e-mail nunca vai na URL**, tentativas são
+limitadas por IP e a combinação errada devolve **mensagem genérica**. CPF,
+telefone, endereço completo e notas internas nunca são expostos.
+
+Cada atualização manual do operador (status, transportadora, código, link HTTPS,
+observação pública) fica registrada em `order_events` com data e hora — e aparece
+imediatamente na consulta do cliente. O pagamento **não** é marcado como
+confirmado só porque o pedido foi criado.
+
+> **Antes de publicar no Supabase:** aplique a migração
+> `supabase/migrations/20261007_acompanhamento_pedidos.sql`. Localmente o SQLite
+> se migra sozinho no boot.
 
 ---
 

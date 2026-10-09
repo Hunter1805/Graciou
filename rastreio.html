@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Acompanhe o seu pedido GRACIOU — status, linha do tempo e rastreio da entrega." />
+  <title>Acompanhar Pedido — GRACIOU</title>
+  <link rel="icon" href="data:," />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ════════════════════════════════════
+       TOKENS — iguais aos de checkout.html / cart.html
+    ════════════════════════════════════ */
+    :root {
+      --ecru:       #FDFDD0;
+      --moss:       #4F5D3A;
+      --moss-light: #6B7A50;
+      --moss-dark:  #3A4529;
+      --navy:       #1A1A1A;
+      --erro:       #8B2F2F;
+      --ok:         #3F6B3F;
+      --ecru-70:    rgba(253,253,208,0.7);
+      --ecru-40:    rgba(253,253,208,0.4);
+      --navy-10:    rgba(26,26,26,0.10);
+      --navy-06:    rgba(26,26,26,0.06);
+      --moss-10:    rgba(79,93,58,0.10);
+      --f-head:     'Barlow Condensed', sans-serif;
+      --f-body:     'DM Sans', sans-serif;
+      --ease:       cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ════════════════════════════════════
+       RESET
+    ════════════════════════════════════ */
+    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:var(--f-body);
+      background:var(--ecru);
+      color:var(--navy);
+      -webkit-font-smoothing:antialiased;
+      overflow-x:hidden;
+    }
+    img { max-width:100%; display:block; }
+    a   { color:inherit; text-decoration:none; }
+    ul  { list-style:none; }
+    h1,h2,h3 { font-family:var(--f-head); font-weight:800; line-height:1; }
+    button { cursor:pointer; font-family:inherit; background:none; border:none; color:inherit; }
+    input { font-family:inherit; font-size:inherit; }
+
+    /* ════════════════════════════════════
+       HEADER — mesmas classes/tokens do projeto
+    ════════════════════════════════════ */
+    .header {
+      position:sticky; top:0; z-index:100;
+      background:var(--ecru);
+      border-bottom:1px solid var(--navy-10);
+      transition:box-shadow .3s;
+    }
+    .header.scrolled { box-shadow:0 4px 24px rgba(0,0,0,0.09); }
+    .header__inner {
+      max-width:1400px; margin:0 auto;
+      padding:0 3rem; height:72px;
+      display:flex; align-items:center; justify-content:space-between; gap:2rem;
+    }
+    .header__logo { display:flex; align-items:center; gap:.6rem; }
+    .header__logo-text {
+      font-family:'Oswald', sans-serif; font-size:1.6rem; font-weight:600;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--moss);
+      transform: scaleY(1.1); transform-origin: bottom;
+    }
+    .header__nav { display:flex; align-items:center; gap:2.5rem; }
+    .header__nav a {
+      font-size:.75rem; font-weight:500; letter-spacing:.14em;
+      text-transform:uppercase; position:relative; padding-bottom:2px; transition:color .2s;
+    }
+    .header__nav a::after {
+      content:''; position:absolute; bottom:-1px; left:0; right:0;
+      height:1px; background:var(--moss);
+      transform:scaleX(0); transform-origin:left; transition:transform .3s;
+    }
+    .header__nav a:hover { color:var(--moss); }
+    .header__nav a:hover::after { transform:scaleX(1); }
+    .header__nav a.is-active { color:var(--moss); }
+    .header__nav a.is-active::after { transform:scaleX(1); }
+    .header__actions { display:flex; align-items:center; gap:.75rem; }
+    .header__icon-btn {
+      width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+      color:var(--navy); border-radius:2px; transition:color .2s, background .2s;
+    }
+    .header__icon-btn:hover { color:var(--moss); background:var(--moss-10); }
+    .cart-badge { position:relative; }
+    .cart-badge__count {
+      position:absolute; top:-5px; right:-5px;
+      min-width:18px; height:18px; background:var(--moss); color:var(--ecru);
+      font-size:.6rem; font-weight:700; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .mobile-menu-btn { display:none; }
+
+    /* ── Menu mobile (drawer) ── */
+    .mobile-menu { position:fixed; inset:0; z-index:200; }
+    .mobile-menu[hidden] { display:none; }
+    .mobile-menu__overlay {
+      position:absolute; inset:0; background:rgba(26,26,26,0.5);
+      animation:fadeIn .2s var(--ease);
+    }
+    .mobile-menu__panel {
+      position:absolute; top:0; right:0; height:100%; width:min(340px,86vw);
+      background:var(--ecru); border-left:1px solid var(--navy-10);
+      padding:1.5rem; display:flex; flex-direction:column;
+      animation:menuEntra .28s var(--ease);
+    }
+    @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+    @keyframes menuEntra { from { transform:translateX(100%); } to { transform:translateX(0); } }
+    .mobile-menu__topo {
+      display:flex; align-items:center; justify-content:space-between;
+      padding-bottom:1.25rem; margin-bottom:1rem;
+      border-bottom:1px solid var(--navy-10);
+    }
+    .mobile-menu__marca {
+      font-family:'Oswald', sans-serif; font-size:1.3rem; font-weight:600;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--moss);
+      transform:scaleY(1.1);
+    }
+    .mobile-menu__fechar { color:var(--navy); padding:.25rem; }
+    .mobile-menu__lista { display:flex; flex-direction:column; gap:.25rem; }
+    .mobile-menu__lista a {
+      display:block; padding:.85rem .25rem;
+      font-size:.8rem; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+      border-bottom:1px solid var(--navy-06); transition:color .2s;
+    }
+    .mobile-menu__lista a:hover, .mobile-menu__lista a.is-active { color:var(--moss); }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      max-width:1400px; margin:0 auto;
+      padding:.875rem 3rem;
+      border-bottom:1px solid var(--navy-06);
+      display:flex; align-items:center; gap:.5rem;
+    }
+    .breadcrumb a, .breadcrumb span {
+      font-size:.68rem; letter-spacing:.12em;
+      text-transform:uppercase; color:rgba(26,26,26,.4);
+      transition:color .2s;
+    }
+    .breadcrumb a:hover { color:var(--moss); }
+    .breadcrumb__sep { color:rgba(26,26,26,.2); }
+    .breadcrumb__current { color:var(--navy); }
+
+    /* ════════════════════════════════════
+       HERO — mesma linguagem do ck-hero
+    ════════════════════════════════════ */
+    .tr-hero {
+      background:var(--moss-dark);
+      padding:3.25rem 3rem 2.75rem;
+      position:relative; overflow:hidden;
+    }
+    .tr-hero__inner { max-width:1400px; margin:0 auto; position:relative; z-index:1; }
+    .tr-hero__eyebrow {
+      font-size:.65rem; letter-spacing:.28em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:.875rem;
+    }
+    .tr-hero__title {
+      font-size:clamp(2.2rem,5vw,3.75rem);
+      text-transform:uppercase; color:var(--ecru); margin-bottom:.875rem;
+    }
+    .tr-hero__desc {
+      font-size:.88rem; font-weight:300; line-height:1.7;
+      color:var(--ecru-70); max-width:62ch;
+    }
+
+    /* ════════════════════════════════════
+       BOTÕES — mesmas classes do projeto
+    ════════════════════════════════════ */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:.5rem;
+      padding:.875rem 2.25rem;
+      font-family:var(--f-head); font-size:.78rem; font-weight:700;
+      letter-spacing:.2em; text-transform:uppercase;
+      border:1.5px solid transparent; cursor:pointer;
+      transition:all .25s; white-space:nowrap;
+    }
+    .btn--outline { background:transparent; color:var(--moss); border-color:var(--moss); }
+    .btn--outline:hover { background:var(--moss); color:var(--ecru); }
+    .btn--primary { background:var(--navy); color:var(--ecru); border-color:var(--navy); }
+    .btn--primary:hover { background:var(--moss); border-color:var(--moss); }
+    .btn--primary:disabled { background:rgba(26,26,26,.2); border-color:transparent; cursor:not-allowed; }
+    .btn--ghost-dark {
+      background:transparent; color:rgba(26,26,26,.5);
+      border-color:rgba(26,26,26,.2);
+    }
+    .btn--ghost-dark:hover { color:var(--navy); border-color:var(--navy); }
+    .btn--bloco { width:100%; }
+    .btn--min { padding:.55rem 1.1rem; font-size:.66rem; letter-spacing:.14em; }
+
+    /* ════════════════════════════════════
+       ÁREA PRINCIPAL
+    ════════════════════════════════════ */
+    .tr-page {
+      max-width:860px; margin:0 auto;
+      padding:3rem 3rem 5rem;
+    }
+
+    /* ── Formulário de consulta ── */
+    .tr-card {
+      border:1px solid var(--navy-10);
+      background:#fff;
+      padding:2.75rem 2.5rem;
+    }
+    .tr-card__eyebrow {
+      font-size:.62rem; letter-spacing:.26em; text-transform:uppercase;
+      color:var(--moss); margin-bottom:.75rem;
+    }
+    .tr-card__titulo {
+      font-size:2rem; text-transform:uppercase; margin-bottom:.6rem;
+    }
+    .tr-card__desc {
+      font-size:.83rem; font-weight:300; line-height:1.7;
+      color:rgba(26,26,26,.6); margin-bottom:2rem;
+    }
+    .tr-campo { display:flex; flex-direction:column; gap:.45rem; margin-bottom:1.25rem; }
+    .tr-campo__label {
+      font-size:.62rem; letter-spacing:.16em; text-transform:uppercase;
+      color:rgba(26,26,26,.55);
+    }
+    .tr-campo input {
+      width:100%; padding:.85rem 1rem;
+      background:#fff; border:1px solid var(--navy-10);
+      color:var(--navy); font-size:.9rem;
+      transition:border-color .2s var(--ease);
+    }
+    .tr-campo input:focus { outline:none; border-color:var(--moss); }
+    .tr-campo input[aria-invalid="true"] { border-color:var(--erro); }
+    .tr-campo__dica { font-size:.68rem; color:rgba(26,26,26,.45); font-weight:300; }
+    .tr-acoes { margin-top:1.75rem; display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; }
+
+    /* ── Avisos ── */
+    .tr-aviso {
+      padding:.9rem 1.1rem; font-size:.8rem; line-height:1.6;
+      border-left:3px solid var(--navy-10); background:var(--navy-06);
+      margin-bottom:1.5rem;
+    }
+    .tr-aviso--erro { border-left-color:var(--erro); background:rgba(139,47,47,.07); color:var(--erro); }
+    .tr-aviso--ok   { border-left-color:var(--ok); background:rgba(63,107,63,.08); color:var(--ok); }
+    .tr-aviso--info { border-left-color:var(--moss); background:var(--moss-10); }
+
+    /* ── Resultado ── */
+    .tr-resultado { margin-top:2.75rem; }
+    .tr-resultado__topo {
+      display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap;
+      padding-bottom:1.25rem; border-bottom:2px solid var(--navy);
+      margin-bottom:2rem;
+    }
+    .tr-resultado__numero {
+      font-family:var(--f-head); font-size:1.9rem; font-weight:700;
+      letter-spacing:.02em; text-transform:uppercase;
+    }
+    .tr-resultado__data {
+      font-size:.7rem; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(26,26,26,.45);
+    }
+    .tr-resultado__espaco { flex:1 1 auto; }
+
+    /* ── Selo de status ── */
+    .selo {
+      display:inline-block; padding:.35rem .7rem;
+      font-size:.6rem; letter-spacing:.1em; text-transform:uppercase;
+      border:1px solid currentColor; white-space:nowrap;
+    }
+    .selo--aguardando_pagamento { color:#8A6A1F; }
+    .selo--pago                  { color:var(--ok); }
+    .selo--encomendar_na_youdraw { color:var(--moss); }
+    .selo--pedido_na_youdraw     { color:var(--moss-dark); }
+    .selo--em_producao           { color:#2F5F7A; }
+    .selo--enviado               { color:#2F5F7A; }
+    .selo--entregue              { color:rgba(26,26,26,.55); }
+    .selo--cancelado             { color:var(--erro); }
+
+    /* ── Blocos de informação ── */
+    .tr-bloco { border:1px solid var(--navy-10); padding:1.75rem; margin-bottom:1.5rem; }
+    .tr-bloco__titulo {
+      font-size:1.2rem; text-transform:uppercase;
+      padding-bottom:.85rem; margin-bottom:1.25rem;
+      border-bottom:1px solid var(--navy-10);
+    }
+
+    /* ── Linha do tempo ── */
+    .tr-timeline { position:relative; padding-left:2rem; }
+    .tr-timeline::before {
+      content:''; position:absolute; left:7px; top:6px; bottom:6px;
+      width:1px; background:var(--navy-10);
+    }
+    .tr-etapa { position:relative; padding-bottom:1.75rem; }
+    .tr-etapa:last-child { padding-bottom:0; }
+    .tr-etapa__marca {
+      position:absolute; left:-2rem; top:3px;
+      width:15px; height:15px; border-radius:50%;
+      border:1.5px solid var(--navy-10); background:var(--ecru);
+      display:flex; align-items:center; justify-content:center;
+    }
+    .tr-etapa.is-concluida .tr-etapa__marca { border-color:var(--moss); background:var(--moss); }
+    .tr-etapa.is-atual .tr-etapa__marca { border-color:var(--moss); box-shadow:0 0 0 4px var(--moss-10); }
+    .tr-etapa__marca svg { display:none; }
+    .tr-etapa.is-concluida .tr-etapa__marca svg { display:block; }
+    .tr-etapa__rotulo {
+      font-family:var(--f-head); font-size:1.05rem; font-weight:600;
+      letter-spacing:.02em; text-transform:uppercase;
+      color:rgba(26,26,26,.4);
+    }
+    .tr-etapa.is-concluida .tr-etapa__rotulo,
+    .tr-etapa.is-atual .tr-etapa__rotulo { color:var(--navy); }
+    .tr-etapa__data {
+      font-size:.72rem; font-weight:300; color:rgba(26,26,26,.5);
+      margin-top:.2rem; letter-spacing:.02em;
+    }
+    .tr-etapa.is-atual .tr-etapa__atual {
+      display:inline-block; margin-left:.5rem;
+      font-size:.58rem; letter-spacing:.14em; text-transform:uppercase;
+      color:var(--moss); border:1px solid var(--moss);
+      padding:.12rem .4rem; vertical-align:middle;
+    }
+    .tr-etapa__atual { display:none; }
+
+    /* ── Cancelamento (fora da timeline normal) ── */
+    .tr-cancelado {
+      border:1px solid var(--erro); background:rgba(139,47,47,.06);
+      padding:1.25rem 1.4rem; margin-bottom:1.5rem;
+      font-size:.83rem; line-height:1.65; color:var(--erro);
+    }
+    .tr-cancelado strong { font-family:var(--f-head); font-size:1.05rem; letter-spacing:.02em; text-transform:uppercase; display:block; margin-bottom:.3rem; }
+
+    /* ── Rastreio ── */
+    .tr-rastreio-linha {
+      display:flex; align-items:center; gap:.75rem; flex-wrap:wrap;
+      font-size:.85rem; padding:.35rem 0;
+    }
+    .tr-rastreio-linha__rot {
+      flex:0 0 140px; font-size:.62rem; letter-spacing:.12em;
+      text-transform:uppercase; color:rgba(26,26,26,.45);
+    }
+    .tr-rastreio-linha__val { flex:1 1 auto; word-break:break-word; }
+    .tr-codigo {
+      display:inline-flex; align-items:center; gap:.6rem;
+      font-family:'Courier New', monospace; font-size:.9rem; letter-spacing:.04em;
+    }
+    .tr-codigo__btn {
+      font-size:.6rem; letter-spacing:.12em; text-transform:uppercase;
+      border:1px solid var(--navy-10); padding:.3rem .6rem;
+      color:rgba(26,26,26,.6); transition:all .2s var(--ease);
+    }
+    .tr-codigo__btn:hover { border-color:var(--moss); color:var(--moss); }
+    .tr-sem-rastreio {
+      font-size:.85rem; font-weight:300; line-height:1.7; color:rgba(26,26,26,.6);
+    }
+    .tr-obs-publica {
+      font-size:.85rem; font-weight:300; line-height:1.7;
+      white-space:pre-wrap; color:rgba(26,26,26,.75);
+    }
+
+    /* ── Rodapé ── */
+    .tr-rodape {
+      max-width:860px; margin:0 auto; padding:2rem 3rem 3rem;
+      border-top:1px solid var(--navy-10);
+      font-size:.68rem; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(26,26,26,.35);
+    }
+
+    /* Ticker */
+    .ticker {
+      background:var(--moss); overflow:hidden; padding:.85rem 0;
+    }
+    .ticker__track { display:inline-flex; animation:ticker 25s linear infinite; }
+    .ticker__item {
+      font-family:var(--f-head); font-size:.75rem; font-weight:700;
+      letter-spacing:.12em; text-transform:uppercase;
+      color:var(--ecru-70); padding:0 2rem; white-space:nowrap;
+    }
+    .ticker__item span { color:var(--ecru); }
+    @keyframes ticker {
+      from { transform:translateX(0); }
+      to   { transform:translateX(-50%); }
+    }
+
+    /* ════════════════════════════════════
+       FOOTER — mesma estrutura do projeto
+    ════════════════════════════════════ */
+    .footer { background:var(--navy); color:var(--ecru); }
+    .footer__links { padding:3.5rem 0; }
+    .footer__links-inner {
+      max-width:1400px; margin:0 auto; padding:0 3rem;
+      display:grid; grid-template-columns:1.4fr 1fr 1fr 1fr; gap:2.5rem;
+    }
+    .footer__brand-logo { display:flex; align-items:center; gap:.5rem; margin-bottom:1rem; }
+    .footer__brand-name {
+      font-family:'Oswald', sans-serif; font-size:1.8rem; font-weight:600;
+      letter-spacing:.05em; transform:scaleY(1.1); color:var(--ecru);
+    }
+    .footer__tagline { font-size:.75rem; font-weight:300; line-height:1.7; color:var(--ecru-40); }
+    .footer__col-title {
+      font-size:.7rem; letter-spacing:.16em; text-transform:uppercase;
+      color:var(--moss-light); margin-bottom:1.1rem;
+    }
+    .footer__col-links { display:flex; flex-direction:column; gap:.75rem; }
+    .footer__col-links a { font-size:.82rem; font-weight:300; color:var(--ecru-70); transition:color .2s; }
+    .footer__col-links a:hover { color:var(--ecru); }
+    .footer__bottom { border-top:1px solid rgba(253,253,208,.08); padding:1.75rem 0; }
+    .footer__bottom-inner {
+      max-width:1400px; margin:0 auto; padding:0 3rem;
+      display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    }
+    .footer__copy { font-size:.68rem; letter-spacing:.08em; color:var(--ecru-40); }
+    .footer__legal { display:flex; gap:1rem; }
+    .footer__legal a { font-size:.65rem; letter-spacing:.08em; color:var(--ecru-40); transition:color .2s; }
+    .footer__legal a:hover { color:var(--ecru-70); }
+
+    /* ════════════════════════════════════
+       RESPONSIVO
+    ════════════════════════════════════ */
+    @media (max-width:1024px) {
+      .footer__links-inner { grid-template-columns:1fr 1fr; gap:2rem; }
+    }
+    @media (max-width:768px) {
+      .header__inner, .breadcrumb, .tr-hero, .tr-page, .tr-rodape,
+      .footer__links-inner, .footer__bottom-inner { padding-left:1.25rem; padding-right:1.25rem; }
+      .header__nav { display:none; }
+      .mobile-menu-btn { display:flex; }
+      .tr-card { padding:2rem 1.5rem; }
+      .tr-rastreio-linha__rot { flex-basis:100%; }
+      .footer__links-inner { grid-template-columns:1fr; }
+      .footer__bottom-inner { flex-direction:column; text-align:center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     HEADER — mesma estrutura/classes do projeto
+══════════════════════════════════════ -->
+<header class="header" id="site-header">
+  <div class="header__inner">
+    <a href="preview.html" class="header__logo" aria-label="GRACIOU — voltar ao início">
+      <img src="assets/tree-icon.png" alt="Tree" style="height:48px; width:auto; mix-blend-mode:multiply; margin-right:-4px; margin-top:-2px;" aria-hidden="true" />
+      <span class="header__logo-text">GRACIOU</span>
+    </a>
+    <nav class="header__nav">
+      <a href="preview.html">Loja</a>
+      <a href="collection.html">Drops</a>
+      <a href="preview.html#philosophy">Missão</a>
+      <a href="rastreio.html" class="is-active" aria-current="page">Acompanhar pedido</a>
+    </nav>
+    <div class="header__actions">
+      <a href="cart.html" class="header__icon-btn cart-badge" aria-label="Carrinho">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><line x1="3" x2="21" y1="6" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-badge__count" data-graciou-cart-count>0</span>
+      </a>
+      <a href="rastreio.html" class="header__icon-btn" aria-label="Acompanhar pedido">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+      </a>
+      <button class="header__icon-btn mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Menu Mobile (Drawer) -->
+<div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu de navegação" hidden>
+  <div class="mobile-menu__overlay" data-fechar-menu></div>
+  <nav class="mobile-menu__panel" aria-label="Menu mobile">
+    <div class="mobile-menu__topo">
+      <span class="mobile-menu__marca">GRACIOU</span>
+      <button class="mobile-menu__fechar" data-fechar-menu aria-label="Fechar menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <ul class="mobile-menu__lista">
+      <li><a href="preview.html">Loja</a></li>
+      <li><a href="collection.html">Drops</a></li>
+      <li><a href="preview.html#philosophy">Missão</a></li>
+      <li><a href="collection.html">Lookbook</a></li>
+      <li><a href="rastreio.html" class="is-active">Acompanhar pedido</a></li>
+      <li><a href="cart.html">Carrinho</a></li>
+    </ul>
+  </nav>
+</div>
+
+<!-- Breadcrumb -->
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="preview.html">Início</a>
+  <span class="breadcrumb__sep" aria-hidden="true">/</span>
+  <span class="breadcrumb__current">Acompanhar pedido</span>
+</nav>
+
+<!-- ══════════════════════════════════════
+     HERO
+══════════════════════════════════════ -->
+<section class="tr-hero">
+  <div class="tr-hero__inner">
+    <p class="tr-hero__eyebrow">Sua entrega</p>
+    <h1 class="tr-hero__title">Acompanhar pedido</h1>
+    <p class="tr-hero__desc">
+      Informe o número do pedido e o e-mail usado na compra para ver o status
+      atual, a linha do tempo e o código de rastreio. Não é preciso ter conta.
+    </p>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════
+     CONSULTA
+══════════════════════════════════════ -->
+<main class="tr-page">
+
+  <section class="tr-card" aria-labelledby="tr-form-titulo">
+    <p class="tr-card__eyebrow">Consulta</p>
+    <h2 class="tr-card__titulo" id="tr-form-titulo">Localizar meu pedido</h2>
+    <p class="tr-card__desc">
+      Os dois dados precisam conferir com o pedido. Por segurança, não informamos
+      quais números existem: se a combinação não bater, verá a mesma mensagem.
+    </p>
+
+    <div class="tr-aviso tr-aviso--erro" id="tr-erro" role="alert" hidden></div>
+
+    <form id="tr-form" novalidate>
+      <div class="tr-campo">
+        <label class="tr-campo__label" for="tr-numero">Número do pedido</label>
+        <input type="text" id="tr-numero" autocomplete="off" spellcheck="false"
+          placeholder="Ex.: GR-20261007-0001-A1B2" />
+      </div>
+      <div class="tr-campo">
+        <label class="tr-campo__label" for="tr-email">E-mail usado na compra</label>
+        <input type="email" id="tr-email" autocomplete="email" spellcheck="false"
+          placeholder="seu@email.com" />
+      </div>
+
+      <div class="tr-acoes">
+        <button type="submit" class="btn btn--primary" id="tr-buscar">Buscar pedido</button>
+        <button type="button" class="btn btn--ghost-dark" id="tr-limpar">Limpar</button>
+      </div>
+      <p class="tr-campo__dica" style="margin-top:1rem" id="tr-dica">
+        O e-mail não é colocado no endereço da página nem guardado pelo navegador.
+      </p>
+    </form>
+  </section>
+
+  <!-- Resultado -->
+  <section class="tr-resultado" id="tr-resultado" hidden aria-live="polite">
+
+    <div class="tr-resultado__topo">
+      <h2 class="tr-resultado__numero" id="tr-res-numero">—</h2>
+      <span class="selo" id="tr-res-selo"></span>
+      <div class="tr-resultado__espaco"></div>
+      <span class="tr-resultado__data" id="tr-res-data"></span>
+    </div>
+
+    <div class="tr-aviso tr-aviso--info" id="tr-res-destino" hidden></div>
+
+    <!-- Cancelamento aparece SEPARADO da linha do tempo normal -->
+    <div class="tr-cancelado" id="tr-res-cancelado" hidden>
+      <strong>Pedido cancelado</strong>
+      Este pedido foi cancelado. Se você não esperava por isso, fale com a gente pelo
+      e-mail de contato do rodapé.
+    </div>
+
+    <!-- Etapas -->
+    <div class="tr-bloco">
+      <h3 class="tr-bloco__titulo">Linha do tempo</h3>
+      <div class="tr-timeline" id="tr-timeline"></div>
+    </div>
+
+    <!-- Rastreio -->
+    <div class="tr-bloco">
+      <h3 class="tr-bloco__titulo">Rastreio</h3>
+      <div id="tr-rastreio"></div>
+    </div>
+
+    <!-- Observação pública -->
+    <div class="tr-bloco" id="tr-bloco-obs" hidden>
+      <h3 class="tr-bloco__titulo">Observação da loja</h3>
+      <p class="tr-obs-publica" id="tr-obs"></p>
+    </div>
+
+    <div class="tr-acoes">
+      <button type="button" class="btn btn--ghost-dark" id="tr-nova-consulta">Fazer nova consulta</button>
+      <a href="collection.html" class="btn btn--outline">Continuar comprando</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- Ticker -->
+<div class="ticker" aria-hidden="true">
+  <div class="ticker__track">
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Acompanhe o seu pedido a qualquer momento</span>
+    <span class="ticker__item">Frete grátis a partir de <span>2 peças</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+    <span class="ticker__item"><span>GRACIOU</span> — Graça em Cada Fio</span>
+    <span class="ticker__item">✦ Acompanhe o seu pedido a qualquer momento</span>
+    <span class="ticker__item">Frete grátis a partir de <span>2 peças</span></span>
+    <span class="ticker__item">✦ Design Brasileiro</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     FOOTER — mesma estrutura do projeto
+══════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer__links">
+    <div class="footer__links-inner">
+      <div>
+        <div class="footer__brand-logo">
+          <img src="assets/tree-icon.png" alt="Tree" style="height:56px; width:auto; filter:contrast(200%) grayscale(100%) invert(100%); mix-blend-mode:screen; opacity:0.9;" />
+          <span class="footer__brand-name">GRACIOU</span>
+        </div>
+        <p class="footer__tagline">Graça em cada fio.<br>Streetwear elevado com propósito.</p>
+      </div>
+
+      <div>
+        <p class="footer__col-title">Loja</p>
+        <ul class="footer__col-links">
+          <li><a href="collection.html">Todos os produtos</a></li>
+          <li><a href="collection.html">Drop 01</a></li>
+          <li><a href="cart.html">Carrinho</a></li>
+          <li><a href="collection.html">Lookbook</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="footer__col-title">Marca</p>
+        <ul class="footer__col-links">
+          <li><a href="preview.html#philosophy">Nossa história</a></li>
+          <li><a href="preview.html#philosophy">Missão</a></li>
+          <li><a href="#">Sustentabilidade</a></li>
+          <li><a href="#">Press</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <p class="footer__col-title">Suporte</p>
+        <ul class="footer__col-links">
+          <li><a href="rastreio.html">Acompanhar pedido</a></li>
+          <li><a href="rastreio.html">Rastrear entrega</a></li>
+          <li><a href="#">Trocas e devoluções</a></li>
+          <li><a href="#">Contato</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer__bottom">
+    <div class="footer__bottom-inner">
+      <p class="footer__copy">&copy; 2026 GRACIOU. Todos os direitos reservados.</p>
+      <nav class="footer__legal">
+        <a href="#">Privacidade</a>
+        <a href="#">Termos</a>
+      </nav>
+    </div>
+  </div>
+</footer>
+
+<script src="dados/catalogo.js"></script>
+<script src="assets/graciou-store.js"></script>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   GRACIOU — ACOMPANHAMENTO DE PEDIDO
+   Script clássico (sem módulos, sem build). Fala apenas com a API.
+
+   Regras de privacidade aplicadas aqui:
+     - o e-mail NUNCA vai para a URL nem para o localStorage;
+     - nada é pré-preenchido a partir de lugar nenhum;
+     - a resposta é exibida exatamente como o servidor devolveu — o
+       frontend não monta dado que o servidor não mandou.
+   ════════════════════════════════════════════════════════════ */
+(function () {
+  'use strict';
+
+  /* Mesma lógica do admin/checkout: em localhost fala com a API :3001;
+     em produção usa a própria origem. Pode ser apontada por ?api=... */
+  var API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001'
+    : window.location.origin;
+  (function () {
+    try {
+      var parametro = new URLSearchParams(window.location.search).get('api');
+      if (parametro) API_BASE = decodeURIComponent(String(parametro)).replace(/\/+$/, '');
+    } catch (_) { /* mantém o padrão */ }
+  })();
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var form        = $('tr-form');
+  var campoNumero = $('tr-numero');
+  var campoEmail  = $('tr-email');
+  var btnBuscar   = $('tr-buscar');
+  var elErro      = $('tr-erro');
+  var resultado   = $('tr-resultado');
+
+  /* Rótulos humanos das etapas e status (iguais aos do painel). */
+  var ROTULOS_STATUS = {
+    aguardando_pagamento: 'Aguardando pagamento',
+    pago: 'Pago',
+    encomendar_na_youdraw: 'Encomendar na YouDraw',
+    pedido_na_youdraw: 'Pedido na YouDraw',
+    em_producao: 'Em produção',
+    enviado: 'Enviado',
+    entregue: 'Entregue',
+    cancelado: 'Cancelado'
+  };
+
+  /* ── Utilitários ── */
+  function escapar(valor) {
+    return String(valor === null || valor === undefined ? '' : valor)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function rotulo(status) {
+    return ROTULOS_STATUS[status] || status || '—';
+  }
+
+  /* Datas no formato local (dd/mm/aaaa às hh:mm). Só formata o que veio. */
+  function dataLegivel(iso) {
+    if (!iso) return '';
+    var d = new Date(String(iso).indexOf('T') === -1 ? String(iso).replace(' ', 'T') : iso);
+    if (isNaN(d.getTime())) return '';
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    return pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() +
+      ' às ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  function mostrarErro(texto) {
+    if (!texto) { elErro.hidden = true; elErro.textContent = ''; return; }
+    elErro.textContent = texto;
+    elErro.hidden = false;
+  }
+
+  /* ── Linha do tempo ──
+     Cada etapa vem do servidor com `registrada` (tem data real) e `atual`.
+     Nada é inferido aqui: a data só aparece se o servidor mandou uma. */
+  function montarTimeline(etapas) {
+    var lista = $('tr-timeline');
+    var check = '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#FDFDD0" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+    lista.innerHTML = (etapas || []).map(function (etapa) {
+      var classes = 'tr-etapa';
+      if (etapa.concluida) classes += ' is-concluida';
+      if (etapa.atual) classes += ' is-atual';
+      var data = etapa.registrada && etapa.data ? dataLegivel(etapa.data) : '';
+      return '<div class="' + classes + '">' +
+        '<span class="tr-etapa__marca">' + check + '</span>' +
+        '<div class="tr-etapa__rotulo">' + escapar(etapa.rotulo) +
+          (etapa.atual ? '<span class="tr-etapa__atual">Etapa atual</span>' : '') +
+        '</div>' +
+        (data ? '<div class="tr-etapa__data">' + escapar(data) + '</div>' : '') +
+      '</div>';
+    }).join('');
+  }
+
+  /* ── Rastreio ── */
+  function montarRastreio(rastreio) {
+    var caixa = $('tr-rastreio');
+    var r = rastreio || {};
+
+    if (!r.disponivel || !r.codigo) {
+      caixa.innerHTML = '<p class="tr-sem-rastreio">O rastreio estará disponível após o envio.</p>';
+      return;
+    }
+
+    var linhas = '';
+    if (r.transportadora) {
+      linhas += '<div class="tr-rastreio-linha">' +
+        '<span class="tr-rastreio-linha__rot">Transportadora</span>' +
+        '<span class="tr-rastreio-linha__val">' + escapar(r.transportadora) + '</span></div>';
+    }
+
+    linhas += '<div class="tr-rastreio-linha">' +
+      '<span class="tr-rastreio-linha__rot">Código</span>' +
+      '<span class="tr-rastreio-linha__val"><span class="tr-codigo">' +
+        escapar(r.codigo) +
+        '<button type="button" class="tr-codigo__btn" id="tr-copiar">Copiar</button>' +
+      '</span></span></div>';
+
+    /* O link só é renderizado se o servidor validou como HTTPS. */
+    if (r.url) {
+      linhas += '<div class="tr-rastreio-linha">' +
+        '<span class="tr-rastreio-linha__rot">Rastrear</span>' +
+        '<span class="tr-rastreio-linha__val">' +
+          '<a href="' + escapar(r.url) + '" target="_blank" rel="noopener noreferrer" ' +
+          'style="color:#4F5D3A;border-bottom:1px solid currentColor">Abrir no site da transportadora →</a>' +
+        '</span></div>';
+    }
+
+    caixa.innerHTML = linhas;
+  }
+
+  /* ── Copiar código de rastreio ── */
+  document.addEventListener('click', function (evento) {
+    if (evento.target && evento.target.id === 'tr-copiar') {
+      var codigo = (window.__TR_CODIGO__ || '');
+      if (!codigo) return;
+      var avisar = function () {
+        var b = evento.target;
+        var original = b.textContent;
+        b.textContent = 'Copiado';
+        setTimeout(function () { b.textContent = original; }, 1600);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(codigo).then(avisar).catch(function () {
+          window.prompt('Copie o código de rastreio:', codigo);
+        });
+      } else {
+        window.prompt('Copie o código de rastreio:', codigo);
+      }
+    }
+  });
+
+  /* ── Desenha o resultado com o que o servidor devolveu ── */
+  function desenhar(pedido) {
+    $('tr-res-numero').textContent = pedido.numero || '—';
+
+    var selo = $('tr-res-selo');
+    selo.className = 'selo selo--' + (pedido.status || '');
+    selo.textContent = rotulo(pedido.status);
+
+    $('tr-res-data').textContent = pedido.atualizadoEm
+      ? 'Atualizado em ' + dataLegivel(pedido.atualizadoEm)
+      : 'Pedido em ' + dataLegivel(pedido.criadoEm);
+
+    /* Destino — só cidade/UF, nunca o endereço completo. */
+    var destino = pedido.destino || {};
+    var elDestino = $('tr-res-destino');
+    if (destino.cidade || destino.estado) {
+      var local = [destino.cidade, destino.estado].filter(Boolean).join(' / ');
+      elDestino.textContent = 'Entrega em ' + local;
+      elDestino.hidden = false;
+    } else {
+      elDestino.hidden = true;
+    }
+
+    /* Cancelamento é tratado à parte. */
+    var cancelado = $('tr-res-cancelado');
+    cancelado.hidden = !pedido.cancelado;
+
+    montarTimeline(pedido.linhaDoTempo || []);
+
+    window.__TR_CODIGO__ = (pedido.rastreio && pedido.rastreio.codigo) || '';
+    montarRastreio(pedido.rastreio);
+
+    var blocoObs = $('tr-bloco-obs');
+    if (pedido.observacaoPublica) {
+      $('tr-obs').textContent = pedido.observacaoPublica;
+      blocoObs.hidden = false;
+    } else {
+      blocoObs.hidden = true;
+    }
+
+    resultado.hidden = false;
+    resultado.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  /* ── Validação no cliente (o servidor valida de novo) ── */
+  function validarLocal() {
+    var numero = campoNumero.value.trim();
+    var email = campoEmail.value.trim();
+
+    campoNumero.removeAttribute('aria-invalid');
+    campoEmail.removeAttribute('aria-invalid');
+
+    if (!numero) {
+      campoNumero.setAttribute('aria-invalid', 'true');
+      campoNumero.focus();
+      mostrarErro('Informe o número do pedido.');
+      return null;
+    }
+    if (!email || email.indexOf('@') === -1) {
+      campoEmail.setAttribute('aria-invalid', 'true');
+      campoEmail.focus();
+      mostrarErro('Informe o e-mail usado na compra.');
+      return null;
+    }
+    return { numero: numero, email: email };
+  }
+
+  /* ── Consulta ── */
+  form.addEventListener('submit', function (evento) {
+    evento.preventDefault();
+    mostrarErro('');
+
+    var dados = validarLocal();
+    if (!dados) return;
+
+    btnBuscar.disabled = true;
+    btnBuscar.textContent = 'Buscando…';
+    resultado.hidden = true;
+
+    fetch(API_BASE + '/api/orders/tracking', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      /* O e-mail vai apenas no CORPO da requisição — nunca na URL. */
+      body: JSON.stringify({ numero: dados.numero, email: dados.email })
+    }).then(function (resposta) {
+      return resposta.json().catch(function () { return {}; }).then(function (corpo) {
+        return { status: resposta.status, corpo: corpo };
+      });
+    }).then(function (r) {
+      if (r.status === 429) {
+        mostrarErro((r.corpo && r.corpo.erro) || 'Muitas tentativas. Aguarde alguns minutos.');
+        return;
+      }
+      if (!r.corpo || r.corpo.ok !== true) {
+        mostrarErro((r.corpo && r.corpo.erro) || 'Não foi possível consultar agora. Tente novamente.');
+        return;
+      }
+      desenhar(r.corpo.pedido);
+    }).catch(function () {
+      mostrarErro('A API não respondeu em ' + API_BASE + '. Tente novamente em instantes.');
+    }).then(function () {
+      btnBuscar.disabled = false;
+      btnBuscar.textContent = 'Buscar pedido';
+    });
+  });
+
+  /* ── Limpar / nova consulta ── */
+  $('tr-limpar').addEventListener('click', function () {
+    campoNumero.value = '';
+    campoEmail.value = '';
+    mostrarErro('');
+    resultado.hidden = true;
+    window.__TR_CODIGO__ = '';
+    campoNumero.focus();
+  });
+
+  $('tr-nova-consulta').addEventListener('click', function () {
+    resultado.hidden = true;
+    campoEmail.value = '';
+    mostrarErro('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    campoNumero.focus();
+  });
+
+  /* Enter no número pula para o e-mail. */
+  campoNumero.addEventListener('keydown', function (evento) {
+    if (evento.key === 'Enter') { evento.preventDefault(); campoEmail.focus(); }
+  });
+
+  /* Header com sombra ao rolar — igual ao resto da loja. */
+  var header = $('site-header');
+  window.addEventListener('scroll', function () {
+    header.classList.toggle('scrolled', window.scrollY > 60);
+  }, { passive: true });
+
+  /* ── Menu mobile (drawer) ── */
+  var menuMobile = $('mobile-menu');
+  var btnMenu = $('mobile-menu-btn');
+  if (menuMobile && btnMenu) {
+    var abrirMenu = function () {
+      menuMobile.hidden = false;
+      btnMenu.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    };
+    var fecharMenu = function () {
+      menuMobile.hidden = true;
+      btnMenu.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    };
+    btnMenu.addEventListener('click', abrirMenu);
+    var alvos = menuMobile.querySelectorAll('[data-fechar-menu]');
+    for (var i = 0; i < alvos.length; i += 1) alvos[i].addEventListener('click', fecharMenu);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !menuMobile.hidden) fecharMenu();
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

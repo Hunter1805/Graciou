@@ -483,6 +483,11 @@
               <h3 class="pb-bloco__titulo">Observações internas</h3>
               <div id="detalhe-observacoes" style="font-size:.82rem;line-height:1.7;white-space:pre-wrap"></div>
             </div>
+
+            <div class="pb-bloco" id="bloco-historico">
+              <h3 class="pb-bloco__titulo">Histórico do pedido</h3>
+              <div id="detalhe-historico"></div>
+            </div>
           </div>
 
           <!-- Coluna direita: YouDraw + atualização -->
@@ -511,15 +516,29 @@
                   <select id="up-pagamento"></select>
                 </div>
                 <div class="campo">
+                  <label class="campo__label" for="up-transportadora">Transportadora</label>
+                  <input type="text" id="up-transportadora" maxlength="80" placeholder="Ex.: Correios" />
+                </div>
+                <div class="campo">
                   <label class="campo__label" for="up-rastreio">Código de rastreio</label>
                   <input type="text" id="up-rastreio" maxlength="120" placeholder="Ex.: BR123456789BR" />
+                </div>
+                <div class="campo campo--full">
+                  <label class="campo__label" for="up-rastreio-url">Link de rastreio (somente HTTPS)</label>
+                  <input type="url" id="up-rastreio-url" maxlength="500" placeholder="https://rastreamento.correios.com.br/..." />
+                  <span class="campo__dica">Apenas links <strong>https://</strong> são aceitos. O link aparece na consulta do cliente.</span>
                 </div>
                 <div class="campo">
                   <label class="campo__label" for="up-youdraw">Nº do pedido na YouDraw</label>
                   <input type="text" id="up-youdraw" maxlength="120" placeholder="Ex.: YD-4821" />
                 </div>
                 <div class="campo campo--full">
-                  <label class="campo__label" for="up-observacoes">Observação interna</label>
+                  <label class="campo__label" for="up-observacao-publica">Observação pública (o cliente vê)</label>
+                  <textarea id="up-observacao-publica" maxlength="1000" placeholder="Ex.: Seu pedido saiu do ateliê e chega em até 5 dias úteis."></textarea>
+                  <span class="campo__dica">Esta mensagem aparece em “Acompanhar pedido”. Não coloque dado interno aqui.</span>
+                </div>
+                <div class="campo campo--full">
+                  <label class="campo__label" for="up-observacoes">Observação interna (não aparece para o cliente)</label>
                   <textarea id="up-observacoes" maxlength="2000" placeholder="Nota sobre este pedido (ex.: cliente pediu embalagem separada)."></textarea>
                 </div>
                 <div class="campo--full" style="display:flex;align-items:center;gap:.5rem">
@@ -871,7 +890,7 @@
       api('/api/admin/orders/' + encodeURIComponent(id))
         .then(function (dados) {
           pedidoAberto = dados.pedido;
-          desenharDetalhe(dados.pedido, dados.resumoYouDraw || '');
+          desenharDetalhe(dados.pedido, dados.resumoYouDraw || '', dados.historico || []);
           desenharLista(); /* atualiza a seleção na tabela */
           mostrarAviso(detalheAviso, 'info', '');
         })
@@ -887,7 +906,31 @@
         '</div>';
     }
 
-    function desenharDetalhe(pedido, resumo) {
+    /* ── Histórico (linha do tempo) ──
+       Só mostra as etapas REALMENTE registradas — o servidor manda a
+       lista pronta, em ordem cronológica. */
+    function desenharHistorico(eventos) {
+      var caixa = $('detalhe-historico');
+      var lista = Array.isArray(eventos) ? eventos : [];
+
+      if (!lista.length) {
+        caixa.innerHTML = '<div class="pb-linha">Nenhum evento registrado ainda.</div>';
+        return;
+      }
+
+      caixa.innerHTML = lista.map(function (ev) {
+        var titulo = ev.titulo || rotulo(ev.status) || ev.tipo || '—';
+        var detalhe = ev.descricao ? escapar(ev.descricao) : '';
+        var interno = ev.publico === false ? ' <span class="pb-tabela__sub" style="display:inline">(interno)</span>' : '';
+        return '<div class="pb-item">' +
+          '<span><strong>' + escapar(titulo) + '</strong>' + interno +
+          (detalhe ? '<span class="pb-item__meta">' + detalhe + '</span>' : '') + '</span>' +
+          '<span class="pb-num">' + escapar(dataLegivel(ev.criadoEm)) + '</span>' +
+        '</div>';
+      }).join('');
+    }
+
+    function desenharDetalhe(pedido, resumo, historico) {
       /* Cabeçalho */
       $('detalhe-id').textContent = pedido.id;
       var selo = $('detalhe-selo');
@@ -951,14 +994,20 @@
         blocoObs.hidden = true;
       }
 
+      /* Histórico (linha do tempo) */
+      desenharHistorico(historico);
+
       /* Resumo YouDraw — texto vem pronto do servidor */
       $('youdraw-texto').value = resumo;
 
       /* Formulário preenchido com o estado atual */
       $('up-status').value = pedido.statusPedido;
       $('up-pagamento').value = pagamento.status || 'aguardando';
+      $('up-transportadora').value = pedido.transportadora || '';
       $('up-rastreio').value = pedido.rastreio || '';
+      $('up-rastreio-url').value = pedido.rastreioUrl || '';
       $('up-youdraw').value = pedido.pedidoYouDraw || '';
+      $('up-observacao-publica').value = pedido.observacaoPublica || '';
       $('up-observacoes').value = '';
       $('up-modo').checked = false;
     }
@@ -1012,11 +1061,24 @@
         alteracoes.statusPagamento = pagamentoNovo;
       }
 
+      var transportadoraNova = $('up-transportadora').value.trim();
+      if (transportadoraNova !== (pedidoAberto.transportadora || '')) {
+        alteracoes.transportadora = transportadoraNova;
+      }
+
       var rastreioNovo = $('up-rastreio').value.trim();
       if (rastreioNovo !== (pedidoAberto.rastreio || '')) alteracoes.rastreio = rastreioNovo;
 
+      var rastreioUrlNova = $('up-rastreio-url').value.trim();
+      if (rastreioUrlNova !== (pedidoAberto.rastreioUrl || '')) alteracoes.rastreioUrl = rastreioUrlNova;
+
       var youdrawNovo = $('up-youdraw').value.trim();
       if (youdrawNovo !== (pedidoAberto.pedidoYouDraw || '')) alteracoes.pedidoYouDraw = youdrawNovo;
+
+      var obsPublicaNova = $('up-observacao-publica').value.trim();
+      if (obsPublicaNova !== (pedidoAberto.observacaoPublica || '')) {
+        alteracoes.observacaoPublica = obsPublicaNova;
+      }
 
       var obsNova = $('up-observacoes').value.trim();
       if (obsNova) {
@@ -1038,7 +1100,7 @@
         body: alteracoes
       }).then(function (dados) {
         pedidoAberto = dados.pedido;
-        desenharDetalhe(dados.pedido, dados.resumoYouDraw || '');
+        desenharDetalhe(dados.pedido, dados.resumoYouDraw || '', dados.historico || []);
         mostrarAviso(detalheAviso, 'ok',
           'Pedido atualizado. Campos gravados: ' + (dados.alterado || []).join(', ') + '.');
         carregarPedidos(); /* a lista reflete o novo status/contagem */

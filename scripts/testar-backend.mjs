@@ -358,13 +358,18 @@ async function principal() {
     colunasCoupons.includes('validade'), true);
 
   /* 10b. A tabela orders tem exatamente as colunas do schema atual.
-     `pedido_youdraw` e `atualizado_em` entram com o painel de pedidos. */
+     `pedido_youdraw` e `atualizado_em` entram com o painel de pedidos;
+     `email_confirmacao_*` com o e-mail transacional; e
+     `transportadora`, `rastreio_url` e `observacao_publica` com o
+     acompanhamento do pedido (rastreio.html). */
   conferir('colunas de orders (schema atual)',
     colunasOrders.slice().sort(),
     ['id', 'criado_em', 'cliente_nome', 'cliente_email', 'cliente_telefone', 'cliente_cpf',
       'endereco_json', 'itens_json', 'forma_pagamento', 'status_pagamento', 'cupom_codigo',
       'subtotal', 'desconto', 'frete', 'total', 'status_pedido', 'rastreio', 'observacoes',
-      'pedido_youdraw', 'atualizado_em', 'mp_preference_id', 'mp_payment_id', 'mp_status', 'pago_em'].sort());
+      'pedido_youdraw', 'atualizado_em', 'mp_preference_id', 'mp_payment_id', 'mp_status', 'pago_em',
+      'email_confirmacao_enviado_em', 'email_confirmacao_id',
+      'transportadora', 'rastreio_url', 'observacao_publica'].sort());
 
   conferir('colunas de coupons (schema da etapa)',
     colunasCoupons.slice().sort(),

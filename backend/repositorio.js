@@ -63,7 +63,10 @@ function pedidoParaSupabase(dados) {
     cpf_cliente: dados.cliente_cpf || null,
     endereco: JSON.parse(dados.endereco_json),
     rastreio: dados.rastreio || null,
-    observacoes: dados.observacoes || null
+    observacoes: dados.observacoes || null,
+    transportadora: dados.transportadora || null,
+    rastreio_url: dados.rastreio_url || null,
+    observacao_publica: dados.observacao_publica || null
   };
 }
 
@@ -82,7 +85,10 @@ function linhaParaPedido(row, itens) {
     total: row.total_centavos,
     statusPedido: row.status,
     rastreio: row.rastreio || null,
+    transportadora: row.transportadora || null,
+    rastreioUrl: row.rastreio_url || null,
     observacoes: row.observacoes || null,
+    observacaoPublica: row.observacao_publica || null,
     pedidoYouDraw: null,
     atualizadoEm: row.updated_at || null,
     mercadoPago: { preferenceId: row.mp_preference_id || null, paymentId: row.mp_payment_id || null, status: row.mp_status || null, pagoEm: row.pago_em || null }
@@ -137,6 +143,9 @@ async function atualizarSupabase(codigo, alteracoes) {
   if (alteracoes.statusPedido !== undefined) patch.status = alteracoes.statusPedido;
   if (alteracoes.statusPagamento !== undefined) patch.status_pagamento = alteracoes.statusPagamento;
   if (alteracoes.rastreio !== undefined) patch.rastreio = alteracoes.rastreio;
+  if (alteracoes.transportadora !== undefined) patch.transportadora = alteracoes.transportadora;
+  if (alteracoes.rastreioUrl !== undefined) patch.rastreio_url = alteracoes.rastreioUrl;
+  if (alteracoes.observacaoPublica !== undefined) patch.observacao_publica = alteracoes.observacaoPublica;
   if (alteracoes.observacoes !== undefined) {
     const anterior = atual.observacoes || '';
     patch.observacoes = alteracoes.observacoesModo === 'substituir'
@@ -198,6 +207,52 @@ async function contagemSupabase(statuses) {
   const out = {}; (statuses || []).forEach((s) => { out[s] = 0; });
   (rows || []).forEach((r) => { out[r.status] = (out[r.status] || 0) + 1; });
   return out;
+}
+
+/* ─────────────────────────────────────────────
+   HISTÓRICO (linha do tempo) — Supabase
+   ───────────────────────────────────────────── */
+async function registrarEventoSupabase(id, evento) {
+  const dados = evento || {};
+  const linhas = await request('order_events', {
+    method: 'POST',
+    body: {
+      pedido_id: id,
+      tipo: String(dados.tipo || 'atualizacao'),
+      status: dados.status || null,
+      titulo: dados.titulo || null,
+      descricao: dados.descricao || null,
+      publico: dados.publico === false ? false : true,
+      criado_em: dados.criadoEm || agora()
+    }
+  });
+  const row = Array.isArray(linhas) ? linhas[0] : linhas;
+  return row && row.id ? row.id : null;
+}
+
+async function listarEventosSupabase(id) {
+  const rows = await request('order_events?pedido_id=eq.' + encodeURIComponent(id) + '&select=id,tipo,status,titulo,descricao,publico,criado_em&order=criado_em.asc,id.asc');
+  return (rows || []).map((linha) => ({
+    id: Number(linha.id),
+    tipo: linha.tipo,
+    status: linha.status || null,
+    titulo: linha.titulo || null,
+    descricao: linha.descricao || null,
+    publico: linha.publico !== false,
+    criadoEm: linha.criado_em
+  }));
+}
+
+/** Busca pública: número do pedido + e-mail (case-insensitive, via ilike). */
+async function buscarPedidoPorNumeroEEmailSupabase(id, email) {
+  const pedidos = await request(
+    'pedidos?codigo=eq.' + encodeURIComponent(id) +
+    '&email_cliente=ilike.' + encodeURIComponent(email) +
+    '&select=*'
+  );
+  const row = Array.isArray(pedidos) ? pedidos[0] : null;
+  if (!row) return null;
+  return buscarSupabase(row.codigo);
 }
 
 async function testarConexao() {
@@ -282,5 +337,16 @@ module.exports = {
     : db_marcarEmailConfirmacao(id, messageId),
   emailConfirmacaoDoPedido: (id) => usaSupabase()
     ? emailConfirmacaoDoPedidoSupabase(id)
-    : db_emailConfirmacaoDoPedido(id)
+    : db_emailConfirmacaoDoPedido(id),
+  /* Histórico do pedido (linha do tempo) — mesmo contrato em ambos os bancos. */
+  registrarEvento: (id, evento) => usaSupabase()
+    ? registrarEventoSupabase(id, evento)
+    : Promise.resolve(sqlite.registrarEvento(id, evento)),
+  listarEventos: (id) => usaSupabase()
+    ? listarEventosSupabase(id)
+    : Promise.resolve(sqlite.listarEventos(id)),
+  /* Consulta pública: número do pedido + e-mail da compra. */
+  buscarPedidoPorNumeroEEmail: (id, email) => usaSupabase()
+    ? buscarPedidoPorNumeroEEmailSupabase(id, email)
+    : Promise.resolve(sqlite.buscarPedidoPorNumeroEEmail(id, email))
 };

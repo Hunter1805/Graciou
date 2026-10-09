@@ -1,4 +1,4 @@
-# GRACIOU — Relatório Técnico e Plano de Loja Independente
+  # GRACIOU — Relatório Técnico e Plano de Loja Independente
 
 > **Data:** 25/09/2026
 > **Escopo:** Diagnóstico do projeto atual + plano para loja independente (sem Shopify / sem Nuvemshop)

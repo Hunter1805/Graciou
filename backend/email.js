@@ -28,6 +28,21 @@ const BREVO_ENDPOINT = BREVO_API + '/v3/smtp/email';
    o remetente configurado manda apenas em FROM. */
 const MARCA = 'GRACIOU';
 
+/* URL pública da loja, para montar o link de acompanhamento do pedido.
+   Sem `PUBLIC_BASE_URL`, o link simplesmente não aparece — nunca
+   inventamos um domínio. */
+function urlAcompanhamento() {
+  const base = String(process.env.PUBLIC_BASE_URL || '').trim().replace(/\/+$/, '');
+  if (!base) return null;
+  try {
+    const url = new URL(base);
+    if (url.protocol !== 'https:' && url.hostname !== 'localhost' && url.hostname !== '127.0.0.1') return null;
+  } catch (_) {
+    return null;
+  }
+  return base + '/rastreio.html';
+}
+
 /* ─────────────────────────────────────────────
    CONFIGURAÇÃO
    Mesmo padrão de backend/pagamentos.js: uma função `config()` que
@@ -146,7 +161,8 @@ function montarConteudo(pedido) {
       : dinheiro(p.total),
     formaPagamento: formaPagamento(p.pagamento && p.pagamento.forma),
     enderecoLinha: enderecoEmLinha(endereco),
-    endereco: endereco
+    endereco: endereco,
+    acompanhamentoUrl: urlAcompanhamento()
   };
 }
 
@@ -171,7 +187,12 @@ function montarTexto(conteudo) {
     'ENDEREÇO DE ENTREGA',
     conteudo.enderecoLinha,
     '',
-    'O código de rastreio será enviado em um e-mail separado assim que o pedido for despachado.',
+    'Acompanhe o seu pedido a qualquer momento:',
+    conteudo.acompanhamentoUrl
+      ? `${conteudo.acompanhamentoUrl} (informe o número do pedido e este e-mail)`
+      : 'acesse a página "Acompanhar pedido" na loja e informe o número do pedido e este e-mail.',
+    '',
+    'O código de rastreio aparecerá na página de acompanhamento assim que o pedido for despachado.',
     '',
     `${MARCA} — Graça em cada fio.`
   ].filter((linha) => linha !== null);
@@ -243,9 +264,19 @@ function montarHtml(conteudo) {
           <p style="margin:0;font-size:14px;line-height:1.6;color:#333;">${enderecoHtml}</p>
         </td></tr>
 
+        <tr><td style="padding:16px 32px 0;">
+          <table role="presentation" cellspacing="0" cellpadding="0">
+            <tr><td style="background:#4F5D3A;border-radius:6px;">
+              <a href="${escapar(conteudo.acompanhamentoUrl || (MARCA + ' — Acompanhar pedido'))}" style="display:inline-block;padding:12px 24px;color:#FDFDD0;font-size:13px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">Acompanhar pedido</a>
+            </td></tr>
+          </table>
+        </td></tr>
+
         <tr><td style="padding:16px 32px 28px;">
           <p style="margin:0;font-size:13px;color:#666;background:#f6f6f2;border-radius:6px;padding:12px;">
-            O código de rastreio será enviado em um e-mail separado assim que o pedido for despachado.
+            Acompanhe o status a qualquer momento: informe o número do pedido
+            <strong>${escapar(conteudo.numero)}</strong> e este e-mail na página <em>Acompanhar pedido</em>.
+            O código de rastreio aparece por lá assim que o pedido for despachado.
           </p>
         </td></tr>
 

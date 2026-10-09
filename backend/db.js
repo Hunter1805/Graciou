@@ -69,7 +69,27 @@ CREATE TABLE IF NOT EXISTS orders (
   mp_status         TEXT,
   pago_em           TEXT,
   email_confirmacao_enviado_em TEXT,
-  email_confirmacao_id         TEXT
+  email_confirmacao_id         TEXT,
+  transportadora    TEXT,
+  rastreio_url      TEXT,
+  observacao_publica TEXT
+);
+`;
+
+/* order_events — linha do tempo do pedido (uso interno + consulta do
+   cliente). Cada linha registra UMA etapa real: quando foi gravada, qual
+   status/evento e um texto opcional. É a única fonte da timeline mostrada
+   em rastreio.html — nada é inventado a partir do status atual. */
+const SQL_ORDER_EVENTS = `
+CREATE TABLE IF NOT EXISTS order_events (
+  id             INTEGER PRIMARY KEY AUTOINCREMENT,
+  pedido_id      TEXT NOT NULL,
+  tipo           TEXT NOT NULL,
+  status         TEXT,
+  titulo         TEXT,
+  descricao      TEXT,
+  publico        INTEGER NOT NULL DEFAULT 1,
+  criado_em      TEXT NOT NULL
 );
 `;
 
@@ -95,7 +115,11 @@ const INDICES = [
   'CREATE INDEX IF NOT EXISTS idx_orders_status_pagamento ON orders (status_pagamento);',
   /* O painel filtra por status do pedido o tempo todo. */
   'CREATE INDEX IF NOT EXISTS idx_orders_status_pedido ON orders (status_pedido);',
-  'CREATE INDEX IF NOT EXISTS idx_orders_mp_payment_id ON orders (mp_payment_id);'
+  'CREATE INDEX IF NOT EXISTS idx_orders_mp_payment_id ON orders (mp_payment_id);',
+  /* A consulta pública casa número do pedido + e-mail: o índice composto
+     deixa essa busca rápida sem expor nada. */
+  'CREATE INDEX IF NOT EXISTS idx_orders_email_lower ON orders (cliente_email);',
+  'CREATE INDEX IF NOT EXISTS idx_order_events_pedido ON order_events (pedido_id, criado_em);'
 ];
 
 /* ─────────────────────────────────────────────
@@ -116,7 +140,13 @@ const COLUNAS_NOVAS = [
      foi enviado e o id da mensagem — o conteúdo do e-mail não é
      persistido, e nada disso é exposto como dado financeiro. */
   { nome: 'email_confirmacao_enviado_em', sql: 'ALTER TABLE orders ADD COLUMN email_confirmacao_enviado_em TEXT;' },
-  { nome: 'email_confirmacao_id', sql: 'ALTER TABLE orders ADD COLUMN email_confirmacao_id TEXT;' }
+  { nome: 'email_confirmacao_id', sql: 'ALTER TABLE orders ADD COLUMN email_confirmacao_id TEXT;' },
+  /* Acompanhamento do pedido (rastreio.html): transportadora, link de
+     rastreio (só HTTPS) e a observação PÚBLICA — que o cliente vê, ao
+     contrário de `observacoes`, que é interna. */
+  { nome: 'transportadora', sql: 'ALTER TABLE orders ADD COLUMN transportadora TEXT;' },
+  { nome: 'rastreio_url', sql: 'ALTER TABLE orders ADD COLUMN rastreio_url TEXT;' },
+  { nome: 'observacao_publica', sql: 'ALTER TABLE orders ADD COLUMN observacao_publica TEXT;' }
 ];
 
 /** Nomes das colunas existentes em `orders` (introspecção do SQLite). */
@@ -157,6 +187,7 @@ function abrir() {
 
   banco.exec(SQL_ORDERS);
   banco.exec(SQL_COUPONS);
+  banco.exec(SQL_ORDER_EVENTS);
   migrar(banco);
   INDICES.forEach((sql) => banco.exec(sql));
 
@@ -459,6 +490,21 @@ function atualizarPedido(id, alteracoes) {
     valores.rastreio = alteracoes.rastreio;
   }
 
+  if (alteracoes.transportadora !== undefined) {
+    colunas.push('transportadora = :transportadora');
+    valores.transportadora = alteracoes.transportadora;
+  }
+
+  if (alteracoes.rastreioUrl !== undefined) {
+    colunas.push('rastreio_url = :rastreio_url');
+    valores.rastreio_url = alteracoes.rastreioUrl;
+  }
+
+  if (alteracoes.observacaoPublica !== undefined) {
+    colunas.push('observacao_publica = :observacao_publica');
+    valores.observacao_publica = alteracoes.observacaoPublica;
+  }
+
   if (alteracoes.pedidoYouDraw !== undefined) {
     colunas.push('pedido_youdraw = :pedido_youdraw');
     valores.pedido_youdraw = alteracoes.pedidoYouDraw;
@@ -527,7 +573,10 @@ function linhaParaPedido(linha) {
     total: linha.total,
     statusPedido: linha.status_pedido,
     rastreio: linha.rastreio,
+    transportadora: linha.transportadora || null,
+    rastreioUrl: linha.rastreio_url || null,
     observacoes: linha.observacoes,
+    observacaoPublica: linha.observacao_publica || null,
     pedidoYouDraw: linha.pedido_youdraw || null,
     atualizadoEm: linha.atualizado_em || null,
     /* Uso interno: a API não devolve estes dois campos ao frontend. */
@@ -586,6 +635,67 @@ function emailConfirmacaoDoPedido(id) {
   ).get({ id: id }) || null;
 }
 
+/* ─────────────────────────────────────────────
+   HISTÓRICO DO PEDIDO (linha do tempo)
+   Cada etapa real vira UMA linha em `order_events`. Nada é inferido do
+   status atual: se a etapa não foi registrada, ela simplesmente não
+   aparece na consulta do cliente.
+   ───────────────────────────────────────────── */
+
+/**
+ * Registra um evento do pedido.
+ * @param {string} id número do pedido
+ * @param {{tipo:string, status?:string|null, titulo?:string|null, descricao?:string|null, publico?:boolean, criadoEm?:string}} evento
+ */
+function registrarEvento(id, evento) {
+  const db = abrir();
+  const dados = evento || {};
+  const info = db.prepare(`
+    INSERT INTO order_events (pedido_id, tipo, status, titulo, descricao, publico, criado_em)
+    VALUES (:pedido_id, :tipo, :status, :titulo, :descricao, :publico, :criado_em)
+  `).run({
+    pedido_id: id,
+    tipo: String(dados.tipo || 'atualizacao'),
+    status: dados.status || null,
+    titulo: dados.titulo || null,
+    descricao: dados.descricao || null,
+    publico: dados.publico === false ? 0 : 1,
+    criado_em: dados.criadoEm || agoraLocalISO()
+  });
+  return Number(info && info.lastInsertRowid) || null;
+}
+
+/** Lista o histórico de um pedido, em ordem cronológica. */
+function listarEventos(id) {
+  const db = abrir();
+  return db.prepare(
+    'SELECT id, tipo, status, titulo, descricao, publico, criado_em FROM order_events WHERE pedido_id = :id ORDER BY criado_em ASC, id ASC'
+  ).all({ id: id }).map(function (linha) {
+    return {
+      id: Number(linha.id),
+      tipo: linha.tipo,
+      status: linha.status || null,
+      titulo: linha.titulo || null,
+      descricao: linha.descricao || null,
+      publico: Number(linha.publico) === 1,
+      criadoEm: linha.criado_em
+    };
+  });
+}
+
+/**
+ * Busca pública: casa número do pedido + e-mail (case-insensitive).
+ * Devolve o pedido no formato interno ou null. Não filtra dado pessoal
+ * aqui — quem monta a resposta pública é o servidor.
+ */
+function buscarPedidoPorNumeroEEmail(id, email) {
+  const db = abrir();
+  const linha = db.prepare(
+    'SELECT * FROM orders WHERE id = :id AND lower(cliente_email) = lower(:email)'
+  ).get({ id: id, email: email });
+  return linha ? linhaParaPedido(linha) : null;
+}
+
 module.exports = {
   CAMINHO_BANCO: CAMINHO_BANCO,
   abrir: abrir,
@@ -604,7 +714,10 @@ module.exports = {
   pagamentoDoPedido: pagamentoDoPedido,
   associarPreferencia: associarPreferencia,
   marcarEmailConfirmacao: marcarEmailConfirmacao,
-  emailConfirmacaoDoPedido: emailConfirmacaoDoPedido
+  emailConfirmacaoDoPedido: emailConfirmacaoDoPedido,
+  registrarEvento: registrarEvento,
+  listarEventos: listarEventos,
+  buscarPedidoPorNumeroEEmail: buscarPedidoPorNumeroEEmail
 };
 
 /* Expostos acima para manter a API de persistência explícita. */

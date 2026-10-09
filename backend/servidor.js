@@ -34,6 +34,7 @@ const regras = require('./regras');
 const admin = require('./admin');
 const pagamentos = require('./pagamentos');
 const email = require('./email');
+const acompanhamento = require('./acompanhamento');
 
 const PORTA = Number(process.env.PORT) || (process.env.VERCEL ? 0 : 3001);
 const CATALOGO = regras.CATALOGO;
@@ -204,6 +205,17 @@ function semUsoInternoDoEmail(pedido) {
   return copia;
 }
 
+/* Registra uma etapa no histórico do pedido sem derrubar a operação:
+   se o histórico falhar, o pedido continua válido e só fica sem a linha.
+   O log nunca traz dado pessoal — só o número do pedido e o tipo. */
+async function registrarHistorico(id, evento) {
+  try {
+    await repositorio.registrarEvento(id, evento);
+  } catch (erro) {
+    log(`historico do pedido ${id} nao registrado (${evento && evento.tipo ? evento.tipo : 'evento'})`);
+  }
+}
+
 /* ─────────────────────────────────────────────
    GET /api/health — teste de vida
    ───────────────────────────────────────────── */
@@ -342,6 +354,12 @@ app.post('/api/orders', async (req, res) => {
   /* Log sem dado pessoal: só o id e o valor total. */
   log(`pedido criado ${registro.id} — ${registro.itens.length} linha(s), pecas=${registro.itens.reduce((s, i) => s + i.quantidade, 0)}`);
 
+  /* Primeira etapa da linha do tempo. O pagamento NÃO é marcado como
+     confirmado aqui — o pedido nasce em `aguardando_pagamento`, e só um
+     evento posterior (webhook do Mercado Pago ou ação do operador) muda
+     isso. */
+  await registrarHistorico(registro.id, acompanhamento.eventoDeCriacao(registro, registro.criadoEm));
+
   /* Confirmação por e-mail (Brevo). Roda DEPOIS do pedido gravado e
      nunca bloqueia a resposta: falha vira log e o 201 sai do mesmo jeito.
      O envio é idempotente — uma repetição para o mesmo pedido não gera
@@ -389,6 +407,73 @@ app.get('/api/orders/:id', async (req, res) => {
 });
 
 /* ═════════════════════════════════════
+   CONSULTA PÚBLICA — ACOMPANHAR PEDIDO
+   ─────────────────────────────
+   Sem sessão, o cliente informa NÚMERO DO PEDIDO + E-MAIL da compra.
+   Regras de privacidade e segurança desta rota:
+     - valida os dois campos no servidor;
+     - devolve mensagem GENÉRICA quando a combinação não casa (não diz
+       se o número existe ou se o e-mail está errado);
+     - limita tentativas por IP (evita varredura de números/e-mails);
+     - responde apenas o necessário: nunca CPF, telefone, endereço
+       completo, observações internas nem ids de pagamento.
+   ═════════════════════════════════════ */
+app.post('/api/orders/tracking', async (req, res) => {
+  /* Mensagem única para "não encontrado". Usar a mesma resposta para
+     número inexistente e para e-mail que não casa impede que alguém
+     descubra quais números existem ou quais e-mails compraram. */
+  const NAO_ENCONTRADO = 'Não localizamos um pedido com esse número e e-mail. Confira os dados e tente novamente.';
+
+  const ip = req.ip || (req.socket && req.socket.remoteAddress) || 'desconhecido';
+  const controle = acompanhamento.registrarTentativa(ip);
+  if (!controle.permitido) {
+    return res.status(429).json({
+      ok: false,
+      erro: 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.'
+    });
+  }
+
+  const validacao = acompanhamento.validarConsulta(req.body);
+  if (!validacao.ok) {
+    return res.status(400).json({
+      ok: false,
+      erro: 'Informe o número do pedido e o e-mail usado na compra.',
+      campos: validacao.erros
+    });
+  }
+
+  let pedido = null;
+  try {
+    pedido = await repositorio.buscarPedidoPorNumeroEEmail(validacao.numero, validacao.email);
+  } catch (erro) {
+    log('ERRO na consulta publica de acompanhamento:', erro && erro.name ? erro.name : 'Error');
+    return res.status(502).json({ ok: false, erro: 'Não foi possível consultar agora. Tente novamente em instantes.' });
+  }
+
+  if (!pedido) {
+    /* Log sem dado pessoal: o número NÃO é impresso (seria um dado do
+       cliente) e o e-mail nunca é registrado. */
+    log('consulta de acompanhamento: combinacao nao encontrada');
+    return res.status(404).json({ ok: false, erro: NAO_ENCONTRADO });
+  }
+
+  let eventos = [];
+  try {
+    eventos = await repositorio.listarEventos(pedido.id);
+  } catch (_) {
+    eventos = []; /* sem histórico, a timeline mostra o status atual sem datas */
+  }
+
+  log(`consulta de acompanhamento: pedido localizado ${pedido.id} — status=${pedido.statusPedido}`);
+
+  return res.json({
+    ok: true,
+    pedido: acompanhamento.respostaPublica(pedido, acompanhamento.eventosDaTimeline(eventos)),
+    etapas: acompanhamento.ETAPAS.map((e) => e.rotulo)
+  });
+});
+
+/* ═════════════════════════════════════
    MERCADO PAGO — CHECKOUT PRO
    ─────────────────────────────
    Rotas de checkout e webhook, sempre server-side.
@@ -430,7 +515,21 @@ app.post('/api/payments/webhook', async (req, res) => {
     if (pagamento.currency_id && String(pagamento.currency_id) !== 'BRL') return res.status(409).json({ ok: false, erro: 'Moeda do pagamento não corresponde ao pedido.' });
     if (pagamento.transaction_amount !== undefined && Math.round(Number(pagamento.transaction_amount) * 100) !== Number(pedido.total)) return res.status(409).json({ ok: false, erro: 'Valor do pagamento não corresponde ao pedido.' });
     const status = pagamentos.statusInterno(String(pagamento.status || '').toLowerCase());
+    const pagamentoAntes = await repositorio.pagamentoDoPedido(externalReference);
+    const jaEstavaPago = Boolean(pagamentoAntes && pagamentoAntes.status_pagamento === 'pago');
     const atualizado = await repositorio.atualizarPagamento(externalReference, { mpPaymentId: paymentId, mpStatus: String(pagamento.status || ''), statusPagamento: status.pagamento });
+
+    /* Só grava a etapa "Pagamento confirmado" quando a transição é NOVA.
+       Uma repetição do webhook (idempotente) não duplica a linha do tempo. */
+    if (status.pagamento === 'pago' && !jaEstavaPago) {
+      await registrarHistorico(externalReference, {
+        tipo: 'status',
+        status: 'pago',
+        titulo: admin.ROTULOS_STATUS.pago,
+        publico: true
+      });
+    }
+
     log(`webhook Mercado Pago processado para ${externalReference} — status=${status.pagamento}`);
     return res.status(200).json({ ok: true, id: externalReference, statusPagamento: atualizado.pagamento.status });
   } catch (erro) {
@@ -610,9 +709,13 @@ app.get('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
      CPF ou endereço. O resumo da YouDraw vai no corpo, não no log. */
   log(`admin consultou pedido ${id}`);
 
+  let historico = [];
+  try { historico = await repositorio.listarEventos(id); } catch (_) { historico = []; }
+
   return res.json({
     ok: true,
     pedido: semUsoInternoDoEmail(pedido),
+    historico: historico,
     meta: {
       statusPermitidos: admin.STATUS_PERMITIDOS,
       rotulosStatus: admin.ROTULOS_STATUS,
@@ -655,14 +758,26 @@ app.patch('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
     return res.status(404).json({ ok: false, erro: 'Pedido não encontrado.', id: id });
   }
 
+  /* Registra o histórico a partir das alterações REAIS. Cada etapa que
+     importa para o cliente vira uma linha com data/hora no Supabase
+     (ou SQLite local) — e aparece imediatamente na consulta pública. */
+  const eventos = acompanhamento.eventosDaAtualizacao(validacao.alteracoes, admin.ROTULOS_STATUS);
+  for (const evento of eventos) {
+    await registrarHistorico(id, evento);
+  }
+
   /* Log apenas com o que mudou e o número do pedido. Nada de
      conteúdo de observação (pode ter dado de cliente) nem de endereço. */
   log(`admin atualizou pedido ${id} — campos: ${Object.keys(validacao.alteracoes).filter((c) => c !== 'observacoesModo').join(', ')}`);
+
+  let historico = [];
+  try { historico = await repositorio.listarEventos(id); } catch (_) { historico = []; }
 
   return res.json({
     ok: true,
     pedido: semUsoInternoDoEmail(pedido),
     alterado: Object.keys(validacao.alteracoes).filter((c) => c !== 'observacoesModo'),
+    historico: historico,
     resumoYouDraw: admin.resumoParaYouDraw(pedido)
   });
 });
@@ -678,6 +793,7 @@ app.use((req, res) => {
       'GET /api/health',
       'POST /api/orders',
       'GET /api/orders/:id',
+      'POST /api/orders/tracking',
       'POST /api/admin/login',
       'POST /api/admin/logout',
       'GET /api/admin/orders',

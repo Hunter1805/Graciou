@@ -29,6 +29,7 @@
 'use strict';
 
 const crypto = require('node:crypto');
+const acompanhamento = require('./acompanhamento');
 
 /* ─────────────────────────────────────────────
    STATUS PERMITIDOS DO PEDIDO
@@ -66,6 +67,9 @@ const STATUS_PAGAMENTO_PERMITIDOS = ['aguardando', 'pago', 'recusado', 'cancelad
 const TAMANHO_MAX_OBSERVACAO = 2000;
 const TAMANHO_MAX_RASTREIO = 120;
 const TAMANHO_MAX_YOUDRAW = 120;
+const TAMANHO_MAX_TRANSPORTADORA = 80;
+const TAMANHO_MAX_URL = 500;
+const TAMANHO_MAX_OBSERVACAO_PUBLICA = 1000;
 
 /* ─────────────────────────────────────────────
    CREDENCIAL (variáveis de ambiente)
@@ -299,6 +303,49 @@ function validarAtualizacao(corpo) {
     }
   }
 
+  /* ── transportadora ── */
+  if (tem('transportadora')) {
+    const transportadora = texto(corpo.transportadora);
+    if (temCaractereDeControle(transportadora)) {
+      erros.push({ campo: 'transportadora', mensagem: 'A transportadora tem caracteres inválidos.' });
+    } else if (transportadora.length > TAMANHO_MAX_TRANSPORTADORA) {
+      erros.push({ campo: 'transportadora', mensagem: 'Nome da transportadora muito longo (máx. ' + TAMANHO_MAX_TRANSPORTADORA + ').' });
+    } else {
+      alteracoes.transportadora = transportadora || null;
+    }
+  }
+
+  /* ── rastreioUrl — SOMENTE HTTPS ──
+     Vazio limpa o campo; qualquer valor que não seja https:// é recusado
+     (bloqueia http, javascript:, data: e afins). */
+  if (tem('rastreioUrl')) {
+    const bruto = texto(corpo.rastreioUrl);
+    if (!bruto) {
+      alteracoes.rastreioUrl = null;
+    } else {
+      const url = acompanhamento.urlHttpsValida(bruto);
+      if (!url) {
+        erros.push({ campo: 'rastreioUrl', mensagem: 'O link de rastreio precisa ser uma URL HTTPS válida (https://…).' });
+      } else if (url.length > TAMANHO_MAX_URL) {
+        erros.push({ campo: 'rastreioUrl', mensagem: 'Link de rastreio muito longo (máx. ' + TAMANHO_MAX_URL + ').' });
+      } else {
+        alteracoes.rastreioUrl = url;
+      }
+    }
+  }
+
+  /* ── observacaoPublica (o cliente vê na consulta; ≠ observacoes) ── */
+  if (tem('observacaoPublica')) {
+    const observacao = texto(corpo.observacaoPublica);
+    if (temCaractereDeControle(observacao)) {
+      erros.push({ campo: 'observacaoPublica', mensagem: 'A observação pública tem caracteres inválidos.' });
+    } else if (observacao.length > TAMANHO_MAX_OBSERVACAO_PUBLICA) {
+      erros.push({ campo: 'observacaoPublica', mensagem: 'Observação pública muito longa (máx. ' + TAMANHO_MAX_OBSERVACAO_PUBLICA + ').' });
+    } else {
+      alteracoes.observacaoPublica = observacao || null;
+    }
+  }
+
   /* ── statusPagamento (opcional: permite marcar "pago" sem Mercado Pago) ── */
   if (tem('statusPagamento')) {
     const status = texto(corpo.statusPagamento);
@@ -332,7 +379,7 @@ function validarAtualizacao(corpo) {
       ok: false,
       erros: [{
         campo: 'corpo',
-        mensagem: 'Nada para atualizar. Envie ao menos um de: statusPedido, statusPagamento, rastreio, pedidoYouDraw, observacoes.'
+        mensagem: 'Nada para atualizar. Envie ao menos um de: statusPedido, statusPagamento, rastreio, transportadora, rastreioUrl, pedidoYouDraw, observacaoPublica, observacoes.'
       }]
     };
   }
