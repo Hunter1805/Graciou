@@ -168,6 +168,7 @@ export default defineConfig({
         collection: resolve(RAIZ, 'collection.html'),
         cart: resolve(RAIZ, 'cart.html'),
         checkout: resolve(RAIZ, 'checkout.html'),
+        rastreio: resolve(RAIZ, 'rastreio.html'),
         admin: resolve(RAIZ, 'admin.html')
       }
     }
