@@ -31,6 +31,7 @@ import { fileURLToPath } from 'node:url';
 const RAIZ = fileURLToPath(new URL('..', import.meta.url));
 const PORTA = 3988;
 const BASE = `http://127.0.0.1:${PORTA}`;
+const LIMPAR_BANCO_QA = true;
 
 const pastaTemp = mkdtempSync(join(tmpdir(), 'graciou-acomp-'));
 const CAMINHO_BANCO = join(pastaTemp, 'teste.sqlite');
@@ -51,6 +52,7 @@ const servidor = spawn(process.execPath, ['--no-warnings', 'backend/servidor.js'
     ...process.env,
     PORT: String(PORTA),
     GRACIOU_DB: CAMINHO_BANCO,
+    GRACIOU_FORCAR_SQLITE: '1',
     SUPABASE_URL: '',
     SUPABASE_SERVICE_ROLE_KEY: '',
     BREVO_API_KEY: '',
@@ -133,10 +135,11 @@ try {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(pedidoTemporario)
   }).then((r) => r.json());
-  idPedido = criado.id;
+  idPedido = criado.numero || criado.id;
   ok(!!idPedido, `pedido criado: ${idPedido}`);
-  ok(criado.pedido.statusPedido === 'aguardando_pagamento', 'pedido nasce em aguardando_pagamento (pagamento NÃO marcado como confirmado)');
-  ok(criado.pedido.pagamento.status === 'aguardando', 'status de pagamento nasce como aguardando');
+  ok(criado.resumo.statusPedido === 'aguardando_pagamento', 'pedido nasce em aguardando_pagamento (pagamento NÃO marcado como confirmado)');
+  ok(criado.resumo.statusPagamento === 'aguardando', 'status de pagamento nasce como aguardando');
+  ok(!JSON.stringify(criado).includes(EMAIL_CLIENTE), 'resposta pública não devolve o e-mail do comprador');
 
   console.log('\n3) Consulta correta (número + e-mail)');
   const correta = await consultar(idPedido, EMAIL_CLIENTE);

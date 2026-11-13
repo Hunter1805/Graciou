@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { dirname, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const raiz = process.cwd();
+const raiz = join(dirname(fileURLToPath(import.meta.url)), '..');
 const pagamentos = await import(pathToFileURL(join(raiz, 'backend', 'pagamentos.js')).href);
 const p = pagamentos.default || pagamentos;
 

@@ -48,6 +48,7 @@ const servidor = spawn(process.execPath, ['--no-warnings', 'backend/servidor.js'
     ...process.env,
     PORT: String(PORTA),
     GRACIOU_DB: CAMINHO_BANCO,
+    GRACIOU_FORCAR_SQLITE: '1',
     SUPABASE_URL: '',
     SUPABASE_SERVICE_ROLE_KEY: '',
     /* Chave e remetente falsos: o fetch é interceptado e nada sai. */
@@ -111,6 +112,7 @@ const servidor2 = spawn(process.execPath, ['--no-warnings', '--require', preload
     ...process.env,
     PORT: String(PORTA),
     GRACIOU_DB: CAMINHO_BANCO,
+    GRACIOU_FORCAR_SQLITE: '1',
     SUPABASE_URL: '',
     SUPABASE_SERVICE_ROLE_KEY: '',
     BREVO_API_KEY: 'chave-de-teste-nao-real',
@@ -171,7 +173,7 @@ try {
     body: JSON.stringify(pedidoTemporario)
   });
   const corpo = await resposta.json();
-  idPedido = corpo.id;
+  idPedido = corpo.numero || corpo.id;
   ok(resposta.status === 201, `pedido criado com 201 (veio ${resposta.status}) — ${idPedido}`);
   ok(corpo.ok === true, 'resposta com ok: true');
   ok(corpo.emailConfirmacao && corpo.emailConfirmacao.enviado === true, 'resposta indica e-mail enviado');
@@ -183,6 +185,8 @@ try {
   ok(!textoResposta.includes('emailConfirmacaoEnviadoEm'), 'campo interno emailConfirmacaoEnviadoEm não exposto');
   ok(!textoResposta.includes('emailConfirmacaoId'), 'campo interno emailConfirmacaoId não exposto');
   ok(!textoResposta.includes('messageId'), 'id da mensagem da Brevo não exposto');
+  ok(!textoResposta.includes(pedidoTemporario.cliente.email), 'e-mail do cliente não é ecoado pela rota pública');
+  ok(!textoResposta.includes(pedidoTemporario.cliente.cpf), 'CPF do cliente não é ecoado pela rota pública');
 
   console.log('\n4) Corpo de /api/health');
   const health = await (await fetch(`${BASE}/api/health`)).json();

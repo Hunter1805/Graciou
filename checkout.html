@@ -494,6 +494,7 @@
       <a href="collection.html">Drops</a>
       <a href="preview.html#philosophy">Missão</a>
       <a href="#">Lookbook</a>
+      <a href="rastreio.html">Acompanhar pedido</a>
     </nav>
     <div class="header__actions">
       <button class="header__icon-btn" aria-label="Buscar">
@@ -758,6 +759,7 @@
     </div>
 
     <div class="ck-confirmacao__acoes">
+      <a href="rastreio.html" class="btn btn--primary">ACOMPANHAR PEDIDO</a>
       <a href="collection.html" class="btn btn--outline">CONTINUAR COMPRANDO</a>
       <a href="cart.html" class="btn btn--ghost-dark">VER CARRINHO</a>
     </div>
@@ -1144,7 +1146,8 @@
   /* ════════════════════════════════════════════════
      AUTOCOMPLETAR ENDEREÇO PELO CEP (ViaCEP)
      Preenche estado, cidade, bairro e rua. NUNCA sobrescreve um campo
-     que o cliente já preencheu; campo vazio recebe o valor do ViaCEP.
+     que o cliente já preencheu. A única exceção é a UF pré-carregada do
+     carrinho, que deve ceder ao estado oficial do CEP consultado.
      ════════════════════════════════════════════════ */
   var cepConsultado = '';
   var cepBuscando = false;
@@ -1155,6 +1158,25 @@
     var inp = campo ? inputDe(campo) : null;
     if (!inp || String(inp.value || '').trim()) return;
     inp.value = valor;
+    limparErro(campo);
+  }
+
+  function preencherEstadoDoCep(valor) {
+    if (!valor) return;
+    var campo = campoPorNome('estado');
+    var inp = campo ? inputDe(campo) : null;
+    if (!inp) return;
+
+    var atual = normalizarEstado(inp.value);
+    var ufCarrinho = '';
+    try { ufCarrinho = normalizarEstado(localStorage.getItem('graciou-uf-v1')); } catch (_) {}
+
+    /* A UF do carrinho serve apenas para estimar frete antes do CEP.
+       Quando o ViaCEP responde, ela não pode produzir combinações como
+       "São Paulo / MG". Uma UF diferente da estimativa é preservada,
+       pois pode ter sido digitada conscientemente pelo cliente. */
+    if (atual && atual !== ufCarrinho) return;
+    inp.value = normalizarEstado(valor);
     limparErro(campo);
   }
 
@@ -1175,7 +1197,7 @@
          silêncio — o cliente digita o endereço à mão. */
       if (!r || !r.ok) { cepConsultado = ''; return; }
 
-      preencherSeVazio('estado', r.estado);
+      preencherEstadoDoCep(r.estado);
       preencherSeVazio('cidade', r.cidade);
       preencherSeVazio('bairro', r.bairro);
       preencherSeVazio('rua', r.rua);
@@ -1375,12 +1397,6 @@
   function lerPedido() {
     try { return JSON.parse(localStorage.getItem(PEDIDO_KEY)) || null; }
     catch (_) { return null; }
-  }
-
-  /* Remove o pedido local SOMENTE depois que a API confirma que gravou.
-     Enquanto a resposta não chega, o localStorage é a única cópia. */
-  function removerPedidoLocal() {
-    try { localStorage.removeItem(PEDIDO_KEY); } catch (_) {}
   }
 
   /** Extrai a mensagem mais útil da resposta de erro da API. */
@@ -1587,14 +1603,20 @@
          a preferência ser criada. Se o MP falhar, o cliente pode tentar
          novamente sem perder os itens. */
       btn.textContent = 'ABRINDO MERCADO PAGO...';
-      return criarPreferencia(resposta.pedido.id).then(function (preferencia) {
+      /* A API devolve só o número do pedido (nada de dados pessoais),
+         então usamos `numero`/`id` do topo da resposta. */
+      var numeroDoPedido = resposta.numero || resposta.id;
+      return criarPreferencia(numeroDoPedido).then(function (preferencia) {
+        /* Grava o pedido COM o número oficial e a preferência. Este
+           registro precisa SOBREVIVER à saída para o Mercado Pago: é
+           a única referência que a página tem quando o cliente volta.
+           Limpamos apenas o carrinho — nunca o pedido. */
         salvarPedido(Object.assign({}, pedido, {
-          id: resposta.pedido.id,
-          numeroApi: resposta.pedido.id,
+          id: numeroDoPedido,
+          numeroApi: numeroDoPedido,
           preferenceId: preferencia.preferenceId,
           registroEm: new Date().toISOString()
         }));
-        removerPedidoLocal();
         STORE.clearCart();
         window.location.assign(preferencia.init_point);
       });

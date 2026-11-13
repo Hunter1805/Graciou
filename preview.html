@@ -953,6 +953,38 @@
     }
 
     /* Mobile menu */
+    .mobile-menu { position:fixed; inset:0; z-index:200; }
+    .mobile-menu[hidden] { display:none; }
+    .mobile-menu__overlay {
+      position:absolute; inset:0; background:rgba(26,26,26,0.5);
+      animation:fadeIn .2s var(--ease);
+    }
+    .mobile-menu__panel {
+      position:absolute; top:0; right:0; height:100%; width:min(340px,86vw);
+      background:var(--ecru); border-left:1px solid var(--navy-10);
+      padding:1.5rem; display:flex; flex-direction:column;
+      animation:menuEntra .28s var(--ease);
+    }
+    @keyframes menuEntra { from { transform:translateX(100%); } to { transform:translateX(0); } }
+    .mobile-menu__topo {
+      display:flex; align-items:center; justify-content:space-between;
+      padding-bottom:1.25rem; margin-bottom:1rem;
+      border-bottom:1px solid var(--navy-10);
+    }
+    .mobile-menu__marca {
+      font-family:'Oswald', sans-serif; font-size:1.3rem; font-weight:600;
+      letter-spacing:.05em; text-transform:uppercase; color:var(--moss);
+      transform:scaleY(1.1);
+    }
+    .mobile-menu__fechar { color:var(--navy); padding:.25rem; }
+    .mobile-menu__lista { display:flex; flex-direction:column; gap:.25rem; }
+    .mobile-menu__lista a {
+      display:block; padding:.85rem .25rem;
+      font-size:.8rem; font-weight:500; letter-spacing:.14em; text-transform:uppercase;
+      border-bottom:1px solid var(--navy-06); transition:color .2s;
+    }
+    .mobile-menu__lista a:hover { color:var(--moss); }
+
     .mobile-menu-btn {
       display:none;
     }
@@ -981,6 +1013,7 @@
       <a href="collection.html" class="header__nav-link">Drops</a>
       <a href="#philosophy">Missão</a>
       <a href="#">Lookbook</a>
+      <a href="rastreio.html">Acompanhar pedido</a>
     </nav>
 
     <!-- Ações -->
@@ -996,7 +1029,7 @@
         </svg>
         <span class="cart-badge__count">2</span>
       </a>
-      <button class="header__icon-btn mobile-menu-btn" aria-label="Menu">
+      <button class="header__icon-btn mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
           <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
         </svg>
@@ -1004,6 +1037,26 @@
     </div>
   </div>
 </header>
+
+<!-- Menu Mobile (Drawer) -->
+<div class="mobile-menu" id="mobile-menu" role="dialog" aria-modal="true" aria-label="Menu de navegação" hidden>
+  <div class="mobile-menu__overlay" data-fechar-menu></div>
+  <nav class="mobile-menu__panel" aria-label="Menu mobile">
+    <div class="mobile-menu__topo">
+      <span class="mobile-menu__marca">GRACIOU</span>
+      <button class="mobile-menu__fechar" data-fechar-menu aria-label="Fechar menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <ul class="mobile-menu__lista">
+      <li><a href="collection.html">Loja</a></li>
+      <li><a href="collection.html">Drops</a></li>
+      <li><a href="#philosophy">Missão</a></li>
+      <li><a href="#">Lookbook</a></li>
+      <li><a href="rastreio.html">Acompanhar pedido</a></li>
+    </ul>
+  </nav>
+</div>
 
 
 <!-- ══════════════════════════════════════════
@@ -1407,6 +1460,7 @@
       <div data-reveal>
         <p class="footer__col-title">Suporte</p>
         <ul class="footer__col-links">
+          <li><a href="rastreio.html">Acompanhar pedido</a></li>
           <li><a href="#">FAQ</a></li>
           <li><a href="#">Trocas e devoluções</a></li>
           <li><a href="#">Guia de tamanhos</a></li>
@@ -1457,6 +1511,29 @@
   window.addEventListener('scroll', () => {
     header.classList.toggle('scrolled', window.scrollY > 60);
   }, { passive: true });
+
+  /* ── Menu Mobile ── */
+  const menuMobile = document.getElementById('mobile-menu');
+  const btnMenu    = document.getElementById('mobile-menu-btn');
+  if (menuMobile && btnMenu) {
+    const abrirMenu = () => {
+      menuMobile.hidden = false;
+      btnMenu.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    };
+    const fecharMenu = () => {
+      menuMobile.hidden = true;
+      btnMenu.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    };
+    btnMenu.addEventListener('click', abrirMenu);
+    menuMobile.querySelectorAll('[data-fechar-menu]').forEach((el) => {
+      el.addEventListener('click', fecharMenu);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menuMobile.hidden) fecharMenu();
+    });
+  }
 
   /* ── Reveal on Scroll ── */
   const revealObserver = new IntersectionObserver((entries) => {

@@ -1,5 +1,5 @@
-import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
+import http from 'node:http';
 import { setTimeout as esperar } from 'node:timers/promises';
 
 createRequire(import.meta.url)('../backend/env').carregar();
@@ -23,7 +23,7 @@ if (!env.SUPABASE_URL || !env.SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error('Teste local exige SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no ambiente, sem exibi-las.');
 }
 
-let processo;
+let servidor;
 let pedidoId = null;
 
 async function api(path, options = {}) {
@@ -59,7 +59,13 @@ const pedido = {
 };
 
 try {
-  processo = spawn(process.execPath, ['--no-warnings', 'backend/servidor.js'], { cwd: process.cwd(), env, stdio: ['ignore', 'inherit', 'inherit'] });
+  Object.assign(process.env, env);
+  const handler = createRequire(import.meta.url)('../api/[...path].js');
+  servidor = http.createServer((req, res) => handler(req, res));
+  await new Promise((resolve, reject) => {
+    servidor.once('error', reject);
+    servidor.listen(porta, '127.0.0.1', resolve);
+  });
   await aguardar();
   const health = await api('/api/health');
   conferir('Supabase obrigatório em Vercel', health.status === 200 && health.body.banco.tipo === 'supabase');
@@ -67,7 +73,7 @@ try {
   conferir('Function de pedidos', criado.status === 201);
   pedidoId = criado.body.id;
   const lido = await api('/api/orders/' + encodeURIComponent(pedidoId));
-  conferir('Function de consulta', lido.status === 200 && lido.body.pedido.id === pedidoId);
+  conferir('Function de consulta', lido.status === 200 && lido.body.resumo.numero === pedidoId);
   const login = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ email: env.ADMIN_EMAIL, senha: env.ADMIN_PASSWORD }) });
   conferir('Function de login admin', login.status === 200);
 } finally {
@@ -76,5 +82,5 @@ try {
     await repositorio.deletarPedido(pedidoId);
     conferir('limpeza do pedido de teste', (await repositorio.buscarPedido(pedidoId)) === null);
   }
-  if (processo && !processo.killed) processo.kill('SIGTERM');
+  if (servidor) await new Promise((resolve) => servidor.close(resolve));
 }

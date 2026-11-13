@@ -18,7 +18,11 @@ const catalogo = require('./regras').CATALOGO;
 const db_marcarEmailConfirmacao = (id, messageId) => sqlite.marcarEmailConfirmacao(id, messageId);
 const db_emailConfirmacaoDoPedido = (id) => sqlite.emailConfirmacaoDoPedido(id);
 
-const usaSupabase = () => supabase.validarConfiguracao().completa;
+/* Força o SQLite mesmo com credencial de Supabase presente. Uso restrito a
+   testes/QA que precisam ler o banco local direto do disco
+   (scripts/testar-backend.mjs). Não afeta a operação normal. */
+const forcarSqlite = () => process.env.GRACIOU_FORCAR_SQLITE === '1' && Boolean(sqlite);
+const usaSupabase = () => !forcarSqlite() && supabase.validarConfiguracao().completa;
 const agora = () => new Date().toISOString();
 
 function itemParaSupabase(item, pedidoId) {

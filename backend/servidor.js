@@ -205,6 +205,55 @@ function semUsoInternoDoEmail(pedido) {
   return copia;
 }
 
+/* Resumo MINIMO de um pedido para as respostas sem sessão.
+   Só o que identifica e localiza o pedido. NUNCA sai daqui: nome,
+   e-mail, telefone, CPF, endereço, dados de pagamento ou observações
+   internas. É o irmão enxuto de `semUsoInternoDoEmail` (esse continua
+   sendo usado onde há sessão de operador, ex.: painel e webhook). */
+function resumoPublicoDoPedido(pedido) {
+  if (!pedido || typeof pedido !== 'object') return null;
+  const forma = pedido.pagamento ? pedido.pagamento.forma : null;
+  return {
+    numero: pedido.id,
+    criadoEm: pedido.criadoEm || null,
+    statusPedido: pedido.statusPedido,
+    statusPagamento: pedido.statusPagamento || (pedido.pagamento && pedido.pagamento.status) || null,
+    formaPagamento: forma,
+    /* Os itens vêm de `regras.montarPedido` como
+       { productId, nome, tamanho, cor, quantidade, precoUnitario, subtotal }.
+       Preço unitário JÁ vem do catálogo recalculado pelo servidor. */
+    itens: Array.isArray(pedido.itens)
+      ? pedido.itens.map((item) => ({
+        productId: item.productId,
+        nome: item.nome,
+        tamanho: item.tamanho,
+        cor: item.cor,
+        quantidade: item.quantidade,
+        precoUnitario: item.precoUnitario
+      }))
+      : [],
+    subtotal: pedido.subtotal,
+    desconto: pedido.desconto,
+    frete: pedido.frete,
+    total: pedido.total,
+    /* Código sempre; tipo/valor quando o repositório os carregou. */
+    cupom: pedido.cupom
+      ? { codigo: pedido.cupom.codigo, tipo: pedido.cupom.tipo || null, valor: pedido.cupom.valor || null }
+      : null
+  };
+}
+
+/* Devolve só o HOST de uma URL (sem credenciais, porta, query ou path).
+   Usado no diagnóstico de /api/health: nunca expõe token nem segredo. */
+function hostDeUrl(bruto) {
+  try {
+    const url = new URL(String(bruto || '').trim().replace(/\/+$/, ''));
+    return url.host || null;
+  } catch (_) {
+    return null;
+  }
+}
+
 /* Registra uma etapa no histórico do pedido sem derrubar a operação:
    se o histórico falhar, o pedido continua válido e só fica sem a linha.
    O log nunca traz dado pessoal — só o número do pedido e o tipo. */
@@ -253,6 +302,18 @@ app.get('/api/health', async (req, res) => {
       problemas: problemas.length
     },
     pagamentoIntegrado: Boolean(process.env.MP_ACCESS_TOKEN && process.env.PUBLIC_BASE_URL),
+    /* Diagnóstico SEM segredo: só o FATO de cada variável existir e, para
+       a URL pública, apenas o HOST (nunca o token nem o segredo do
+       webhook, que não aparecem nem como tamanho). */
+    ambiente: {
+      mpAccessTokenDefinido: Boolean(String(process.env.MP_ACCESS_TOKEN || '').trim()),
+      mpWebhookSecretDefinido: Boolean(String(process.env.MP_WEBHOOK_SECRET || '').trim()),
+      publicBaseUrlDefinida: Boolean(String(process.env.PUBLIC_BASE_URL || '').trim()),
+      publicBaseUrlHost: hostDeUrl(process.env.PUBLIC_BASE_URL),
+      brevoDefinido: Boolean(String(process.env.BREVO_API_KEY || '').trim()),
+      supabaseDefinido: Boolean(String(process.env.SUPABASE_URL || '').trim()),
+      sqliteForcado: process.env.GRACIOU_FORCAR_SQLITE === '1'
+    },
     usuarioAdmin: admin.configurado(),
     /* Só o FATO de a Brevo estar configurada — nunca a chave ou o
        endereço do remetente. */
@@ -366,12 +427,17 @@ app.post('/api/orders', async (req, res) => {
      segundo e-mail (ver repositorio.marcarEmailConfirmacao). */
   const emailConfirmacao = await enviarConfirmacaoSeNovo(registro);
 
+  /* A resposta da criação NÃO devolve o pedido inteiro. `/api/orders` é
+     rota pública: devolver o registro completo significava ecoar nome,
+     e-mail, telefone, CPF e endereço de volta para qualquer chamador.
+     Não há sessão aqui, então quem envia os dados é quem deve conhecê-los.
+     O checkout só precisa do número para montar a confirmação. */
   return res.status(201).json({
     ok: true,
     /* O número do pedido é o que o checkout mostra na confirmação. */
     numero: registro.id,
     id: registro.id,
-    pedido: semUsoInternoDoEmail(registro),
+    resumo: resumoPublicoDoPedido(registro),
     recalculadoNoServidor: true,
     valoresRecebidosDoClienteIgnorados: pedido.camposDinheiroIgnorados,
     aviso: pedido.cupomRecusado
@@ -387,6 +453,11 @@ app.post('/api/orders', async (req, res) => {
    GET /api/orders/:id — consulta por id
    ───────────────────────────────────────────── */
 app.get('/api/orders/:id', async (req, res) => {
+  /* ROTA PÚBLICA (sem sessão) e o número do pedido é sequencial, logo
+     ADIVINHÁVEL. Antes ela devolvia o pedido inteiro — CPF, telefone,
+     e-mail e endereço de qualquer pedido, para qualquer um que
+     chamasse. Agora devolve só os campos NÃO pessoais. Quem precisa do
+     endereço completo é o operador, e isso vem do painel (com sessão). */
   const id = String(req.params.id || '').trim();
 
   if (!id) {
@@ -403,7 +474,7 @@ app.get('/api/orders/:id', async (req, res) => {
     });
   }
 
-  return res.json({ ok: true, pedido: semUsoInternoDoEmail(pedido) });
+  return res.json({ ok: true, resumo: resumoPublicoDoPedido(pedido) });
 });
 
 /* ═════════════════════════════════════
@@ -788,21 +859,7 @@ app.patch('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
 app.use((req, res) => {
   res.status(404).json({
     ok: false,
-    erro: 'Rota não encontrada.',
-    rotas: [
-      'GET /api/health',
-      'POST /api/orders',
-      'GET /api/orders/:id',
-      'POST /api/orders/tracking',
-      'POST /api/admin/login',
-      'POST /api/admin/logout',
-      'GET /api/admin/orders',
-      'GET /api/admin/orders/:id',
-      'PATCH /api/admin/orders/:id',
-      'POST /api/payments/create-preference',
-      'POST /api/payments/webhook',
-      'GET /api/payments/status/:orderId'
-    ]
+    erro: 'Rota não encontrada.'
   });
 });
 

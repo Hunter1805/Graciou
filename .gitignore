@@ -16,3 +16,18 @@ backend/data/*.log
 # Vite
 dist/
 .vite/
+
+# QA e arquivos temporários locais
+.tmp/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
+*.log
+cloudflared.exe
+.vite-tunel.config.mjs
+logs/*.png
+scripts/_tmp-*
+.payload-teste.json

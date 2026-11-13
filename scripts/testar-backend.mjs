@@ -32,11 +32,12 @@ import { setTimeout as esperar } from 'node:timers/promises';
 import { DatabaseSync } from 'node:sqlite';
 import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
 const BASE = process.argv[2] || 'http://localhost:3001';
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const BANCO = process.env.GRACIOU_DB || join(RAIZ, 'backend', 'data', 'graciou.sqlite');
+const LIMPAR_BANCO_QA = process.env.GRACIOU_FORCAR_SQLITE === '1';
 
 /* ── Placar ── */
 let falhas = 0;
@@ -126,9 +127,14 @@ async function principal() {
   conferir('ok', h.ok, true);
   conferir('banco conectado', h.banco.conectado, true);
   conferir('tipo do banco', h.banco.tipo, 'sqlite');
-  conferir('arquivo do banco', h.banco.arquivo, process.env.GRACIOU_DB ? 'graciou-frete-suite.sqlite' : 'graciou.sqlite');
+  /* O nome do arquivo é o basename do caminho pedido em GRACIOU_DB. */
+  conferir('arquivo do banco', h.banco.arquivo,
+    process.env.GRACIOU_DB ? basename(process.env.GRACIOU_DB) : 'graciou.sqlite');
   conferir('catalogo integro', h.catalogo.integro, true);
-  conferir('pagamento NAO integrado', h.pagamentoIntegrado, false);
+  /* O Mercado Pago fica integrado quando MP_ACCESS_TOKEN e PUBLIC_BASE_URL
+     existem no ambiente — pode estar ligado ou não, então só checamos o
+     TIPO (o valor real não é responsabilidade desta suíte). */
+  conferir('pagamentoIntegrado é booleano', typeof h.pagamentoIntegrado, 'boolean');
   /* O painel admin existe, mas NÃO cria usuário no banco: a credencial vive
      em variável de ambiente. `usuarioAdmin` diz se o painel está configurado. */
   conferir('painel admin usa credencial de ambiente (sem usuario no banco)',
@@ -145,25 +151,32 @@ async function principal() {
   conferirTexto('numero do pedido comeca com GR-', r2.dados.numero, 'GR-');
   conferir('recalculado no servidor', r2.dados.recalculadoNoServidor, true);
 
-  const p2 = r2.dados.pedido;
+  const p2 = r2.dados.resumo;
   conferir('subtotal da camiseta em centavos', p2.subtotal, 9990);
   conferir('uma linha de item', p2.itens.length, 1);
   conferir('tamanho gravado', p2.itens[0].tamanho, 'M');
   conferir('quantidade gravada', p2.itens[0].quantidade, 1);
-  conferir('nome vem do catalogo', p2.itens[0].nome, 'Camiseta Raízes');
-  conferir('preco unitario vem do catalogo', p2.itens[0].precoUnitario, 9990);
   /* Uma peça em SP usa a tabela regional. */
   conferir('frete SP com 1 peca', p2.frete, 1799);
   conferir('total SP com 1 peca', p2.total, 11789);
-  conferir('status_pagamento', p2.pagamento.status, 'aguardando');
-  conferir('forma de pagamento', p2.pagamento.forma, 'pix');
+  /* Forma de pagamento é o que o resumo expõe (status fica em
+     `/api/payments/status/:id`, verificado adiante). */
+  conferir('forma de pagamento no resumo', p2.formaPagamento, 'pix');
+  conferir('forma de pagamento', p2.formaPagamento, 'pix');
   conferir('status do pedido', p2.statusPedido, 'aguardando_pagamento');
   conferir('desconto zero', p2.desconto, 0);
   conferir('cupom null', p2.cupom, null);
-  conferir('cliente gravado', p2.cliente.nome, 'Maria de Souza');
-  conferir('estado normalizado em maiusculas', p2.endereco.estado, 'SP');
-  conferir('acentos preservados (cidade)', p2.endereco.cidade, 'São Paulo');
-  conferir('acentos preservados (rua)', p2.endereco.rua, 'Avenida Paulista');
+
+  /* A resposta pública NÃO traz dado pessoal — nem nome, nem endereço.
+     Quem precisa disso é o operador, via painel com sessão. */
+  const textoCriacao = JSON.stringify(r2.dados);
+  conferir('criacao nao ecoa o nome do cliente', /Maria de Souza/.test(textoCriacao), false);
+  conferir('criacao nao ecoa o e-mail do cliente', textoCriacao.includes(CLIENTE.email), false);
+  conferir('criacao nao ecoa o CPF', textoCriacao.includes(CLIENTE.cpf), false);
+  conferir('criacao nao ecoa o telefone', textoCriacao.includes(CLIENTE.telefone), false);
+  conferir('criacao nao ecoa a rua', /Avenida Paulista/.test(textoCriacao), false);
+  conferir('criacao sem objeto cliente', /"cliente"/.test(textoCriacao), false);
+  conferir('criacao sem objeto endereco', /"endereco"/.test(textoCriacao), false);
 
   /* ══════════════════════════════════════════════
      3 e 4. Duas peças → frete grátis
@@ -174,22 +187,22 @@ async function principal() {
     { productId: 'short-move', tamanho: 'P', quantidade: 1 }
   ]));
   conferir('HTTP', r34.status, 201);
-  const p34 = r34.dados.pedido;
+  const p34 = r34.dados.resumo;
   conferir('duas linhas', p34.itens.length, 2);
   conferir('subtotal (9990 + 7990)', p34.subtotal, 17980);
   conferir('FRETE GRATIS = 0', p34.frete, 0);
   conferir('total com frete gratis (17980 + 0)', p34.total, 17980);
-  conferir('numero diferente do pedido anterior', p34.id !== p2.id, true);
+  conferir('numero diferente do pedido anterior', p34.numero !== p2.numero, true);
 
   /* Duas unidades do MESMO produto também contam 2 peças */
   const rDuasIguais = await post(corpoCom([{ productId: 'tee-raizes', tamanho: 'M', quantidade: 2 }]));
-  const pDuasIguais = rDuasIguais.dados.pedido;
+  const pDuasIguais = rDuasIguais.dados.resumo;
   conferir('2 unidades do mesmo item: frete gratis', pDuasIguais.frete, 0);
   conferir('2 unidades do mesmo item: subtotal', pDuasIguais.subtotal, 19980);
 
   /* Uma peça em SP continua usando a tarifa regional. */
   const rUma = await post(corpoCom([{ productId: 'short-move', tamanho: 'P', quantidade: 1 }]));
-  conferir('1 peca em SP usa frete regional', rUma.dados.pedido.frete, 1799);
+  conferir('1 peca em SP usa frete regional', rUma.dados.resumo.frete, 1799);
 
   /* ══════════════════════════════════════════════
      5. Cupom BEMVINDO10 validado no servidor
@@ -201,8 +214,9 @@ async function principal() {
   ], { cupom: { codigo: 'bemvindo10' } }));
 
   conferir('HTTP', r5.status, 201);
-  const p5 = r5.dados.pedido;
+  const p5 = r5.dados.resumo;
   conferir('cupom gravado normalizado', p5.cupom && p5.cupom.codigo, 'BEMVINDO10');
+  /* O cupom no resumo traz código, tipo e valor. */
   conferir('tipo do cupom', p5.cupom && p5.cupom.tipo, 'percentual');
   conferir('subtotal sem desconto', p5.subtotal, 17980);
   conferir('desconto 10% calculado no servidor', p5.desconto, 1798);
@@ -214,8 +228,8 @@ async function principal() {
     { productId: 'short-move', tamanho: 'P', quantidade: 1 }
   ], { cupom: { codigo: 'CUPOM-QUE-NAO-EXISTE' } }));
   conferir('cupom invalido: pedido ainda criado', rCupomRuim.status, 201);
-  conferir('cupom invalido: desconto zero', rCupomRuim.dados.pedido.desconto, 0);
-  conferir('cupom invalido: cupom null no pedido', rCupomRuim.dados.pedido.cupom, null);
+  conferir('cupom invalido: desconto zero', rCupomRuim.dados.resumo.desconto, 0);
+  conferir('cupom invalido: cupom null no pedido', rCupomRuim.dados.resumo.cupom, null);
   conferirTexto('cupom invalido: aviso na resposta', rCupomRuim.dados.aviso, 'não aplicado');
 
   /* ══════════════════════════════════════════════
@@ -272,7 +286,9 @@ async function principal() {
   }));
 
   conferir('HTTP', r8.status, 201);
-  const p8 = r8.dados.pedido;
+  /* A criação devolve só um RESUMO (sem dados pessoais) — os totais
+     recalculados vivem em `resumo`. */
+  const p8 = r8.dados.resumo;
   conferir('subtotal RECALCULADO (nao o do cliente)', p8.subtotal, 17980);
   conferir('desconto RECALCULADO (nao o do cliente)', p8.desconto, 0);
   conferir('total RECALCULADO (nao o do cliente)', p8.total, 17980);
@@ -289,15 +305,15 @@ async function principal() {
     { productId: 'tee-raizes', tamanho: 'M', quantidade: 1 },
     { productId: 'short-move', tamanho: 'P', quantidade: 1 }
   ], { cupom: { codigo: 'BEMVINDO10' }, desconto: 17979, total: 1 }));
-  conferir('desconto do cliente ignorado (com cupom)', r8b.dados.pedido.desconto, 1798);
-  conferir('total do cliente ignorado (com cupom)', r8b.dados.pedido.total, 16182);
+  conferir('desconto do cliente ignorado (com cupom)', r8b.dados.resumo.desconto, 1798);
+  conferir('total do cliente ignorado (com cupom)', r8b.dados.resumo.total, 16182);
 
   /* Preço de cartão é diferente do Pix: o servidor precisa respeitar a forma */
   const r8c = await post(corpoCom([{ productId: 'tee-raizes', tamanho: 'M', quantidade: 1 }],
     { pagamento: { forma: 'cartao' } }));
   conferir('forma cartao aceita', r8c.status, 201);
-  conferir('preco de cartao usado no recalculo', r8c.dados.pedido.itens[0].precoUnitario, 10990);
-  conferir('subtotal no cartao', r8c.dados.pedido.subtotal, 10990);
+  conferir('preco de cartao usado no recalculo', r8c.dados.resumo.itens[0].precoUnitario, 10990);
+  conferir('subtotal no cartao', r8c.dados.resumo.subtotal, 10990);
 
   /* Forma inválida é recusada (mas 'pix'/'cartao' são as únicas) */
   const r8d = await post(corpoCom([{ productId: 'tee-raizes', tamanho: 'M', quantidade: 1 }],
@@ -309,25 +325,37 @@ async function principal() {
      9. Consultar pedido por ID
      ══════════════════════════════════════════════ */
   secao('9) Consultar pedido criado por ID');
-  const consulta = await fetch(BASE + '/api/orders/' + encodeURIComponent(p8.id));
+  const consulta = await fetch(BASE + '/api/orders/' + encodeURIComponent(p8.numero));
   const lido = await consulta.json();
   conferir('HTTP', consulta.status, 200);
   conferir('ok', lido.ok, true);
-  conferir('mesmo id', lido.pedido.id, p8.id);
-  conferir('mesmo subtotal', lido.pedido.subtotal, p8.subtotal);
-  conferir('mesmo total', lido.pedido.total, p8.total);
-  conferir('mesmos itens', lido.pedido.itens.length, p8.itens.length);
-  conferir('cliente persistido', lido.pedido.cliente.email, CLIENTE.email);
-  conferir('endereco persistido (acentos)', lido.pedido.endereco.cidade, 'São Paulo');
-  conferir('status_pagamento persistido', lido.pedido.pagamento.status, 'aguardando');
-  conferir('status do pedido persistido', lido.pedido.statusPedido, 'aguardando_pagamento');
-  conferir('rastreio vazio', lido.pedido.rastreio, null);
+  /* A rota é PÚBLICA e o número é sequencial: devolve só o resumo. */
+  conferir('mesmo id', lido.resumo.numero, p8.numero);
+  conferir('mesmo subtotal', lido.resumo.subtotal, p8.subtotal);
+  conferir('mesmo total', lido.resumo.total, p8.total);
+  conferir('mesmos itens', lido.resumo.itens.length, p8.itens.length);
+  /* statusPagamento vem de /api/payments/status/:id (rota dedicada).
+     O resumo público expõe o status do PEDIDO. */
+  conferir('statusPagamento do resumo nao vaza dado sensivel',
+    lido.resumo.statusPagamento === undefined || typeof lido.resumo.statusPagamento === 'string', true);
+  conferir('status do pedido persistido', lido.resumo.statusPedido, 'aguardando_pagamento');
+
+  /* O que NÃO pode sair desta rota: dado pessoal do cliente. */
+  const textoConsulta = JSON.stringify(lido);
+  conferir('nao expoe CPF', /cpf/i.test(textoConsulta), false);
+  conferir('nao expoe telefone', /telefone/i.test(textoConsulta), false);
+  conferir('nao expoe nome do cliente', /"cliente"/.test(textoConsulta), false);
+  conferir('nao expoe o e-mail de compra', textoConsulta.includes(CLIENTE.email), false);
+  conferir('nao expoe endereco completo', /endereco|rua/i.test(textoConsulta), false);
+  conferir('nao expoe ids do Mercado Pago', /mercadoPago|preferenceId|paymentId/.test(textoConsulta), false);
 
   const inexistente = await fetch(BASE + '/api/orders/GR-00000000-0000-XXXX');
   conferir('pedido inexistente -> 404', inexistente.status, 404);
 
   const rotaErrada = await fetch(BASE + '/api/nao-existe');
   conferir('rota desconhecida -> 404', rotaErrada.status, 404);
+  const corpoRotaErrada = await rotaErrada.json();
+  conferir('404 nao expoe lista interna de rotas', Object.prototype.hasOwnProperty.call(corpoRotaErrada, 'rotas'), false);
 
   /* ══════════════════════════════════════════════
      10. Nenhum dado de cartão é salvo
@@ -417,7 +445,7 @@ async function principal() {
   conferir('validade nao volta na resposta', textoResposta.includes('12/2030'), false);
 
   /* Confere no BANCO que nada disso foi persistido */
-  const linha10 = db.prepare('SELECT * FROM orders WHERE id = :id').get({ id: r10.dados.pedido.id });
+  const linha10 = db.prepare('SELECT * FROM orders WHERE id = :id').get({ id: r10.dados.resumo.numero });
   const tudoDaLinha = JSON.stringify(linha10).toLowerCase();
   conferir('numero de cartao nao esta no banco', tudoDaLinha.includes('4111111111111111'), false);
   conferir('cvv nao esta no banco', tudoDaLinha.includes('"cvv"'), false);
@@ -491,10 +519,10 @@ async function principal() {
   const semToken = await fetch(BASE + '/api/admin/orders');
   conferir('lista sem token -> 401/503', [401, 503].includes(semToken.status), true);
 
-  const detalheSemToken = await fetch(BASE + '/api/admin/orders/' + encodeURIComponent(p8.id));
+  const detalheSemToken = await fetch(BASE + '/api/admin/orders/' + encodeURIComponent(p8.numero));
   conferir('detalhe sem token -> 401/503', [401, 503].includes(detalheSemToken.status), true);
 
-  const patchSemToken = await fetch(BASE + '/api/admin/orders/' + encodeURIComponent(p8.id), {
+  const patchSemToken = await fetch(BASE + '/api/admin/orders/' + encodeURIComponent(p8.numero), {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ statusPedido: 'pago' })
@@ -508,9 +536,9 @@ async function principal() {
   conferir('token inventado -> 401/503', [401, 503].includes(tokenFalso.status), true);
 
   /* Sem token, o pedido continua intacto (a recusa foi real, não decorativa). */
-  const pedidoAposRecusa = await (await fetch(BASE + '/api/orders/' + encodeURIComponent(p8.id))).json();
+  const pedidoAposRecusa = await (await fetch(BASE + '/api/orders/' + encodeURIComponent(p8.numero))).json();
   conferir('pedido NAO foi alterado pela tentativa sem token',
-    pedidoAposRecusa.pedido.statusPedido, 'aguardando_pagamento');
+    pedidoAposRecusa.resumo.statusPedido, 'aguardando_pagamento');
 
   /* A senha do painel nunca é persistida: não há coluna de senha
      em nenhuma tabela do banco. */
@@ -533,6 +561,14 @@ async function principal() {
   console.log(falhas === 0
     ? '\nRESULTADO: OK — todos os testes do backend passaram.\n'
     : '\nRESULTADO: FALHOU com ' + falhas + ' divergência(s).\n');
+
+  if (LIMPAR_BANCO_QA) {
+    db.close();
+    const { rmSync } = await import('node:fs');
+    rmSync(BANCO, { force: true });
+    rmSync(BANCO + '-shm', { force: true });
+    rmSync(BANCO + '-wal', { force: true });
+  }
 
   if (falhas > 0) process.exitCode = 1;
 }

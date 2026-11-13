@@ -22,11 +22,35 @@
 
 import { spawn } from 'node:child_process';
 import { setTimeout as esperar } from 'node:timers/promises';
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, rmSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const CHROME = 'C:\\Users\\PV\\AppData\\Local\\ms-playwright\\chromium-1243\\chrome-win64\\chrome.exe';
+function localizarNavegador() {
+  const local = process.env.LOCALAPPDATA || '';
+  const candidatos = [
+    process.env.CHROME_PATH,
+    join(process.env.PROGRAMFILES || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    join(process.env['ProgramFiles(x86)'] || '', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    join(local, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+    join(process.env.PROGRAMFILES || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    join(process.env['ProgramFiles(x86)'] || '', 'Microsoft', 'Edge', 'Application', 'msedge.exe')
+  ].filter(Boolean);
+
+  const raizPlaywright = join(local, 'ms-playwright');
+  if (existsSync(raizPlaywright)) {
+    for (const pasta of readdirSync(raizPlaywright).filter((nome) => nome.startsWith('chromium-')).sort().reverse()) {
+      candidatos.push(join(raizPlaywright, pasta, 'chrome-win64', 'chrome.exe'));
+      candidatos.push(join(raizPlaywright, pasta, 'chrome-win', 'chrome.exe'));
+    }
+  }
+
+  const encontrado = candidatos.find((caminho) => existsSync(caminho));
+  if (!encontrado) throw new Error('Chrome, Edge ou Chromium do Playwright não encontrado. Defina CHROME_PATH.');
+  return encontrado;
+}
+
+const CHROME = localizarNavegador();
 const BASE_FRONT = process.argv[2] || 'http://localhost:3100';
 const BASE_API = process.argv[3] || 'http://localhost:3001';
 const PORTA_CDP = 9777;

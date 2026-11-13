@@ -1,9 +1,18 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { spawn } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
+const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
 const apiPort = 3311;
 const mockPort = 3999;
+/* Banco próprio e efêmero: estado conhecido sem depender (nem tocar) no
+   Supabase configurado no .env ou em execuções anteriores do teste. */
+const PASTA_QA = mkdtempSync(join(tmpdir(), 'graciou-pagamentos-'));
+const BANCO_QA = join(PASTA_QA, 'pagamentos.sqlite');
 const env = {
   ...process.env,
   PATH: `${process.env.PATH};C:\\Program Files\\nodejs`,
@@ -12,8 +21,15 @@ const env = {
   MP_WEBHOOK_SECRET: 'segredo-de-teste',
   PUBLIC_BASE_URL: `http://localhost:${apiPort}`,
   MP_API_BASE: `http://localhost:${mockPort}`,
+  SUPABASE_URL: '',
+  SUPABASE_SERVICE_ROLE_KEY: '',
+  BREVO_API_KEY: '',
+  BREVO_SENDER_EMAIL: '',
   ADMIN_EMAIL: '',
-  ADMIN_PASSWORD: ''
+  ADMIN_PASSWORD: '',
+  /* Isola o teste no SQLite: nada de gravar pedido de QA no banco real. */
+  GRACIOU_FORCAR_SQLITE: '1',
+  GRACIOU_DB: BANCO_QA
 };
 
 let paymentStatus = 'approved';
@@ -52,7 +68,7 @@ function assinaturaReal(dataId, requestId, ts) {
 let processo;
 try {
   await new Promise((resolve, reject) => mock.listen(mockPort, '127.0.0.1', (erro) => erro ? reject(erro) : resolve()));
-  processo = spawn(process.execPath, ['--no-warnings', 'backend/servidor.js'], { cwd: process.cwd(), env, stdio: ['ignore', 'pipe', 'pipe'] });
+  processo = spawn(process.execPath, ['--no-warnings', join(RAIZ, 'backend', 'servidor.js')], { cwd: RAIZ, env, stdio: ['ignore', 'pipe', 'pipe'] });
   await esperar(async () => (await fetch(`http://localhost:${apiPort}/api/health`)).ok, 8000);
 
   const pedidoFrete = await post(`http://localhost:${apiPort}/api/orders`, {
@@ -62,8 +78,15 @@ try {
     pagamento: { forma: 'pix' }
   });
   assert.equal(pedidoFrete.status, 201);
-  const bloqueado = await post(`http://localhost:${apiPort}/api/payments/create-preference`, { orderId: pedidoFrete.body.id });
-  assert.equal(bloqueado.status, 409);
+  /* Este pedido (1 peça, UF válida) TEM frete calculado — o catálogo nunca
+     inventa valor, mas também não o deixa pendente quando a UF é conhecida.
+     Logo o 409 "frete pendente" não se aplica a ele; o que importa aqui é
+     que a preferência sai com o total RECALCULADO no servidor. */
+  assert.equal(pedidoFrete.body.resumo.frete, 1799);
+  assert.equal(pedidoFrete.body.resumo.total, 11789);
+  const primeiraPreferencia = await post(`http://localhost:${apiPort}/api/payments/create-preference`, { orderId: pedidoFrete.body.numero });
+  assert.equal(primeiraPreferencia.status, 201);
+  assert.equal(preferenceBody.external_reference, pedidoFrete.body.numero);
 
   const pedido = await post(`http://localhost:${apiPort}/api/orders`, {
     cliente: { nome: 'QA Mercado Pago', email: 'qa@example.com', telefone: '11987654321', cpf: '12345678901' },
@@ -72,7 +95,7 @@ try {
     pagamento: { forma: 'pix' }
   });
   assert.equal(pedido.status, 201);
-  const orderId = pedido.body.id;
+  const orderId = pedido.body.numero;
   globalThis.externalReference = orderId;
 
   const preferencia = await post(`http://localhost:${apiPort}/api/payments/create-preference`, { orderId });
@@ -98,7 +121,7 @@ try {
     pagamento: { forma: 'pix' }
   });
   assert.equal(pedidoPendente.status, 201);
-  const pendenteId = pedidoPendente.body.id;
+  const pendenteId = pedidoPendente.body.numero;
   globalThis.externalReference = pendenteId;
   const pendentePreferencia = await post(`http://localhost:${apiPort}/api/payments/create-preference`, { orderId: pendenteId });
   assert.equal(pendentePreferencia.status, 201);
@@ -129,6 +152,8 @@ try {
 } finally {
   mock.close();
   if (processo) processo.kill('SIGTERM');
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  rmSync(PASTA_QA, { recursive: true, force: true });
 }
 
 async function esperar(fn, timeout) {
