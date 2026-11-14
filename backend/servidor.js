@@ -667,7 +667,51 @@ function exigirAdmin(req, res, next) {
 /* ─────────────────────────────────────────────
    POST /api/admin/login
    ───────────────────────────────────────────── */
+const JANELA_LOGIN_ADMIN_MS = 15 * 60 * 1000;
+const MAX_FALHAS_LOGIN_ADMIN = 5;
+const falhasLoginAdmin = new Map();
+
+function ipDaRequisicao(req) {
+  const encaminhado = String(req.headers && req.headers['x-forwarded-for'] || '')
+    .split(',')[0]
+    .trim();
+  return encaminhado || req.ip || (req.socket && req.socket.remoteAddress) || 'desconhecido';
+}
+
+function estadoLoginAdmin(ip) {
+  const agora = Date.now();
+  const estado = falhasLoginAdmin.get(ip);
+  if (!estado || estado.inicio + JANELA_LOGIN_ADMIN_MS <= agora) {
+    falhasLoginAdmin.delete(ip);
+    return { bloqueado: false, tentativas: 0, inicio: agora };
+  }
+  return {
+    bloqueado: estado.tentativas >= MAX_FALHAS_LOGIN_ADMIN,
+    tentativas: estado.tentativas,
+    inicio: estado.inicio,
+    aguardarSegundos: Math.max(1, Math.ceil((estado.inicio + JANELA_LOGIN_ADMIN_MS - agora) / 1000))
+  };
+}
+
+function registrarFalhaLoginAdmin(ip) {
+  const estado = estadoLoginAdmin(ip);
+  falhasLoginAdmin.set(ip, {
+    inicio: estado.inicio,
+    tentativas: estado.tentativas + 1
+  });
+}
+
 app.post('/api/admin/login', (req, res) => {
+  const ip = ipDaRequisicao(req);
+  const controle = estadoLoginAdmin(ip);
+  if (controle.bloqueado) {
+    res.setHeader('Retry-After', String(controle.aguardarSegundos));
+    return res.status(429).json({
+      ok: false,
+      erro: 'Muitas tentativas de acesso. Aguarde alguns minutos e tente novamente.'
+    });
+  }
+
   const corpo = (req.body && typeof req.body === 'object') ? req.body : {};
   const email = String(corpo.email || '').trim();
   const senha = String(corpo.senha || '');
@@ -682,6 +726,7 @@ app.post('/api/admin/login', (req, res) => {
   const resultado = admin.conferirCredenciais(email, senha);
 
   if (!resultado.ok) {
+    if (resultado.motivo === 'credencial') registrarFalhaLoginAdmin(ip);
     /* Log sem credencial: só o fato da recusa, nunca o e-mail
        informado nem a senha (tentada ou correta). */
     log(`admin login RECUSADO (${resultado.motivo})`);
@@ -693,6 +738,7 @@ app.post('/api/admin/login', (req, res) => {
   }
 
   const sessao = admin.criarSessao(String(email).trim().toLowerCase());
+  falhasLoginAdmin.delete(ip);
 
   log('admin login OK');
 

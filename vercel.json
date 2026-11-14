@@ -2,6 +2,18 @@
   "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "proxy": {
+    "entrypoint": "proxy.js",
+    "matcher": [
+      "/admin.html"
+    ]
+  },
+  "routes": [
+    {
+      "src": "^/$",
+      "dest": "/preview.html"
+    }
+  ],
   "functions": {
     "api/[...path].js": {
       "maxDuration": 30,
