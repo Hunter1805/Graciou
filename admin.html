@@ -712,12 +712,17 @@
 
       fetch(API_BASE + '/api/admin/login', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ codigo: codigo })
       }).then(function (resposta) {
-        return resposta.json().catch(function () { return {}; }).then(function (dados) {
+        var tipoConteudo = resposta.headers.get('content-type') || '';
+        if (tipoConteudo.toLowerCase().indexOf('application/json') === -1) {
+          throw new Error('A resposta do login não veio em JSON. Verifique se a barreira de acesso está autorizada e tente novamente.');
+        }
+        return resposta.json().then(function (dados) {
           if (!resposta.ok || !dados.ok) {
-            throw new Error(dados.erro || 'Não foi possível entrar.');
+            throw new Error(dados.erro || 'Não foi possível entrar com o código informado.');
           }
           return dados;
         });
@@ -725,7 +730,7 @@
         token = dados.token;
         entrarNoPainel('Administrador');
       }).catch(function (erro) {
-        var mensagem = erro.message || '';
+        var mensagem = erro && erro.message ? erro.message : 'Não foi possível entrar. Tente novamente.';
         if (mensagem.indexOf('fetch') !== -1 || mensagem.indexOf('Failed') !== -1) {
           mensagem = 'A API não respondeu em ' + API_BASE + '. Suba o backend (cd backend; npm run dev) e tente de novo.';
         }

@@ -1,5 +1,8 @@
+import { createRequire } from 'node:module';
 import proxy, { __test } from '../proxy.js';
 
+const admin = createRequire(import.meta.url)('../backend/admin.js');
+process.env.ADMIN_TOTP_SECRET = '';
 const USUARIO_QA = 'usuario-barreira-teste';
 const SENHA_QA = 'senha-barreira-falsa-somente-para-testes';
 const COOKIE_NOME = 'graciou_admin_gate';
@@ -20,8 +23,15 @@ function requisicao(caminho, headers = {}) {
   return new Request('https://graciou.example' + caminho, { headers });
 }
 
-async function respostaLogin(cookie) {
-  return proxy(requisicao('/api/admin/login', cookie ? { Cookie: cookie } : {}));
+async function respostaLogin(cookie, authorization) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (cookie) headers.Cookie = cookie;
+  if (authorization) headers.Authorization = authorization;
+  return proxy(new Request('https://graciou.example/api/admin/login', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ codigo: 'invalid-code' })
+  }));
 }
 
 function valorDoSetCookie(cabecalho) {
@@ -51,22 +61,28 @@ conferir('cookie não contém usuário nem senha em texto puro',
   !payloadCookie.includes(USUARIO_QA) && !payloadCookie.includes(SENHA_QA));
 
 const semCookie = await respostaLogin(null);
-conferir('login TOTP sem cookie de barreira recusado', semCookie.status === 401 &&
+conferir('sem cookie e sem Basic a rota de login é recusada', semCookie.status === 401 &&
   (semCookie.headers.get('content-type') || '').startsWith('text/plain'));
-const apenasBasic = await proxy(requisicao('/api/admin/login', {
-  Authorization: basic(USUARIO_QA, SENHA_QA)
-}));
-conferir('Basic sozinho não substitui o cookie na rota de login', apenasBasic.status === 401);
 
 const cookieValido = await respostaLogin(cookie);
 conferir('cookie válido deixa o POST seguir para o backend TOTP',
   cookieValido.headers.get('x-middleware-next') === '1');
 
+const basicValido = await respostaLogin(null, basic(USUARIO_QA, SENHA_QA));
+conferir('Basic válido permite chegar ao backend TOTP',
+  basicValido.headers.get('x-middleware-next') === '1');
+const basicInvalido = await respostaLogin(null, basic(USUARIO_QA, 'senha-incorreta-de-teste'));
+conferir('Basic inválido é recusado mesmo com código enviado', basicInvalido.status === 401 &&
+  (basicInvalido.headers.get('content-type') || '').startsWith('text/plain'));
+conferir('proxy autoriza Basic, mas backend exige TOTP configurado',
+  basicValido.headers.get('x-middleware-next') === '1' &&
+  !admin.conferirCredenciais('invalid-code').ok);
+
 const valor = cookie.slice((COOKIE_NOME + '=').length);
 const partesValor = valor.split('.');
 const assinaturaAlterada = (partesValor[1][0] === 'A' ? 'B' : 'A') + partesValor[1].slice(1);
 const cookieAlterado = await respostaLogin(COOKIE_NOME + '=' + partesValor[0] + '.' + assinaturaAlterada);
-conferir('cookie alterado recusado', cookieAlterado.status === 401 &&
+conferir('cookie adulterado recusado', cookieAlterado.status === 401 &&
   (cookieAlterado.headers.get('content-type') || '').startsWith('text/plain'));
 
 const expiradoSetCookie = await __test.criarCookieBarreira(

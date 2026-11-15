@@ -151,15 +151,14 @@ export default async function proxy(request) {
     }
 
     const cookie = await criarCookieBarreira(usuarioEsperado, senhaEsperada);
-    const headers = new Headers({ 'Set-Cookie': cookie });
-    const resposta = next({ headers });
-    /* Mantém o cookie também no cabeçalho de resposta emitido pelo middleware. */
+    const resposta = next();
     resposta.headers.set('Set-Cookie', cookie);
     return resposta;
   }
 
   if (caminho === '/api/admin/login') {
-    if (!await cookieBarreiraValido(request, usuarioEsperado, senhaEsperada)) {
+    const cookieValido = await cookieBarreiraValido(request, usuarioEsperado, senhaEsperada);
+    if (!cookieValido && (!usuarioOk || !senhaOk)) {
       return respostaPrivada(401, 'Acesso restrito.');
     }
     return next();
