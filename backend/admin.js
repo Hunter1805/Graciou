@@ -6,7 +6,7 @@
  *
  * ─── O QUE ESTE ARQUIVO FAZ ─────────────────────────────────
  *   - lê as credenciais SOMENTE de variáveis de ambiente
- *     (ADMIN_EMAIL / ADMIN_PASSWORD) — nunca do código, nunca do
+ *     (ADMIN_TOTP_SECRET) — nunca do código, nunca do
  *     banco e nunca do frontend;
  *   - emite um token de sessão temporário, aleatório e opaco;
  *   - guarda as sessões apenas em MEMÓRIA (reiniciar a API derruba
@@ -19,11 +19,9 @@
  *   - não imprime credencial, token nem dado pessoal no console.
  *
  * ─── SOBRE A SENHA ──────────────────────────────────────────
- * A senha vive na variável de ambiente ADMIN_PASSWORD e é comparada
- * em memória com timingSafeEqual. Ela NUNCA é persistida: o banco
- * SQLite deste painel guarda apenas pedidos e cupons — não há
- * coluna, tabela nem hash de senha. Ou seja, "senha em texto no
- * banco" é impossível por construção, não por convenção.
+ * O primeiro fator (usuário + senha) é validado pelo proxy da Vercel.
+ * Esta API valida o segundo fator TOTP e não persiste credencial alguma:
+ * o banco guarda apenas pedidos e cupons.
  */
 
 'use strict';
@@ -81,11 +79,12 @@ const TAMANHO_MAX_OBSERVACAO_PUBLICA = 1000;
  * servidor NÃO expõe o login, em vez de aceitar qualquer senha.
  */
 function credenciaisDoAmbiente() {
-  const email = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase();
-  const senha = String(process.env.ADMIN_PASSWORD || '');
+  const segredoTotp = String(process.env.ADMIN_TOTP_SECRET || '')
+    .replace(/[\s-]+/g, '')
+    .toUpperCase();
 
-  if (!email || !senha) return null;
-  return { email: email, senha: senha };
+  if (!segredoTotp || !/^[A-Z2-7]{16,}$/.test(segredoTotp)) return null;
+  return { segredoTotp: segredoTotp };
 }
 
 /** O painel administrativo está configurado? */
@@ -97,7 +96,7 @@ function configurado() {
  * Compara duas strings sem vazar informação pelo tempo de resposta.
  * O hash SHA-256 prévio garante buffers do mesmo tamanho, então
  * timingSafeEqual pode ser usado mesmo com entradas de tamanhos
- * diferentes (e-mail curto vs. senha longa, por exemplo).
+ * diferentes sem vazar o conteúdo comparado.
  */
 function iguaisEmTempoConstante(a, b) {
   const hash = (v) => crypto.createHash('sha256').update(String(v), 'utf8').digest();
@@ -105,33 +104,69 @@ function iguaisEmTempoConstante(a, b) {
 }
 
 /**
- * Confere e-mail + senha contra o ambiente.
+ * Confere o código TOTP contra o segredo do ambiente.
  * Devolve { ok: true } ou { ok: false, erro: '...' }.
- * A mensagem de erro é a MESMA para e-mail inexistente e senha
- * errada: o painel não revela qual das duas falhou.
+ * A mensagem de erro não revela detalhes sobre o segredo configurado.
  */
-function conferirCredenciais(email, senha) {
+function base32ParaBuffer(valor) {
+  const alfabeto = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+  let bits = '';
+  for (const caractere of String(valor || '')) {
+    const indice = alfabeto.indexOf(caractere);
+    if (indice < 0) return null;
+    bits += indice.toString(2).padStart(5, '0');
+  }
+
+  const bytes = [];
+  for (let i = 0; i + 8 <= bits.length; i += 8) {
+    bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  }
+  return bytes.length >= 10 ? Buffer.from(bytes) : null;
+}
+
+function codigoTotp(segredoBase32, passo) {
+  const chave = base32ParaBuffer(segredoBase32);
+  if (!chave) return null;
+
+  const contador = Buffer.alloc(8);
+  contador.writeBigUInt64BE(BigInt(passo));
+  const hash = crypto.createHmac('sha1', chave).update(contador).digest();
+  const deslocamento = hash[hash.length - 1] & 0x0f;
+  const numero = (hash.readUInt32BE(deslocamento) & 0x7fffffff) % 1000000;
+  return String(numero).padStart(6, '0');
+}
+
+function conferirTotp(codigo, segredoBase32, agora = Date.now()) {
+  const informado = String(codigo || '').replace(/\s+/g, '');
+  const formatoValido = /^\d{6}$/.test(informado);
+  const passoAtual = Math.floor(Number(agora) / 30000);
+  let valido = false;
+
+  /* Sempre calcula os três intervalos para não revelar o acerto pelo tempo. */
+  for (const desvio of [-1, 0, 1]) {
+    const esperado = codigoTotp(segredoBase32, passoAtual + desvio) || '000000';
+    const candidato = formatoValido ? informado : '999999';
+    valido = iguaisEmTempoConstante(candidato, esperado) || valido;
+  }
+  return formatoValido && valido;
+}
+
+function conferirCredenciais(codigo) {
   const credenciais = credenciaisDoAmbiente();
 
   if (!credenciais) {
     return {
       ok: false,
       motivo: 'nao_configurado',
-      erro: 'Painel administrativo não configurado. Defina ADMIN_EMAIL e ADMIN_PASSWORD no ambiente da API.'
+      erro: 'Painel administrativo não configurado. Defina ADMIN_TOTP_SECRET no ambiente da API.'
     };
   }
 
-  const emailInformado = String(email || '').trim().toLowerCase();
-  const senhaInformada = String(senha || '');
+  const totpOk = conferirTotp(codigo, credenciais.segredoTotp);
 
-  const emailOk = iguaisEmTempoConstante(emailInformado, credenciais.email);
-  const senhaOk = iguaisEmTempoConstante(senhaInformada, credenciais.senha);
+  if (totpOk) return { ok: true };
 
-  /* As duas comparações rodam sempre: nada de curto-circuito que
-     denuncie qual campo estava errado. */
-  if (emailOk && senhaOk) return { ok: true };
-
-  return { ok: false, motivo: 'credencial', erro: 'E-mail ou senha inválidos.' };
+  return { ok: false, motivo: 'credencial', erro: 'Código temporário inválido.' };
 }
 
 /* ─────────────────────────────────────────────
@@ -158,7 +193,7 @@ function limparExpiradas() {
 /**
  * Cria uma sessão e devolve o token opaco (32 bytes em hex).
  * O token é aleatório (crypto.randomBytes) — não é derivado do
- * e-mail, da senha nem da hora, então não vaza nada.
+ * identificador nem da hora, então não vaza nada.
  */
 function criarSessao(email) {
   limparExpiradas();
@@ -477,6 +512,8 @@ module.exports = {
 
   configurado: configurado,
   conferirCredenciais: conferirCredenciais,
+  conferirTotp: conferirTotp,
+  codigoTotp: codigoTotp,
 
   criarSessao: criarSessao,
   obterSessao: obterSessao,

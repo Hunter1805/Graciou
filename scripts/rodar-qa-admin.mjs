@@ -13,9 +13,13 @@ import { existsSync } from 'node:fs';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
+import { createRequire } from 'node:module';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = resolve(AQUI, '..');
+const require = createRequire(import.meta.url);
+const admin = require('../backend/admin.js');
+const SEGREDO_TOTP_QA = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 
 const CAMINHOS_BROWSER = [
   join(process.env.USERPROFILE || '', '.codegpt', 'skills', 'browser-automation', 'browser.mjs'),
@@ -37,7 +41,8 @@ const api = semBarraFinal(process.env.GRACIOU_API || 'http://localhost:3001');
 const front = semBarraFinal(process.env.GRACIOU_FRONT || 'http://localhost:3000');
 
 /* O valor de ?api= é uma URL: precisa ir codificado na query string. */
-const url = `${front}/admin.html?api=${encodeURIComponent(api)}`;
+const codigoTotp = admin.codigoTotp(SEGREDO_TOTP_QA, Math.floor(Date.now() / 30000));
+const url = `${front}/admin.html?api=${encodeURIComponent(api)}&qaTotp=${encodeURIComponent(codigoTotp)}`;
 
 console.log('[qa-admin] front: ' + front);
 console.log('[qa-admin] api:   ' + api);

@@ -510,7 +510,7 @@ async function principal() {
 
   /* ══════════════════════════════════════════════
      13. Painel admin: exige sessão e não guarda senha
-     As credenciais vêm de ADMIN_EMAIL/ADMIN_PASSWORD, então estes
+     A credencial TOTP vem de ADMIN_TOTP_SECRET, então estes
      testes rodam com ou sem o painel configurado.
      ══════════════════════════════════════════════ */
   secao('13) Painel admin: sessão obrigatória e nenhuma senha no banco');
@@ -549,9 +549,9 @@ async function principal() {
   /* E o código-fonte não guarda credencial literal. */
   const fonteAdmin = readFileSync(join(RAIZ, 'backend', 'admin.js'), 'utf8');
   conferir('admin.js le credencial do ambiente',
-    /process\.env\.ADMIN_EMAIL/.test(fonteAdmin) && /process\.env\.ADMIN_PASSWORD/.test(fonteAdmin), true);
+    /process\.env\.ADMIN_TOTP_SECRET/.test(fonteAdmin), true);
   conferir('nenhuma senha literal no codigo',
-    /(senha|password)\s*[:=]\s*['"][^'"]{3,}['"]/i.test(fonteAdmin.replace(/process\.env\.ADMIN_PASSWORD/g, '')), false);
+    /(senha|password)\s*[:=]\s*['"][^'"]{3,}['"]/i.test(fonteAdmin), false);
 
   /* ── Relatório ── */
   console.log('\nGRACIOU — testes do backend (API de pedidos)');

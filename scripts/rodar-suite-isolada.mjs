@@ -46,8 +46,8 @@ const envLimpo = {
   BREVO_API_KEY: '',
   BREVO_SENDER_EMAIL: '',
   BREVO_SENDER_NAME: '',
-  ADMIN_EMAIL: '',
-  ADMIN_PASSWORD: '',
+  ADMIN_TOTP_SECRET: '',
+  GRACIOU_SKIP_DOTENV: '1',
   VERCEL: ''
 };
 

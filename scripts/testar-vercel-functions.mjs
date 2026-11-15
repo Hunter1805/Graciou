@@ -3,6 +3,8 @@ import http from 'node:http';
 import { setTimeout as esperar } from 'node:timers/promises';
 
 createRequire(import.meta.url)('../backend/env').carregar();
+const admin = createRequire(import.meta.url)('../backend/admin.js');
+const SEGREDO_TOTP_QA = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 
 const porta = 3021;
 const base = `http://127.0.0.1:${porta}`;
@@ -11,8 +13,7 @@ const env = {
   PORT: String(porta),
   VERCEL: '1',
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || '',
-  ADMIN_EMAIL: 'vercel-test@example.invalid',
-  ADMIN_PASSWORD: 'senha-apenas-teste',
+  ADMIN_TOTP_SECRET: SEGREDO_TOTP_QA,
   MP_ACCESS_TOKEN: '',
   MP_WEBHOOK_SECRET: '',
   PUBLIC_BASE_URL: `http://127.0.0.1:${porta}`,
@@ -74,7 +75,12 @@ try {
   pedidoId = criado.body.id;
   const lido = await api('/api/orders/' + encodeURIComponent(pedidoId));
   conferir('Function de consulta', lido.status === 200 && lido.body.resumo.numero === pedidoId);
-  const login = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ email: env.ADMIN_EMAIL, senha: env.ADMIN_PASSWORD }) });
+  const login = await api('/api/admin/login', {
+    method: 'POST',
+    body: JSON.stringify({
+      codigo: admin.codigoTotp(SEGREDO_TOTP_QA, Math.floor(Date.now() / 30000))
+    })
+  });
   conferir('Function de login admin', login.status === 200);
 } finally {
   if (pedidoId) {

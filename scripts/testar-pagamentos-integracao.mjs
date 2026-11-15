@@ -25,8 +25,6 @@ const env = {
   SUPABASE_SERVICE_ROLE_KEY: '',
   BREVO_API_KEY: '',
   BREVO_SENDER_EMAIL: '',
-  ADMIN_EMAIL: '',
-  ADMIN_PASSWORD: '',
   /* Isola o teste no SQLite: nada de gravar pedido de QA no banco real. */
   GRACIOU_FORCAR_SQLITE: '1',
   GRACIOU_DB: BANCO_QA

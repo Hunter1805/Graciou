@@ -170,8 +170,9 @@ As credenciais são lidas por variáveis de ambiente:
 - `MP_ACCESS_TOKEN`;
 - `MP_WEBHOOK_SECRET`;
 - `PUBLIC_BASE_URL`;
-- `ADMIN_EMAIL`;
-- `ADMIN_PASSWORD`.
+- `ADMIN_GATE_USER`;
+- `ADMIN_GATE_PASSWORD`;
+- `ADMIN_TOTP_SECRET`.
 
 O `.gitignore` contém:
 

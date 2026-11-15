@@ -12,6 +12,7 @@ export default async function run(page) {
   const endereco = { cep: '01310-100', estado: 'SP', cidade: 'São Paulo', bairro: 'Teste', rua: 'Rua Teste', numero: '0', complemento: '' };
   let pedidoId = null;
   let adminToken = null;
+  const codigoQa = new URL(page.url()).searchParams.get('qaTotp') || '';
 
   async function api(path, options = {}) {
     const response = await page.evaluate(async ({ baseApi, path, options }) => {
@@ -49,7 +50,7 @@ export default async function run(page) {
       'ck-cep': endereco.cep, 'ck-estado': endereco.estado, 'ck-cidade': endereco.cidade, 'ck-bairro': endereco.bairro,
       'ck-rua': endereco.rua, 'ck-numero': endereco.numero
     })) await page.locator('#' + id).fill(value);
-    const login = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ email: 'teste-frontend@example.invalid', senha: 'senha-temporaria-frontend' }) });
+    const login = await api('/api/admin/login', { method: 'POST', body: JSON.stringify({ codigo: codigoQa }) });
     resultado.etapas.loginAdmin = { status: login.status, ok: login.body.ok };
     if (login.status !== 200) throw new Error('login admin falhou');
     adminToken = login.body.token;

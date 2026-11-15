@@ -9,6 +9,7 @@ export default async function run(page) {
   const result = { urls: [page.url()], etapas: {}, errosConsole: errors, falhasRede: failed };
   const call = async (path, options = {}) => page.evaluate(async ({ base, path, options }) => { const r = await fetch(base + path, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } }); return { status: r.status, body: await r.json().catch(() => ({})) }; }, { base, path, options });
   let id = null;
+  const codigoQa = new URL(page.url()).searchParams.get('qaTotp') || '';
   try {
     await page.evaluate(() => localStorage.clear());
     await page.evaluate(() => {
@@ -28,7 +29,7 @@ export default async function run(page) {
     result.etapas.checkout = { carregado: page.url().endsWith('/checkout.html'), semRedirecionamentoInicial: true };
     const campos = { 'ck-nome':'Teste Frontend', 'ck-email':'teste-frontend@example.invalid', 'ck-telefone':'(11) 90000-0000', 'ck-cpf':'123.456.789-01', 'ck-cep':'01310-100', 'ck-estado':'SP', 'ck-cidade':'São Paulo', 'ck-bairro':'Teste', 'ck-rua':'Rua Teste', 'ck-numero':'0' };
     for (const [key, value] of Object.entries(campos)) await page.locator('#' + key).fill(value);
-    const login = await call('/api/admin/login', { method: 'POST', body: JSON.stringify({ email: 'teste-frontend@example.invalid', senha: 'senha-temporaria-frontend' }) });
+    const login = await call('/api/admin/login', { method: 'POST', body: JSON.stringify({ codigo: codigoQa }) });
     result.etapas.loginAdmin = { status: login.status, ok: login.body.ok };
     const auth = { Authorization: 'Bearer ' + login.body.token };
     const post = page.waitForResponse((r) => r.url().endsWith('/api/orders'));

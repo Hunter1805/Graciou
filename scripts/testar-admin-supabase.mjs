@@ -4,14 +4,15 @@ import { setTimeout as esperar } from 'node:timers/promises';
 
 const require = createRequire(import.meta.url);
 require('../backend/env').carregar();
+const admin = require('../backend/admin.js');
+const SEGREDO_TOTP_QA = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 const raiz = process.cwd();
 const porta = 3011;
 const base = `http://127.0.0.1:${porta}`;
 const env = {
   ...process.env,
   PORT: String(porta),
-  ADMIN_EMAIL: 'teste-admin-supabase@example.invalid',
-  ADMIN_PASSWORD: 'senha-temporaria-apenas-teste',
+  ADMIN_TOTP_SECRET: SEGREDO_TOTP_QA,
   MP_ACCESS_TOKEN: '',
   MP_WEBHOOK_SECRET: '',
   PUBLIC_BASE_URL: ''
@@ -85,7 +86,9 @@ try {
 
   const login = await api('/api/admin/login', {
     method: 'POST',
-    body: JSON.stringify({ email: env.ADMIN_EMAIL, senha: env.ADMIN_PASSWORD })
+    body: JSON.stringify({
+      codigo: admin.codigoTotp(SEGREDO_TOTP_QA, Math.floor(Date.now() / 30000))
+    })
   });
   conferir('POST /api/admin/login', login.status === 200 && login.body.ok === true);
   const autorizacao = { Authorization: 'Bearer ' + login.body.token };

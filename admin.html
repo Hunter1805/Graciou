@@ -360,21 +360,18 @@
       <p class="login-card__eyebrow">Acesso restrito</p>
       <h1 class="login-card__title">Painel de Pedidos</h1>
       <p class="login-card__desc">
-        Área interna da GRACIOU. As credenciais não ficam no código nem no banco:
-        vêm de <strong>ADMIN_EMAIL</strong> e <strong>ADMIN_PASSWORD</strong>,
-        definidas no ambiente da API.
+        Área interna da GRACIOU. Após a primeira barreira de acesso, informe o
+        código temporário do seu aplicativo autenticador.
       </p>
 
       <div class="aviso aviso--erro" id="login-erro" hidden></div>
 
       <form id="form-login" novalidate>
         <div class="campo">
-          <label class="campo__label" for="login-email">E-mail</label>
-          <input type="email" id="login-email" autocomplete="username" spellcheck="false" />
-        </div>
-        <div class="campo">
-          <label class="campo__label" for="login-senha">Senha</label>
-          <input type="password" id="login-senha" autocomplete="current-password" />
+          <label class="campo__label" for="login-codigo">Código do autenticador</label>
+          <input type="text" id="login-codigo" inputmode="numeric" autocomplete="one-time-code"
+            maxlength="6" pattern="[0-9]{6}" placeholder="000000" />
+          <span class="campo__dica">Código de 6 dígitos que muda a cada 30 segundos.</span>
         </div>
         <button type="submit" class="btn btn--escuro" id="btn-entrar" style="width:100%">Entrar</button>
       </form>
@@ -703,11 +700,10 @@
       evento.preventDefault();
       mostrarAviso(loginErro, 'erro', '');
 
-      var email = $('login-email').value.trim();
-      var senha = $('login-senha').value;
+      var codigo = $('login-codigo').value.replace(/\D/g, '');
 
-      if (!email || !senha) {
-        mostrarAviso(loginErro, 'erro', 'Informe e-mail e senha.');
+      if (codigo.length !== 6) {
+        mostrarAviso(loginErro, 'erro', 'Informe o código de 6 dígitos.');
         return;
       }
 
@@ -717,7 +713,7 @@
       fetch(API_BASE + '/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, senha: senha })
+        body: JSON.stringify({ codigo: codigo })
       }).then(function (resposta) {
         return resposta.json().catch(function () { return {}; }).then(function (dados) {
           if (!resposta.ok || !dados.ok) {
@@ -727,7 +723,7 @@
         });
       }).then(function (dados) {
         token = dados.token;
-        entrarNoPainel(email);
+        entrarNoPainel('Administrador');
       }).catch(function (erro) {
         var mensagem = erro.message || '';
         if (mensagem.indexOf('fetch') !== -1 || mensagem.indexOf('Failed') !== -1) {
@@ -741,7 +737,7 @@
     });
 
     function entrarNoPainel(email) {
-      $('login-senha').value = '';
+      $('login-codigo').value = '';
       telaLogin.hidden = true;
       app.classList.add('is-visivel');
       btnSair.hidden = false;
@@ -1125,9 +1121,8 @@
     filtroLimite.addEventListener('change', carregarPedidos);
     btnAtualizar.addEventListener('click', carregarPedidos);
 
-    /* Enter no campo de e-mail pula para a senha. */
-    $('login-email').addEventListener('keydown', function (evento) {
-      if (evento.key === 'Enter') { evento.preventDefault(); $('login-senha').focus(); }
+    $('login-codigo').addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 6);
     });
   })();
   </script>

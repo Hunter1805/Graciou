@@ -21,8 +21,9 @@
 
 'use strict';
 
-/* O .env é apenas um recurso local; na Vercel as variáveis vêm do ambiente. */
-if (!process.env.VERCEL) require('./env').carregar();
+/* O .env é apenas um recurso local; na Vercel as variáveis vêm do ambiente.
+   Suites isoladas também podem desativar a leitura do arquivo explicitamente. */
+if (!process.env.VERCEL && process.env.GRACIOU_SKIP_DOTENV !== '1') require('./env').carregar();
 
 const express = require('express');
 const path = require('node:path');
@@ -323,6 +324,7 @@ app.get('/api/health', async (req, res) => {
     },
     painelAdmin: {
       configurado: admin.configurado(),
+      totpConfigurado: Boolean(String(process.env.ADMIN_TOTP_SECRET || '').trim()),
       sessoesAtivas: admin.sessoesAtivas(),
       duracaoSessaoMinutos: Math.floor(admin.DURACAO_SESSAO_MS / 60000)
     },
@@ -647,7 +649,7 @@ function exigirAdmin(req, res, next) {
   if (!admin.configurado()) {
     return res.status(503).json({
       ok: false,
-      erro: 'Painel administrativo não configurado. Defina ADMIN_EMAIL e ADMIN_PASSWORD no ambiente da API e reinicie.'
+      erro: 'Painel administrativo não configurado. Defina ADMIN_TOTP_SECRET no ambiente da API e reinicie.'
     });
   }
 
@@ -713,17 +715,16 @@ app.post('/api/admin/login', (req, res) => {
   }
 
   const corpo = (req.body && typeof req.body === 'object') ? req.body : {};
-  const email = String(corpo.email || '').trim();
-  const senha = String(corpo.senha || '');
+  const codigo = String(corpo.codigo || '').replace(/\s+/g, '');
 
-  if (!email || !senha) {
+  if (!/^\d{6}$/.test(codigo)) {
     return res.status(400).json({
       ok: false,
-      erro: 'Informe e-mail e senha.'
+      erro: 'Informe o código temporário de 6 dígitos.'
     });
   }
 
-  const resultado = admin.conferirCredenciais(email, senha);
+  const resultado = admin.conferirCredenciais(codigo);
 
   if (!resultado.ok) {
     if (resultado.motivo === 'credencial') registrarFalhaLoginAdmin(ip);
@@ -737,7 +738,7 @@ app.post('/api/admin/login', (req, res) => {
     });
   }
 
-  const sessao = admin.criarSessao(String(email).trim().toLowerCase());
+  const sessao = admin.criarSessao('administrador');
   falhasLoginAdmin.delete(ip);
 
   log('admin login OK');
@@ -950,7 +951,7 @@ function iniciar() {
     if (admin.configurado()) {
       log(`painel admin: configurado (sessao de ${Math.floor(admin.DURACAO_SESSAO_MS / 60000)} min)`);
     } else {
-      log('painel admin: NAO configurado — defina ADMIN_EMAIL e ADMIN_PASSWORD para usar /admin.html');
+      log('painel admin: NAO configurado — defina ADMIN_TOTP_SECRET para usar /admin.html');
     }
   });
 

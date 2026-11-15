@@ -4,8 +4,7 @@
  * COMO RODAR
  *   1. API no ar, com o painel configurado:
  *        cd backend
- *        $env:ADMIN_EMAIL='admin@graciou.com'
- *        $env:ADMIN_PASSWORD='graciou-teste-123'
+ *        $env:ADMIN_TOTP_SECRET='GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'
  *        npm run dev
  *   2. Front no ar:  npm run dev   (raiz, porta 3000)
  *   3. Um pedido precisa existir — crie um pelo checkout ou por POST /api/orders.
@@ -25,6 +24,7 @@
  *   6. salvar uma alteração faz o PATCH e o servidor confirma.
  */
 export default async function run(page, ui) {
+  const codigoQa = new URLSearchParams(new URL(page.url()).search).get('qaTotp') || '';
   const resultado = { etapas: [] };
   const passo = (nome, dados) => resultado.etapas.push(Object.assign({ passo: nome }, dados));
 
@@ -32,12 +32,11 @@ export default async function run(page, ui) {
   const inicial = await ui.snapshot({ full: true });
   passo('carregou', {
     temTituloLogin: inicial.includes('Painel de Pedidos'),
-    temCampoEmail: inicial.includes('E-mail') || inicial.includes('email')
+    temCampoCodigo: inicial.includes('Código do autenticador')
   });
 
   /* ── 2. Credencial errada é recusada ── */
-  await page.fill('#login-email', 'admin@graciou.com');
-  await page.fill('#login-senha', 'senha-errada');
+  await page.fill('#login-codigo', '000000');
   await page.click('#btn-entrar');
   await page.waitForFunction(
     () => {
@@ -52,7 +51,7 @@ export default async function run(page, ui) {
   });
 
   /* ── 3. Login correto ── */
-  await page.fill('#login-senha', 'graciou-teste-123');
+  await page.fill('#login-codigo', codigoQa);
   await page.click('#btn-entrar');
   await page.waitForFunction(
     () => document.getElementById('app').classList.contains('is-visivel'),
@@ -131,12 +130,11 @@ export default async function run(page, ui) {
   /* Confirma no servidor que o dado persistiu e o resto não foi apagado. */
   const noServidor = await page.evaluate(async (id) => {
     const base = decodeURIComponent(new URLSearchParams(location.search).get('api') || 'http://localhost:3001');
-    const EMAIL_QA = 'admin@graciou.com';
-    const SENHA_QA = 'graciou-teste-123';
+    const codigo = new URLSearchParams(location.search).get('qaTotp') || '';
     const login = await fetch(base + '/api/admin/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: EMAIL_QA, senha: SENHA_QA })
+      body: JSON.stringify({ codigo: codigo })
     }).then((r) => r.json());
     const resposta = await fetch(base + '/api/admin/orders/' + encodeURIComponent(id), {
       headers: { Authorization: 'Bearer ' + login.token }

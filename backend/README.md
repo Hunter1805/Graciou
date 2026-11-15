@@ -284,10 +284,9 @@ A tela do operador. É uma página estática na **raiz do projeto**
 ### Como abrir
 
 ```bash
-# 1. API com o painel configurado
+# 1. API com o painel configurado (a primeira barreira usuário/senha fica na Vercel)
 cd backend
-$env:ADMIN_EMAIL='admin@graciou.com'
-$env:ADMIN_PASSWORD='uma-senha-boa'
+$env:ADMIN_TOTP_SECRET='CHAVE-BASE32-GERADA-LOCALMENTE'
 npm run dev
 
 # 2. Frontend, na raiz do projeto (outro terminal)
@@ -296,8 +295,17 @@ npm run dev
 
 Depois: **http://localhost:3000/admin.html**
 
-> Sem `ADMIN_EMAIL`/`ADMIN_PASSWORD`, o login responde `503` e o painel avisa
+> Sem `ADMIN_TOTP_SECRET`, o login responde `503` e o painel avisa
 > que não está configurado — ele **nunca** aceita qualquer senha.
+
+Em produção, `proxy.js` exige `ADMIN_GATE_USER` e `ADMIN_GATE_PASSWORD` antes
+de liberar tanto `/admin.html` quanto `/api/admin/login`. Depois dessa primeira
+barreira, o painel solicita somente o código temporário.
+
+Gere a chave TOTP uma única vez com `node scripts/gerar-totp-admin.mjs`, cadastre-a
+manualmente no Google Authenticator e salve o mesmo valor em
+`ADMIN_TOTP_SECRET` na Vercel. A chave não deve ser enviada por mensagem,
+capturada em print ou versionada.
 
 Se a API estiver em outra porta (por exemplo, a 3001 já ocupada por outro
 programa), aponte o painel para ela pela URL:
@@ -332,6 +340,8 @@ http://localhost:3000/admin.html?api=http://localhost:3002
   `meta.statusPermitidos` na resposta da lista — não há lista duplicada no HTML.
 - **A sessão morre sozinha** em 30 minutos, e o token fica **só na memória**:
   recarregar a página exige novo login. Ele não vai para `localStorage`.
+- **O código TOTP muda a cada 30 segundos.** O servidor aceita apenas o intervalo
+  atual e os dois intervalos vizinhos para tolerar pequena diferença de relógio.
 - **Nada de dinheiro é editável.** Total, frete e desconto vêm do servidor; o
   painel só os exibe.
 
@@ -506,7 +516,7 @@ preços, cupons e regra de frete em todo o projeto.
 | `rastreio.html` diz "Não foi possível consultar" / painel não grava | No Supabase, falta aplicar a migração `supabase/migrations/20261007_acompanhamento_pedidos.sql`. Sem as colunas/tabela novas, a persistência falha. |
 | Link de rastreio recusado pelo painel | Só **HTTPS** é aceito (`https://…`). Corrija o link ou deixe o campo vazio. |
 | Cliente vê a mesma mensagem para qualquer erro | Comportamento **proposital**: a consulta pública não revela se o número existe ou se o e-mail está errado. |
-| Painel diz "Painel administrativo não configurado" (`503`) | Faltam `ADMIN_EMAIL` e `ADMIN_PASSWORD` no ambiente da API. Defina as duas e reinicie. |
+| Painel diz "Painel administrativo não configurado" (`503`) | Falta `ADMIN_TOTP_SECRET` no ambiente da API. Defina a chave e reinicie. |
 | Painel mostra "A API não respondeu em http://localhost:3001" | A API não está no ar, ou está em outra porta. Suba o backend, ou abra `admin.html?api=http://localhost:<porta>`. |
 | Painel volta para o login sozinho | A sessão expirou (30 min) ou a API foi reiniciada — as sessões vivem só em memória. Entre novamente. |
 | `emailConfirmacao: { enviado: false }` na resposta | A Brevo não está configurada (`BREVO_API_KEY`/`BREVO_SENDER_EMAIL`) ou o envio falhou. O console da API mostra o motivo. **O pedido foi criado normalmente.** |

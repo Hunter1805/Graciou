@@ -8,8 +8,9 @@ A preparação está concluída, mas este projeto **não foi publicado**.
 4. Cadastre no ambiente da Vercel, sem versionar valores:
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `ADMIN_EMAIL`
-   - `ADMIN_PASSWORD`
+   - `ADMIN_GATE_USER`
+   - `ADMIN_GATE_PASSWORD`
+   - `ADMIN_TOTP_SECRET`
    - `PUBLIC_BASE_URL`
    - `MP_ACCESS_TOKEN` — placeholder até configurar Mercado Pago
    - `MP_WEBHOOK_SECRET` — placeholder até configurar Mercado Pago

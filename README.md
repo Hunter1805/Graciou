@@ -89,12 +89,11 @@ npm run dev
 
 Depois abra **http://localhost:3000** — o hub lista todas as páginas.
 
-Para usar o painel de pedidos, defina as credenciais antes de subir a API:
+Para usar o painel de pedidos localmente, defina a chave TOTP antes de subir a API:
 
 ```powershell
 cd backend
-$env:ADMIN_EMAIL='voce@graciou.com'
-$env:ADMIN_PASSWORD='uma-senha-boa'
+$env:ADMIN_TOTP_SECRET='CHAVE-BASE32-GERADA-LOCALMENTE'
 npm run dev
 ```
 
@@ -181,8 +180,10 @@ confirmado só porque o pedido foi criado.
   frente/costas/detalhes dependem de ensaio. Enquanto faltarem, a loja não deve
   ir ao ar.
 
-> O backend **não é para produção** ainda: falta HTTPS, rate limiting no login e
-> política de retenção de dados. Veja `backend/README.md` §8.
+> O backend **não é para produção** ainda: falta concluir a política de retenção
+> de dados e a revisão operacional. HTTPS, limitação de tentativas e autenticação
+> administrativa em múltiplas camadas já estão implementados. Veja
+> `backend/README.md` §8.
 
 ---
 

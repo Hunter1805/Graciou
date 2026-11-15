@@ -23,6 +23,7 @@
  */
 
 import { spawn } from 'node:child_process';
+import { createRequire } from 'node:module';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -32,6 +33,9 @@ const RAIZ = fileURLToPath(new URL('..', import.meta.url));
 const PORTA = 3988;
 const BASE = `http://127.0.0.1:${PORTA}`;
 const LIMPAR_BANCO_QA = true;
+const require = createRequire(import.meta.url);
+const admin = require('../backend/admin.js');
+const SEGREDO_TOTP_QA = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
 
 const pastaTemp = mkdtempSync(join(tmpdir(), 'graciou-acomp-'));
 const CAMINHO_BANCO = join(pastaTemp, 'teste.sqlite');
@@ -58,8 +62,7 @@ const servidor = spawn(process.execPath, ['--no-warnings', 'backend/servidor.js'
     BREVO_API_KEY: '',
     BREVO_SENDER_EMAIL: '',
     MP_ACCESS_TOKEN: '',
-    ADMIN_EMAIL: 'admin@graciou.local',
-    ADMIN_PASSWORD: 'senha-de-teste-forte'
+    ADMIN_TOTP_SECRET: SEGREDO_TOTP_QA
   },
   stdio: ['ignore', 'pipe', 'pipe']
 });
@@ -178,7 +181,9 @@ try {
   const login = await fetch(`${BASE}/api/admin/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'admin@graciou.local', senha: 'senha-de-teste-forte' })
+    body: JSON.stringify({
+      codigo: admin.codigoTotp(SEGREDO_TOTP_QA, Math.floor(Date.now() / 30000))
+    })
   }).then((r) => r.json());
   tokenAdmin = login.token;
   ok(!!tokenAdmin, 'login admin devolveu token');
