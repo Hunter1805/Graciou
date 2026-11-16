@@ -177,13 +177,6 @@ export default async function proxy(request) {
     return redirecionamentoPrivado('/admin.html?gate=1', { 'Set-Cookie': cookie });
   }
 
-  if (caminho === '/api/admin/login') {
-    if (!cookieValido && !basicValido) {
-      return respostaPrivada(401, 'Acesso restrito.');
-    }
-    return next();
-  }
-
   return respostaPrivada(404, 'Página não encontrada.');
 }
 

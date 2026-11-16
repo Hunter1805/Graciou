@@ -33,6 +33,7 @@ const banco = process.env.VERCEL ? null : require('./db');
 const repositorio = require('./repositorio');
 const regras = require('./regras');
 const admin = require('./admin');
+const barreiraAdmin = require('./barreira-admin');
 const pagamentos = require('./pagamentos');
 const email = require('./email');
 const acompanhamento = require('./acompanhamento');
@@ -704,6 +705,10 @@ function registrarFalhaLoginAdmin(ip) {
 }
 
 app.post('/api/admin/login', (req, res) => {
+  if (!barreiraAdmin.validarCookieBarreira(req.headers.cookie)) {
+    return res.status(404).json({ ok: false, erro: 'Acesso não autorizado.' });
+  }
+
   const ip = ipDaRequisicao(req);
   const controle = estadoLoginAdmin(ip);
   if (controle.bloqueado) {

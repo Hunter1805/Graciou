@@ -5,8 +5,7 @@
   "proxy": {
     "entrypoint": "proxy.js",
     "matcher": [
-      "/admin.html",
-      "/api/admin/login"
+      "/admin.html"
     ]
   },
   "routes": [

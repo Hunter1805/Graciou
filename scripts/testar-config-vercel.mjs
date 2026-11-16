@@ -15,13 +15,11 @@ assert.equal(routes.length, 2,
   'Não adicione regras posteriores que possam bloquear arquivos públicos ou Functions.');
 
 assert.ok(config.functions && config.functions['api/[...path].js'],
-  'A Function catch-all api/[...path].js deve permanecer configurada.');
+  'A Function catch-all api/[...path].js deve permanecer configurada para /api/health e /api/admin/login.');
 assert.ok(existsSync(resolve(raiz, 'api/[...path].js')),
   'O entrypoint local da Function catch-all api/[...path].js deve existir.');
-assert.ok(config.proxy && config.proxy.matcher.includes('/admin.html'),
-  'A página admin.html deve continuar passando pelo proxy.');
-assert.ok(config.proxy.matcher.includes('/api/admin/login'),
-  'O POST /api/admin/login deve continuar passando pelo proxy antes da Function.');
+assert.deepEqual(config.proxy && config.proxy.matcher, ['/admin.html'],
+  'Somente /admin.html deve passar pelo proxy; as rotas /api/* devem alcançar a Function.');
 
 for (const caminho of ['preview.html', 'admin.html', 'index.html', 'assets/graciou-base.css', 'assets/graciou-main.js']) {
   assert.ok(existsSync(resolve(raiz, caminho)), `Arquivo público ausente: ${caminho}`);
