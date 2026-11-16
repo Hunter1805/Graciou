@@ -13,6 +13,9 @@
     {
       "src": "^/$",
       "dest": "/preview.html"
+    },
+    {
+      "handle": "filesystem"
     }
   ],
   "functions": {
