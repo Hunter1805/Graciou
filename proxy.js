@@ -53,7 +53,7 @@ async function criarCookieBarreira(usuario, senha, agoraMs = Date.now()) {
     nonce
   })));
   const assinatura = base64url(await assinar(payload, usuario, senha));
-  return `${COOKIE_BARRIERA}=${payload}.${assinatura}; Max-Age=${DURACAO_COOKIE_SEGUNDOS}; Path=/api/admin/login; HttpOnly; Secure; SameSite=Strict`;
+  return `${COOKIE_BARRIERA}=${payload}.${assinatura}; Max-Age=${DURACAO_COOKIE_SEGUNDOS}; Path=/; HttpOnly; Secure; SameSite=Strict`;
 }
 
 function valorCookie(request) {
@@ -124,6 +124,20 @@ function respostaPrivada(status, corpo, headers = {}) {
   });
 }
 
+function redirecionamentoPrivado(location, headers = {}) {
+  return new Response(null, {
+    status: 303,
+    headers: {
+      Location: location,
+      'Cache-Control': 'no-store, private',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+      'X-Robots-Tag': 'noindex, nofollow, noarchive',
+      ...headers
+    }
+  });
+}
+
 export default async function proxy(request) {
   const usuarioEsperado = String(process.env.ADMIN_GATE_USER || '');
   const senhaEsperada = String(process.env.ADMIN_GATE_PASSWORD || '');
@@ -141,24 +155,30 @@ export default async function proxy(request) {
     ? await iguaisEmTempoConstante(recebidas.senha, senhaEsperada)
     : false;
 
-  const caminho = new URL(request.url).pathname;
+  const url = new URL(request.url);
+  const caminho = url.pathname;
+  const cookieValido = await cookieBarreiraValido(request, usuarioEsperado, senhaEsperada);
+  const basicValido = Boolean(usuarioOk && senhaOk);
 
   if (caminho === '/admin.html') {
-    if (!usuarioOk || !senhaOk) {
+    const retornoGate = url.searchParams.get('gate') === '1';
+    if (cookieValido) {
+      if (retornoGate) return redirecionamentoPrivado('/admin.html');
+      return next();
+    }
+
+    if (retornoGate || !basicValido) {
       return respostaPrivada(401, 'Acesso restrito.', {
         'WWW-Authenticate': 'Basic realm="GRACIOU Backstage", charset="UTF-8"'
       });
     }
 
     const cookie = await criarCookieBarreira(usuarioEsperado, senhaEsperada);
-    const resposta = next();
-    resposta.headers.set('Set-Cookie', cookie);
-    return resposta;
+    return redirecionamentoPrivado('/admin.html?gate=1', { 'Set-Cookie': cookie });
   }
 
   if (caminho === '/api/admin/login') {
-    const cookieValido = await cookieBarreiraValido(request, usuarioEsperado, senhaEsperada);
-    if (!cookieValido && (!usuarioOk || !senhaOk)) {
+    if (!cookieValido && !basicValido) {
       return respostaPrivada(401, 'Acesso restrito.');
     }
     return next();

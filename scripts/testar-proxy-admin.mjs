@@ -38,27 +38,40 @@ function valorDoSetCookie(cabecalho) {
   return String(cabecalho || '').split(';', 1)[0];
 }
 
-const semBasic = await proxy(requisicao('/admin.html'));
-conferir('acesso a /admin.html sem Basic bloqueado', semBasic.status === 401 &&
-  (semBasic.headers.get('content-type') || '').startsWith('text/plain'));
+const semAutenticacao = await proxy(requisicao('/admin.html'));
+conferir('primeira visita sem autenticação responde 401', semAutenticacao.status === 401 &&
+  (semAutenticacao.headers.get('content-type') || '').startsWith('text/plain'));
 
-const autorizada = await proxy(requisicao('/admin.html', {
+const basicInicial = await proxy(requisicao('/admin.html', {
   Authorization: basic(USUARIO_QA, SENHA_QA)
 }));
-const setCookie = autorizada.headers.get('set-cookie') || '';
+const setCookie = basicInicial.headers.get('set-cookie') || '';
 const cookie = valorDoSetCookie(setCookie);
-conferir('Basic correto permite a página e emite cookie', autorizada.headers.get('x-middleware-next') === '1' &&
-  cookie.startsWith(COOKIE_NOME + '='));
-conferir('cookie tem HttpOnly, Secure, SameSite=Strict e Path restrito',
+conferir('Basic correto responde 303 com Set-Cookie e Location gate=1',
+  basicInicial.status === 303 && basicInicial.headers.get('location') === '/admin.html?gate=1' &&
+  cookie.startsWith(COOKIE_NOME + '=') &&
+  basicInicial.headers.get('cache-control') === 'no-store, private');
+conferir('cookie tem HttpOnly, Secure, SameSite=Strict, Path=/ e Max-Age=600',
   /(?:^|;\s*)HttpOnly(?:;|$)/i.test(setCookie) &&
   /(?:^|;\s*)Secure(?:;|$)/i.test(setCookie) &&
   /(?:^|;\s*)SameSite=Strict(?:;|$)/i.test(setCookie) &&
-  /(?:^|;\s*)Path=\/api\/admin\/login(?:;|$)/i.test(setCookie) &&
+  /(?:^|;\s*)Path=\/(?:;|$)/i.test(setCookie) &&
   /(?:^|;\s*)Max-Age=600(?:;|$)/i.test(setCookie));
 const conteudoCookie = cookie.slice((COOKIE_NOME + '=').length).split('.')[0];
 const payloadCookie = atob(conteudoCookie.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - conteudoCookie.length % 4) % 4));
 conferir('cookie não contém usuário nem senha em texto puro',
   !payloadCookie.includes(USUARIO_QA) && !payloadCookie.includes(SENHA_QA));
+
+const retornoGateSemCookie = await proxy(requisicao('/admin.html?gate=1'));
+conferir('gate=1 sem cookie recusa em vez de redirecionar novamente', retornoGateSemCookie.status === 401 &&
+  (retornoGateSemCookie.headers.get('content-type') || '').startsWith('text/plain'));
+
+const retornoGate = await proxy(requisicao('/admin.html?gate=1', { Cookie: cookie }));
+conferir('retorno gate=1 com cookie redireciona para URL limpa sem apagar cookie', retornoGate.status === 303 &&
+  retornoGate.headers.get('location') === '/admin.html' && !retornoGate.headers.has('set-cookie'));
+
+const paginaLimpa = await proxy(requisicao('/admin.html', { Cookie: cookie }));
+conferir('URL limpa com cookie válido continua com next()', paginaLimpa.headers.get('x-middleware-next') === '1');
 
 const semCookie = await respostaLogin(null);
 conferir('sem cookie e sem Basic a rota de login é recusada', semCookie.status === 401 &&
