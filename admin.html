@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Painel administrativo GRACIOU — pedidos internos, status, rastreio e exportação para a YouDraw." />
+  <meta name="description" content="Painel administrativo GRACIOU — pedidos internos, produção e rastreio." />
   <meta name="robots" content="noindex, nofollow, noarchive" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Painel Admin — GRACIOU</title>
@@ -226,9 +226,10 @@
     }
     .selo--aguardando_pagamento { color:#8A6A1F; }
     .selo--pago                  { color:var(--ok); }
-    .selo--encomendar_na_youdraw { color:var(--moss); }
-    .selo--pedido_na_youdraw     { color:var(--moss-dark); }
+    .selo--preparando_pedido     { color:var(--moss); }
+    .selo--producao_solicitada   { color:var(--moss-dark); }
     .selo--em_producao           { color:#2F5F7A; }
+    .selo--pronto_para_envio     { color:#2F5F7A; }
     .selo--enviado               { color:#2F5F7A; }
     .selo--entregue              { color:rgba(26,26,26,.55); }
     .selo--cancelado             { color:var(--erro); }
@@ -290,18 +291,18 @@
     }
 
     /* ════════════════════════════════════
-       RESUMO YOUDRAW
+       RESUMO PARA O FORNECEDOR
     ════════════════════════════════════ */
-    .pb-youdraw {
+    .pb-fornecedor {
       border:1px solid var(--moss); background:var(--moss-10);
       padding:1.5rem; margin-bottom:1.5rem;
     }
-    .pb-youdraw__topo {
+    .pb-fornecedor__topo {
       display:flex; align-items:center; justify-content:space-between;
       gap:1rem; flex-wrap:wrap; margin-bottom:1rem;
     }
-    .pb-youdraw__titulo { font-size:1.15rem; text-transform:uppercase; color:var(--moss-dark); }
-    .pb-youdraw__texto {
+    .pb-fornecedor__titulo { font-size:1.15rem; text-transform:uppercase; color:var(--moss-dark); }
+    .pb-fornecedor__texto {
       width:100%; background:var(--ecru); border:1px solid var(--navy-10);
       padding:.9rem; font-family:'Courier New', monospace; font-size:.74rem;
       line-height:1.65; color:var(--navy); min-height:280px; resize:vertical;
@@ -380,7 +381,8 @@
       </form>
 
       <p class="campo__dica" style="margin-top:1.25rem">
-        Sessão em memória, válida por 30 minutos. Reiniciar a API encerra todas as sessões.
+        Sessão assinada válida por 30 minutos. O token fica apenas na memória deste navegador;
+        sair remove este token localmente, mas não revoga cópias em outros lugares.
       </p>
     </div>
   </section>
@@ -393,9 +395,9 @@
         <p class="pb-hero__eyebrow">Operação</p>
         <h1 class="pb-hero__title">Pedidos</h1>
         <p class="pb-hero__desc">
-          Acompanhe os pedidos recebidos, atualize status, informe rastreio e número da
-          YouDraw, e copie o resumo formatado para lançar na produção. A lista mostra
-          apenas o essencial — CPF, endereço e itens aparecem só no detalhe.
+          Acompanhe os pedidos recebidos, atualize a produção, informe rastreio e referência
+          do fornecedor, e copie o resumo formatado para a produção. A lista mostra apenas
+          o essencial — CPF, endereço e itens aparecem só no detalhe.
         </p>
       </div>
     </section>
@@ -491,17 +493,16 @@
             </div>
           </div>
 
-          <!-- Coluna direita: YouDraw + atualização -->
+          <!-- Coluna direita: resumo para o fornecedor + atualização -->
           <div>
-            <div class="pb-youdraw">
-              <div class="pb-youdraw__topo">
-                <h3 class="pb-youdraw__titulo">Resumo para a YouDraw</h3>
+            <div class="pb-fornecedor">
+              <div class="pb-fornecedor__topo">
+                <h3 class="pb-fornecedor__titulo">Resumo para o fornecedor</h3>
                 <button class="btn btn--moss btn--min" id="btn-copiar">Copiar resumo</button>
               </div>
-              <textarea class="pb-youdraw__texto" id="youdraw-texto" readonly spellcheck="false"></textarea>
+              <textarea class="pb-fornecedor__texto" id="resumo-fornecedor-texto" readonly spellcheck="false"></textarea>
               <p class="campo__dica" style="margin-top:.75rem">
-                Texto gerado pelo servidor a partir do pedido gravado. Cole na plataforma da
-                YouDraw e guarde o número do pedido de lá no campo abaixo.
+                Texto gerado pelo servidor a partir do pedido gravado para orientar a produção.
               </p>
             </div>
 
@@ -513,8 +514,8 @@
                   <select id="up-status"></select>
                 </div>
                 <div class="campo">
-                  <label class="campo__label" for="up-pagamento">Status do pagamento</label>
-                  <select id="up-pagamento"></select>
+                  <label class="campo__label">Status do pagamento</label>
+                  <div id="detalhe-status-pagamento" class="campo__dica">Automático pelo Mercado Pago verificado.</div>
                 </div>
                 <div class="campo">
                   <label class="campo__label" for="up-transportadora">Transportadora</label>
@@ -530,8 +531,8 @@
                   <span class="campo__dica">Apenas links <strong>https://</strong> são aceitos. O link aparece na consulta do cliente.</span>
                 </div>
                 <div class="campo">
-                  <label class="campo__label" for="up-youdraw">Nº do pedido na YouDraw</label>
-                  <input type="text" id="up-youdraw" maxlength="120" placeholder="Ex.: YD-4821" />
+                  <label class="campo__label" for="up-referencia-fornecedor">Referência do fornecedor</label>
+                  <input type="text" id="up-referencia-fornecedor" maxlength="120" placeholder="Referência ou número do pedido" />
                 </div>
                 <div class="campo campo--full">
                   <label class="campo__label" for="up-observacao-publica">Observação pública (o cliente vê)</label>
@@ -755,6 +756,7 @@
     }
 
     function encerrarSessaoLocal() {
+      /* Revoga imediatamente este navegador; token copiado não é revogável globalmente. */
       token = null;
       pedidoAberto = null;
       pedidosAtuais = [];
@@ -767,13 +769,8 @@
     }
 
     btnSair.addEventListener('click', function () {
-      var cabecalhos = { 'Authorization': 'Bearer ' + token };
-      fetch(API_BASE + '/api/admin/logout', { method: 'POST', headers: cabecalhos })
-        .catch(function () { /* mesmo falhando, a sessão local acaba */ })
-        .then(function () {
-          mostrarAviso(loginErro, 'info', 'Sessão encerrada no servidor.');
-          encerrarSessaoLocal();
-        });
+      /* Token é apagado primeiro, sem esperar a rede. Não existe revogação global. */
+      encerrarSessaoLocal();
     });
 
     /* ════════════════════════════════════════
@@ -818,13 +815,12 @@
         }).join('');
       filtroStatus.value = valorFiltro || 'todos';
 
-      $('up-status').innerHTML = meta.statusPermitidos.map(function (s) {
-        return '<option value="' + escapar(s) + '">' + escapar(rotulo(s)) + '</option>';
-      }).join('');
+      $('up-status').innerHTML = '<option value="">Selecione um status manual</option>' +
+        (meta.statusManuais || []).map(function (s) {
+          return '<option value="' + escapar(s) + '">' + escapar(rotulo(s)) + '</option>';
+        }).join('');
 
-      $('up-pagamento').innerHTML = (meta.statusPagamentoPermitidos || []).map(function (s) {
-        return '<option value="' + escapar(s) + '">' + escapar(s) + '</option>';
-      }).join('');
+
     }
 
     function montarContagens(mapa) {
@@ -895,7 +891,7 @@
       api('/api/admin/orders/' + encodeURIComponent(id))
         .then(function (dados) {
           pedidoAberto = dados.pedido;
-          desenharDetalhe(dados.pedido, dados.resumoYouDraw || '', dados.historico || []);
+          desenharDetalhe(dados.pedido, dados.resumoFornecedor || '', dados.historico || []);
           desenharLista(); /* atualiza a seleção na tabela */
           mostrarAviso(detalheAviso, 'info', '');
         })
@@ -957,25 +953,33 @@
       var rua = [e.rua, e.numero].filter(Boolean).join(', ') +
         (e.complemento ? ' — ' + e.complemento : '');
       $('detalhe-endereco').innerHTML =
-        linhaHtml('Endereço', rua) +
+        linhaHtml('Endereço completo', rua) +
+        linhaHtml('Rua', e.rua) +
+        linhaHtml('Número', e.numero) +
+        linhaHtml('Complemento', e.complemento) +
         linhaHtml('Bairro', e.bairro) +
-        linhaHtml('Cidade', [e.cidade, e.estado].filter(Boolean).join('/')) +
-        linhaHtml('CEP', e.cep);
+        linhaHtml('Cidade', e.cidade) +
+        linhaHtml('Estado', e.estado) +
+        linhaHtml('CEP', e.cep) +
+        linhaHtml('Observação de entrega', e.observacao);
+      $('detalhe-endereco').innerHTML += linhaHtml('Observação pública', pedido.observacaoPublica);
 
       /* Itens */
       var itens = Array.isArray(pedido.itens) ? pedido.itens : [];
       $('detalhe-itens').innerHTML = itens.length
         ? itens.map(function (item, indice) {
             var meta_item = [
+              'ID ' + (item.productId || item.id || '—'),
               'Tam ' + (item.tamanho || '—'),
               'Cor ' + (item.cor || '—'),
               'Qtd ' + (item.quantidade || 0),
-              'Un ' + moeda(item.precoUnitario)
+              'Un ' + moeda(item.precoUnitario),
+              'Total ' + moeda(item.subtotal !== undefined ? item.subtotal : (item.precoUnitario || 0) * (item.quantidade || 0))
             ].join(' · ');
             return '<div class="pb-item">' +
               '<span><strong>' + escapar((indice + 1) + '. ' + (item.nome || item.productId || '—')) + '</strong>' +
               '<span class="pb-item__meta">' + escapar(meta_item) + '</span></span>' +
-              '<span class="pb-num">' + escapar(moeda((item.precoUnitario || 0) * (item.quantidade || 0))) + '</span>' +
+              '<span class="pb-num">' + escapar(moeda(item.subtotal !== undefined ? item.subtotal : (item.precoUnitario || 0) * (item.quantidade || 0))) + '</span>' +
             '</div>';
           }).join('')
         : '<div class="pb-linha">Nenhum item registrado.</div>';
@@ -988,6 +992,11 @@
         '<div class="pb-total-linha"><span>Desconto (' + escapar(cupom) + ')</span><span class="pb-num">' + escapar(moeda(pedido.desconto || 0)) + '</span></div>' +
         '<div class="pb-total-linha"><span>Frete</span><span class="pb-num">' + escapar(moeda(pedido.frete)) + '</span></div>' +
         '<div class="pb-total-linha"><span>Pagamento</span><span>' + escapar((pagamento.forma || '—') + ' · ' + (pagamento.status || '—')) + '</span></div>' +
+        '<div class="pb-total-linha"><span>Pago em</span><span>' + escapar(dataLegivel(pedido.mercadoPago && pedido.mercadoPago.pagoEm)) + '</span></div>' +
+        '<div class="pb-total-linha"><span>Transportadora</span><span>' + escapar(pedido.transportadora || '—') + '</span></div>' +
+        '<div class="pb-total-linha"><span>Rastreio</span><span>' + escapar(pedido.rastreio || '—') + '</span></div>' +
+        '<div class="pb-total-linha"><span>Link de rastreio</span><span>' + (pedido.rastreioUrl ? '<a href="' + escapar(pedido.rastreioUrl) + '" target="_blank" rel="noopener noreferrer">Abrir</a>' : '—') + '</span></div>' +
+        '<div class="pb-total-linha"><span>Referência do fornecedor</span><span>' + escapar(pedido.referenciaFornecedor || '—') + '</span></div>' +
         '<div class="pb-total-linha pb-total-linha--forte"><span>Total</span><span class="pb-num">' + escapar(moeda(pedido.total)) + '</span></div>';
 
       /* Observações */
@@ -1002,16 +1011,18 @@
       /* Histórico (linha do tempo) */
       desenharHistorico(historico);
 
-      /* Resumo YouDraw — texto vem pronto do servidor */
-      $('youdraw-texto').value = resumo;
+      /* Resumo para o fornecedor — texto vem pronto do servidor */
+      $('resumo-fornecedor-texto').value = resumo;
 
       /* Formulário preenchido com o estado atual */
-      $('up-status').value = pedido.statusPedido;
-      $('up-pagamento').value = pagamento.status || 'aguardando';
+      $('up-status').value = (meta && meta.statusManuais || []).indexOf(pedido.statusPedido) >= 0
+        ? pedido.statusPedido
+        : '';
+      $('detalhe-status-pagamento').textContent = (pagamento.status || 'aguardando') + ' — atualizado automaticamente pelo Mercado Pago verificado.';
       $('up-transportadora').value = pedido.transportadora || '';
       $('up-rastreio').value = pedido.rastreio || '';
       $('up-rastreio-url').value = pedido.rastreioUrl || '';
-      $('up-youdraw').value = pedido.pedidoYouDraw || '';
+      $('up-referencia-fornecedor').value = pedido.referenciaFornecedor || '';
       $('up-observacao-publica').value = pedido.observacaoPublica || '';
       $('up-observacoes').value = '';
       $('up-modo').checked = false;
@@ -1025,12 +1036,12 @@
 
     /* ── Copiar resumo ── */
     $('btn-copiar').addEventListener('click', function () {
-      var texto = $('youdraw-texto').value || '';
+      var texto = $('resumo-fornecedor-texto').value || '';
       if (!texto) { mostrarAviso(detalheAviso, 'erro', 'Nada para copiar.'); return; }
 
       var avisar = function (ok) {
         mostrarAviso(detalheAviso, ok ? 'ok' : 'erro',
-          ok ? 'Resumo copiado. Cole na plataforma da YouDraw.' : 'Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.');
+          ok ? 'Resumo para o fornecedor copiado.' : 'Não foi possível copiar automaticamente. Selecione o texto e copie manualmente.');
       };
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -1038,7 +1049,7 @@
           .then(function () { avisar(true); })
           .catch(function () { avisar(false); });
       } else {
-        var campo = $('youdraw-texto');
+        var campo = $('resumo-fornecedor-texto');
         campo.removeAttribute('readonly');
         campo.select();
         try { avisar(document.execCommand('copy')); } catch (_) { avisar(false); }
@@ -1059,12 +1070,9 @@
       var alteracoes = {};
 
       var statusNovo = $('up-status').value;
-      if (statusNovo !== pedidoAberto.statusPedido) alteracoes.statusPedido = statusNovo;
+      if (statusNovo && statusNovo !== pedidoAberto.statusPedido) alteracoes.statusPedido = statusNovo;
 
-      var pagamentoNovo = $('up-pagamento').value;
-      if (pagamentoNovo !== (pedidoAberto.pagamento && pedidoAberto.pagamento.status)) {
-        alteracoes.statusPagamento = pagamentoNovo;
-      }
+
 
       var transportadoraNova = $('up-transportadora').value.trim();
       if (transportadoraNova !== (pedidoAberto.transportadora || '')) {
@@ -1077,8 +1085,8 @@
       var rastreioUrlNova = $('up-rastreio-url').value.trim();
       if (rastreioUrlNova !== (pedidoAberto.rastreioUrl || '')) alteracoes.rastreioUrl = rastreioUrlNova;
 
-      var youdrawNovo = $('up-youdraw').value.trim();
-      if (youdrawNovo !== (pedidoAberto.pedidoYouDraw || '')) alteracoes.pedidoYouDraw = youdrawNovo;
+      var referenciaNova = $('up-referencia-fornecedor').value.trim();
+      if (referenciaNova !== (pedidoAberto.referenciaFornecedor || '')) alteracoes.referenciaFornecedor = referenciaNova;
 
       var obsPublicaNova = $('up-observacao-publica').value.trim();
       if (obsPublicaNova !== (pedidoAberto.observacaoPublica || '')) {
@@ -1105,7 +1113,7 @@
         body: alteracoes
       }).then(function (dados) {
         pedidoAberto = dados.pedido;
-        desenharDetalhe(dados.pedido, dados.resumoYouDraw || '', dados.historico || []);
+        desenharDetalhe(dados.pedido, dados.resumoFornecedor || '', dados.historico || []);
         mostrarAviso(detalheAviso, 'ok',
           'Pedido atualizado. Campos gravados: ' + (dados.alterado || []).join(', ') + '.');
         carregarPedidos(); /* a lista reflete o novo status/contagem */

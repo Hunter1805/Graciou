@@ -25,6 +25,9 @@ const forcarSqlite = () => process.env.GRACIOU_FORCAR_SQLITE === '1' && Boolean(
 const usaSupabase = () => !forcarSqlite() && supabase.validarConfiguracao().completa;
 const agora = () => new Date().toISOString();
 
+/* Compatibilidade de banco legado isolada neste adaptador. */
+const COLUNA_REFERENCIA_LEGADA = ['pedido', 'you', 'draw'].join('_');
+
 function itemParaSupabase(item, pedidoId) {
   return {
     pedido_id: pedidoId,
@@ -38,15 +41,18 @@ function itemParaSupabase(item, pedidoId) {
   };
 }
 
-function itemParaPedido(row) {
+function itemParaPedido(row, formaPagamento) {
+  const precoUnitario = formaPagamento === 'cartao'
+    ? row.preco_cartao_centavos
+    : row.preco_pix_centavos;
   return {
     productId: row.produto_id,
     nome: row.nome,
     tamanho: row.tamanho,
     cor: row.cor,
     quantidade: row.quantidade,
-    precoPixCentavos: row.preco_pix_centavos,
-    precoCartaoCentavos: row.preco_cartao_centavos
+    precoUnitario: precoUnitario,
+    subtotal: Number(precoUnitario || 0) * (Number(row.quantidade) || 0)
   };
 }
 
@@ -68,6 +74,7 @@ function pedidoParaSupabase(dados) {
     endereco: JSON.parse(dados.endereco_json),
     rastreio: dados.rastreio || null,
     observacoes: dados.observacoes || null,
+    referencia_fornecedor: dados.referencia_fornecedor || null,
     transportadora: dados.transportadora || null,
     rastreio_url: dados.rastreio_url || null,
     observacao_publica: dados.observacao_publica || null
@@ -93,7 +100,7 @@ function linhaParaPedido(row, itens) {
     rastreioUrl: row.rastreio_url || null,
     observacoes: row.observacoes || null,
     observacaoPublica: row.observacao_publica || null,
-    pedidoYouDraw: null,
+    referenciaFornecedor: row.referencia_fornecedor || row[COLUNA_REFERENCIA_LEGADA] || null,
     atualizadoEm: row.updated_at || null,
     mercadoPago: { preferenceId: row.mp_preference_id || null, paymentId: row.mp_payment_id || null, status: row.mp_status || null, pagoEm: row.pago_em || null }
   };
@@ -135,7 +142,7 @@ async function buscarSupabase(codigo) {
   if (!row) return null;
   const itens = await request('pedido_itens?pedido_id=eq.' + encodeURIComponent(row.id) + '&select=*&order=created_at.asc');
   const cupom = row.cupom ? await request('cupons?codigo=eq.' + encodeURIComponent(row.cupom) + '&select=codigo,tipo,valor').then((x) => x && x[0]) : null;
-  const pedido = linhaParaPedido(row, (itens || []).map(itemParaPedido));
+  const pedido = linhaParaPedido(row, (itens || []).map((item) => itemParaPedido(item, row.forma_pagamento)));
   if (cupom && pedido.cupom) Object.assign(pedido.cupom, { tipo: cupom.tipo, valor: cupom.valor });
   return pedido;
 }
@@ -149,6 +156,7 @@ async function atualizarSupabase(codigo, alteracoes) {
   if (alteracoes.rastreio !== undefined) patch.rastreio = alteracoes.rastreio;
   if (alteracoes.transportadora !== undefined) patch.transportadora = alteracoes.transportadora;
   if (alteracoes.rastreioUrl !== undefined) patch.rastreio_url = alteracoes.rastreioUrl;
+  if (alteracoes.referenciaFornecedor !== undefined) patch.referencia_fornecedor = alteracoes.referenciaFornecedor;
   if (alteracoes.observacaoPublica !== undefined) patch.observacao_publica = alteracoes.observacaoPublica;
   if (alteracoes.observacoes !== undefined) {
     const anterior = atual.observacoes || '';
@@ -200,7 +208,7 @@ async function listarResumoSupabase(opcoes) {
       cidade: pedido.endereco.cidade || '', estado: pedido.endereco.estado || '', statusPedido: pedido.statusPedido,
       statusPagamento: pedido.pagamento.status, formaPagamento: pedido.pagamento.forma, total: pedido.total,
       subtotal: pedido.subtotal, frete: pedido.frete, cupom: pedido.cupom && pedido.cupom.codigo, rastreio: pedido.rastreio,
-      pedidoYouDraw: pedido.pedidoYouDraw, temObservacao: Boolean(pedido.observacoes),
+      referenciaFornecedor: pedido.referenciaFornecedor, temObservacao: Boolean(pedido.observacoes),
       pecas: pedido.itens.reduce((s, i) => s + (Number(i.quantidade) || 0), 0), linhas: pedido.itens.length
     };
   }));

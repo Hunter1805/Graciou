@@ -109,7 +109,7 @@ console.log('6) Preços (nenhum valor inventado)');
 const semConfirmacao = CATALOGO.PRODUTOS.filter((p) => !p.precoConfirmado);
 const comPreco = CATALOGO.PRODUTOS.filter((p) => p.precoVenda !== null);
 if (comPreco.length === 0) {
-  ok(`nenhum preço de venda definido — ${semConfirmacao.length} produtos aguardando tabela da YouDraw`);
+  ok(`nenhum preço de venda definido — ${semConfirmacao.length} produtos aguardando tabela do fornecedor`);
 } else if (comPreco.every((p) => p.precoConfirmado === true)) {
   ok(`${comPreco.length} preço(s) definidos e explicitamente confirmados`);
 } else {

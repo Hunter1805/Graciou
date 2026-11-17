@@ -120,19 +120,19 @@ Para mudar o arquivo do banco: defina `GRACIOU_DB` com o caminho desejado.
 | `endereco_json` | TEXT | Endereço completo em JSON |
 | `itens_json` | TEXT | Itens em JSON (produto, tamanho, cor, quantidade, preço) |
 | `forma_pagamento` | TEXT | `pix` ou `cartao` |
-| `status_pagamento` | TEXT | Nasce como `aguardando`; o painel pode mudar |
+| `status_pagamento` | TEXT | Nasce como `aguardando`; alterado apenas pelo pagamento verificado |
 | `cupom_codigo` | TEXT | `NULL` quando não há cupom |
 | `subtotal` | INTEGER | Em **centavos** |
 | `desconto` | INTEGER | Em **centavos** |
 | `frete` | INTEGER | Em centavos; `NULL` quando o valor não foi informado |
 | `total` | INTEGER | Em centavos; `NULL` enquanto o frete for `NULL` |
-| `status_pedido` | TEXT | Nasce como `aguardando_pagamento` |
+| `status_pedido` | TEXT | Status canônico; `aguardando_pagamento` e `pago` automáticos |
 | `rastreio` | TEXT | Código de rastreio; começa vazio, preenchido pelo painel |
 | `transportadora` | TEXT | Nome da transportadora (ex.: Correios). Aparece na consulta do cliente |
 | `rastreio_url` | TEXT | Link de rastreio. O backend **só grava HTTPS** |
 | `observacoes` | TEXT | Notas **internas** (o painel acrescenta ou substitui). **Nunca** vai para o cliente |
 | `observacao_publica` | TEXT | Observação que o **cliente vê** em `rastreio.html` |
-| `pedido_youdraw` | TEXT | Número do pedido na YouDraw, preenchido pelo painel |
+| `referencia_fornecedor` | TEXT | Referência genérica do pedido, preenchida pelo painel |
 | `atualizado_em` | TEXT | Data/hora da última alteração feita pelo painel |
 | `email_confirmacao_enviado_em` | TEXT | Quando o e-mail de confirmação saiu (`NULL` = não enviado). Uso interno — nunca devolvido pela API |
 | `email_confirmacao_id` | TEXT | Id da mensagem na Brevo. Uso interno — nunca devolvido pela API |
@@ -246,8 +246,13 @@ Todas exigem sessão: `Authorization: Bearer <token>` (o token sai do login).
 | `POST` | `/api/admin/login` | Confere as credenciais e devolve um token de sessão |
 | `POST` | `/api/admin/logout` | Invalida a sessão atual |
 | `GET` | `/api/admin/orders` | Lista resumida, com filtro `?status=` e `?limite=` |
-| `GET` | `/api/admin/orders/:id` | Detalhe completo + resumo pronto para a YouDraw |
+| `GET` | `/api/admin/orders/:id` | Detalhe completo + resumo para o fornecedor (`resumoFornecedor`) |
 | `PATCH` | `/api/admin/orders/:id` | Atualiza só os campos enviados |
+
+Status canônicos: `aguardando_pagamento`, `pago`, `preparando_pedido`,
+`producao_solicitada`, `em_producao`, `pronto_para_envio`, `enviado`,
+`entregue` e `cancelado`. Somente os estados de produção e envio são opções
+manuais. O pagamento aprovado só é definido pelo fluxo verificado do Mercado Pago.
 
 Sem sessão válida a resposta é `401` e nada é devolvido.
 
@@ -321,10 +326,10 @@ http://localhost:3000/admin.html?api=http://localhost:3002
    itens só trafegam quando o detalhe é aberto.**
 2. **Abre o detalhe:** dados do cliente, endereço completo, itens (tamanho, cor,
    quantidade, unitário), totais, cupom e observações.
-3. **Copia o resumo da YouDraw** — texto puro, já formatado pelo servidor
-   (`admin.js` → `resumoParaYouDraw`), pronto para colar na plataforma.
-4. **Atualiza o pedido:** status, status de pagamento, transportadora, código de
-   rastreio, **link de rastreio (só HTTPS)**, número do pedido na YouDraw,
+3. **Copia o resumo para o fornecedor** — texto puro, já formatado pelo servidor
+   (`admin.js` → `resumoParaFornecedor`), pronto para orientar a produção.
+4. **Atualiza o pedido:** status manual de produção, transportadora, código de
+   rastreio, **link de rastreio (só HTTPS)**, referência do fornecedor,
    **observação pública** (que o cliente vê) e observação **interna** (que o
    cliente não vê). Cada alteração relevante vira uma linha no **histórico**
    (`order_events`) com data e hora — e aparece na consulta do cliente.
@@ -336,14 +341,16 @@ http://localhost:3000/admin.html?api=http://localhost:3002
   "atualizar sem apagar dados existentes".
 - **Observação tem dois modos:** acrescentar ao fim (padrão) ou substituir tudo
   (a caixa de seleção). O texto anterior nunca some por acidente.
-- **Status vêm do servidor.** O `<select>` é montado a partir de
-  `meta.statusPermitidos` na resposta da lista — não há lista duplicada no HTML.
-- **A sessão morre sozinha** em 30 minutos, e o token fica **só na memória**:
-  recarregar a página exige novo login. Ele não vai para `localStorage`.
+- **Status vêm do servidor.** O `<select>` manual usa `meta.statusManuais`; `aguardando_pagamento` e `pago` não são opções manuais. O pagamento só muda com resposta verificada do Mercado Pago.
+- **O token é stateless e assinado**: qualquer instância da API valida a mesma
+  sessão por até 30 minutos. O token fica apenas na memória da página; recarregar
+  exige novo login. O botão de saída apaga o token local, mas um token copiado
+  continua válido até expirar (não há revogação global).
 - **O código TOTP muda a cada 30 segundos.** O servidor aceita apenas o intervalo
   atual e os dois intervalos vizinhos para tolerar pequena diferença de relógio.
-- **Nada de dinheiro é editável.** Total, frete e desconto vêm do servidor; o
-  painel só os exibe.
+- **Nada de dinheiro/pagamento é editável.** Total, frete e desconto vêm do servidor;
+  o painel só os exibe. `aguardando_pagamento` e `pago` não são opções manuais; `pago`
+  só pode ser definido pelo fluxo verificado do Mercado Pago.
 
 ### Teste automatizado
 
@@ -375,7 +382,7 @@ logs, banco ou resposta HTTP.
 
 Abre o painel num navegador real e verifica: carregamento sem erro de console,
 recusa de senha errada, login, lista vinda da API, abertura do detalhe com o
-resumo da YouDraw, e uma atualização de verdade — confirmando depois **no
+resumo para o fornecedor, e uma atualização de verdade — confirmando depois **no
 servidor** que o dado persistiu e que cliente, endereço e itens continuam
 intactos. Se a API não estiver na 3001:
 
@@ -489,7 +496,7 @@ GRACIOU/
 └── backend/
     ├── package.json      # dependências e scripts (dev, start, testar)
     ├── servidor.js       # Express: rotas, CORS restrito e logs seguros
-    ├── admin.js          # sessões, validação do painel e resumo da YouDraw
+    ├── admin.js          # sessões, validação do painel e resumo para o fornecedor
     ├── acompanhamento.js # consulta pública: resposta mínima, timeline, rate limit
     ├── regras.js         # validação + recálculo no servidor (o coração)
     ├── db.js             # SQLite: schema, migrações e acesso a orders/events/coupons
@@ -518,7 +525,7 @@ preços, cupons e regra de frete em todo o projeto.
 | Cliente vê a mesma mensagem para qualquer erro | Comportamento **proposital**: a consulta pública não revela se o número existe ou se o e-mail está errado. |
 | Painel diz "Painel administrativo não configurado" (`503`) | Falta `ADMIN_TOTP_SECRET` no ambiente da API. Defina a chave e reinicie. |
 | Painel mostra "A API não respondeu em http://localhost:3001" | A API não está no ar, ou está em outra porta. Suba o backend, ou abra `admin.html?api=http://localhost:<porta>`. |
-| Painel volta para o login sozinho | A sessão expirou (30 min) ou a API foi reiniciada — as sessões vivem só em memória. Entre novamente. |
+| Painel volta para o login sozinho | A sessão expirou (30 min) ou o token foi removido desta página. Entre novamente; reiniciar a API não invalida tokens stateless ainda válidos. |
 | `emailConfirmacao: { enviado: false }` na resposta | A Brevo não está configurada (`BREVO_API_KEY`/`BREVO_SENDER_EMAIL`) ou o envio falhou. O console da API mostra o motivo. **O pedido foi criado normalmente.** |
 | Cliente não recebeu o e-mail | Confirme que `BREVO_SENDER_EMAIL` é um remetente verificado na Brevo e veja no console se o motivo foi `brevo_recusou` (traz o status HTTP). |
 
@@ -654,7 +661,7 @@ Pago e os campos de controle de e-mail. Só sai cidade/UF do destino.
 Toda alteração relevante do painel (status, rastreio, observação pública) grava
 uma linha em `order_events` com data e hora. O pagamento **não** é marcado como
 confirmado só porque o pedido foi criado: o pedido nasce em `aguardando_pagamento`
-e só muda com o webhook do Mercado Pago ou com ação do operador.
+e só muda com o webhook verificado do Mercado Pago.
 
 ### Link no e-mail de confirmação
 
@@ -664,14 +671,11 @@ Sem essa variável, o e-mail traz a instrução em texto — nunca um domínio i
 
 ### Migração necessária antes de publicar
 
-**Supabase (produção):** aplique
-`supabase/migrations/20261007_acompanhamento_pedidos.sql` no SQL Editor.
-Ela acrescenta as colunas `transportadora`, `rastreio_url`, `observacao_publica`
-em `pedidos` e cria a tabela `order_events` — **sem apagar nada** (idempotente).
-Sem ela, a consulta pública e o painel falham com erro de persistência.
-
-**SQLite (local):** nada a fazer. `backend/db.js` cria as mesmas colunas e a
-tabela automaticamente no boot (função `migrar`).
+As migrações históricas do Supabase não devem ser alteradas após aplicação.
+A nova migração `supabase/migrations/20261117_referencia_fornecedor.sql` é aditiva,
+preserva a coluna legada e copia dados sem sobrescrever a referência genérica. Ela
+aguarda autorização explícita e **não foi executada**. O backend local migra o
+SQLite no boot sem remover colunas ou dados.
 
 ### Teste automatizado
 

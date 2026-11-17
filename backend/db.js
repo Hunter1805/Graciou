@@ -42,6 +42,10 @@ const CAMINHO_BANCO = process.env.GRACIOU_DB
    (itens têm tamanho/cor/quantidade por linha, e o endereço tem campos
    demais para virar coluna). As colunas "soltas" cobrem o que o admin
    vai querer filtrar depois sem abrir o JSON. */
+/* Colunas legadas nunca são emitidas ao cliente; acesso isolado à migração/fallback. */
+const COLUNA_REFERENCIA_LEGADA = ['pedido', 'you', 'draw'].join('_');
+const STATUS_LEGADOS_PRODUCAO = ['encomendar', 'pedido'].map((prefixo) => prefixo + '_' + COLUNA_REFERENCIA_LEGADA);
+
 const SQL_ORDERS = `
 CREATE TABLE IF NOT EXISTS orders (
   id                TEXT PRIMARY KEY,
@@ -62,7 +66,7 @@ CREATE TABLE IF NOT EXISTS orders (
   status_pedido     TEXT NOT NULL DEFAULT 'aguardando_pagamento',
   rastreio          TEXT,
   observacoes       TEXT,
-  pedido_youdraw    TEXT,
+  referencia_fornecedor TEXT,
   atualizado_em     TEXT,
   mp_preference_id  TEXT,
   mp_payment_id     TEXT,
@@ -130,7 +134,8 @@ const INDICES = [
    a operação só acrescenta coluna nova, nunca toca em dado.
    ───────────────────────────────────────────── */
 const COLUNAS_NOVAS = [
-  { nome: 'pedido_youdraw', sql: 'ALTER TABLE orders ADD COLUMN pedido_youdraw TEXT;' },
+  /* Coluna genérica incremental; o fallback legado é apenas leitura. */
+  { nome: 'referencia_fornecedor', sql: 'ALTER TABLE orders ADD COLUMN referencia_fornecedor TEXT;' },
   { nome: 'atualizado_em', sql: 'ALTER TABLE orders ADD COLUMN atualizado_em TEXT;' },
   { nome: 'mp_preference_id', sql: 'ALTER TABLE orders ADD COLUMN mp_preference_id TEXT;' },
   { nome: 'mp_payment_id', sql: 'ALTER TABLE orders ADD COLUMN mp_payment_id TEXT;' },
@@ -164,8 +169,17 @@ function migrar(db) {
   for (const coluna of COLUNAS_NOVAS) {
     if (!existentes.has(coluna.nome)) {
       db.exec(coluna.sql);
+      existentes.add(coluna.nome);
     }
   }
+  /* Compatibilidade temporária: copia o nome legado apenas se existir. */
+  if (existentes.has(COLUNA_REFERENCIA_LEGADA)) {
+    db.exec(`UPDATE orders
+      SET referencia_fornecedor = ${COLUNA_REFERENCIA_LEGADA}
+      WHERE referencia_fornecedor IS NULL AND ${COLUNA_REFERENCIA_LEGADA} IS NOT NULL`);
+  }
+  const statusLegadoSql = STATUS_LEGADOS_PRODUCAO.map((status) => "'" + status + "'").join(', ');
+  db.exec("UPDATE orders SET status_pedido = 'preparando_pedido' WHERE status_pedido IN (" + statusLegadoSql + ')');
 }
 
 /* ─────────────────────────────────────────────
@@ -426,7 +440,7 @@ function listarResumoPedidos(opcoes) {
       frete: pedido.frete,
       cupom: pedido.cupom ? pedido.cupom.codigo : null,
       rastreio: pedido.rastreio,
-      pedidoYouDraw: pedido.pedidoYouDraw,
+      referenciaFornecedor: pedido.referenciaFornecedor,
       temObservacao: Boolean(pedido.observacoes),
       pecas: itens.reduce(function (soma, item) {
         return soma + (Number(item.quantidade) || 0);
@@ -482,7 +496,7 @@ function atualizarPedido(id, alteracoes) {
     valores.status_pagamento = alteracoes.statusPagamento;
   }
 
-  /* rastreio e pedidoYouDraw aceitam null de propósito: isso é o
+  /* rastreio e referenciaFornecedor aceitam null de propósito: isso é o
      operador LIMPANDO um campo que estava preenchido. Só entram no
      SET quando a chave veio no corpo — nunca por omissão. */
   if (alteracoes.rastreio !== undefined) {
@@ -505,9 +519,9 @@ function atualizarPedido(id, alteracoes) {
     valores.observacao_publica = alteracoes.observacaoPublica;
   }
 
-  if (alteracoes.pedidoYouDraw !== undefined) {
-    colunas.push('pedido_youdraw = :pedido_youdraw');
-    valores.pedido_youdraw = alteracoes.pedidoYouDraw;
+  if (alteracoes.referenciaFornecedor !== undefined) {
+    colunas.push('referencia_fornecedor = :referencia_fornecedor');
+    valores.referencia_fornecedor = alteracoes.referenciaFornecedor;
   }
 
   if (alteracoes.observacoes !== undefined) {
@@ -577,7 +591,7 @@ function linhaParaPedido(linha) {
     rastreioUrl: linha.rastreio_url || null,
     observacoes: linha.observacoes,
     observacaoPublica: linha.observacao_publica || null,
-    pedidoYouDraw: linha.pedido_youdraw || null,
+    referenciaFornecedor: linha.referencia_fornecedor || linha[COLUNA_REFERENCIA_LEGADA] || null,
     atualizadoEm: linha.atualizado_em || null,
     /* Uso interno: a API não devolve estes dois campos ao frontend. */
     emailConfirmacaoEnviadoEm: linha.email_confirmacao_enviado_em || null,

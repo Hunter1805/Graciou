@@ -131,8 +131,7 @@ const semCookie = await respostaLogin(null,
   admin.codigoTotp(process.env.ADMIN_TOTP_SECRET, Math.floor(Date.now() / 30000)));
 conferir('login sem cookie retorna JSON 404 mesmo com TOTP correto',
   semCookie.status === 404 && semCookie.body.ok === false && semCookie.body.erro === 'Acesso não autorizado.');
-conferir('login sem cookie não chega à validação TOTP nem cria sessão',
-  chamadasValidacaoTotp === 0 && admin.sessoesAtivas() === 0);
+conferir('login sem cookie não chega à validação TOTP', chamadasValidacaoTotp === 0);
 const totpValido = admin.codigoTotp(process.env.ADMIN_TOTP_SECRET, Math.floor(Date.now() / 30000));
 const codigoInvalido = admin.codigoTotp(process.env.ADMIN_TOTP_SECRET, Math.floor(Date.now() / 30000) + 1000);
 conferir('código TOTP inválido de seis dígitos', /^\d{6}$/.test(codigoInvalido) && !admin.conferirTotp(codigoInvalido, process.env.ADMIN_TOTP_SECRET));
@@ -140,8 +139,9 @@ const totpInvalido = await respostaLogin(cookie, codigoInvalido);
 conferir('cookie válido com TOTP inválido é recusado', totpInvalido.status === 401 &&
   totpInvalido.body.erro === 'Código temporário inválido.' && totpInvalido.body.ok === false);
 const loginValido = await respostaLogin(cookie, totpValido);
-conferir('cookie válido com TOTP válido cria sessão', loginValido.status === 200 &&
-  loginValido.body.ok === true && typeof loginValido.body.token === 'string' && admin.sessoesAtivas() === 1);
+conferir('cookie válido com TOTP válido cria token stateless', loginValido.status === 200 &&
+  loginValido.body.ok === true && typeof loginValido.body.token === 'string' &&
+  admin.obterSessao(loginValido.body.token) !== null);
 
 const health = await fetch(`http://127.0.0.1:${servidor.address().port}/api/health`);
 const healthBody = await health.json();

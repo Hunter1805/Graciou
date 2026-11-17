@@ -8,9 +8,8 @@
  *   - lê as credenciais SOMENTE de variáveis de ambiente
  *     (ADMIN_TOTP_SECRET) — nunca do código, nunca do
  *     banco e nunca do frontend;
- *   - emite um token de sessão temporário, aleatório e opaco;
- *   - guarda as sessões apenas em MEMÓRIA (reiniciar a API derruba
- *     todas — comportamento desejado para um painel local);
+ *   - emite um token de sessão stateless assinado com HMAC-SHA256;
+ *   - valida tokens independentemente do processo ou instância que os recebeu;
  *   - valida e normaliza o que o painel pode alterar num pedido.
  *
  * ─── O QUE ESTE ARQUIVO NÃO FAZ (de propósito) ──────────────
@@ -36,35 +35,30 @@ const acompanhamento = require('./acompanhamento');
    servidor recusa qualquer valor fora dela.
    ───────────────────────────────────────────── */
 const STATUS_PERMITIDOS = [
-  'aguardando_pagamento',
-  'pago',
-  'encomendar_na_youdraw',
-  'pedido_na_youdraw',
-  'em_producao',
-  'enviado',
-  'entregue',
-  'cancelado'
+  'aguardando_pagamento', 'pago', 'preparando_pedido', 'producao_solicitada',
+  'em_producao', 'pronto_para_envio', 'enviado', 'entregue', 'cancelado'
+];
+const STATUS_MANUAIS = [
+  'preparando_pedido', 'producao_solicitada', 'em_producao',
+  'pronto_para_envio', 'enviado', 'entregue', 'cancelado'
 ];
 
-/* Rótulos de exibição. Ficam no servidor para que painel e API
-   mostrem a mesma palavra — e para o resumo da YouDraw sair pronto. */
+/* Rótulos compartilhados entre a API administrativa e o painel. */
 const ROTULOS_STATUS = {
   aguardando_pagamento: 'Aguardando pagamento',
   pago: 'Pago',
-  encomendar_na_youdraw: 'Encomendar na YouDraw',
-  pedido_na_youdraw: 'Pedido na YouDraw',
+  preparando_pedido: 'Preparando pedido',
+  producao_solicitada: 'Produção solicitada',
   em_producao: 'Em produção',
+  pronto_para_envio: 'Pronto para envio',
   enviado: 'Enviado',
   entregue: 'Entregue',
   cancelado: 'Cancelado'
 };
 
-/** Status de pagamento que o painel pode gravar (não existe 'estornado' etc.). */
-const STATUS_PAGAMENTO_PERMITIDOS = ['aguardando', 'pago', 'recusado', 'cancelado'];
-
 const TAMANHO_MAX_OBSERVACAO = 2000;
 const TAMANHO_MAX_RASTREIO = 120;
-const TAMANHO_MAX_YOUDRAW = 120;
+const TAMANHO_MAX_REFERENCIA_FORNECEDOR = 120;
 const TAMANHO_MAX_TRANSPORTADORA = 80;
 const TAMANHO_MAX_URL = 500;
 const TAMANHO_MAX_OBSERVACAO_PUBLICA = 1000;
@@ -170,82 +164,104 @@ function conferirCredenciais(codigo) {
 }
 
 /* ─────────────────────────────────────────────
-   SESSÕES (somente em memória)
+   SESSÕES (tokens assinados, sem estado local)
    ───────────────────────────────────────────── */
 
 const DURACAO_SESSAO_MS = 30 * 60 * 1000; /* 30 minutos */
+const DURACAO_SESSAO_SEGUNDOS = Math.floor(DURACAO_SESSAO_MS / 1000);
+const CONTEXTO_CHAVE_SESSAO = 'GRACIOU_ADMIN_SESSION_V1';
+const TAMANHO_MAX_TOKEN_SESSAO = 2048;
 
-/* token -> { email, criadaEm, expiraEm } */
-const sessoes = new Map();
+function base64urlParaBuffer(valor) {
+  if (typeof valor !== 'string' || !/^[A-Za-z0-9_-]+$/.test(valor) || valor.length % 4 === 1) return null;
+  try {
+    const base64 = valor.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - valor.length % 4) % 4);
+    const buffer = Buffer.from(base64, 'base64');
+    return buffer.length > 0 && buffer.toString('base64url') === valor ? buffer : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function chaveSessao() {
+  const segredoTotp = String(process.env.ADMIN_TOTP_SECRET || '').replace(/[\s-]+/g, '').toUpperCase();
+  if (!segredoTotp || !/^[A-Z2-7]{16,}$/.test(segredoTotp)) return null;
+  return crypto.createHash('sha256')
+    .update(JSON.stringify([CONTEXTO_CHAVE_SESSAO, segredoTotp]), 'utf8')
+    .digest();
+}
+
+function assinarPayloadSessao(payloadCodificado, chave) {
+  return crypto.createHmac('sha256', chave).update(payloadCodificado, 'utf8').digest();
+}
 
 function agoraMs() {
   return Date.now();
 }
 
-/** Remove sessões expiradas. Chamada a cada uso para o mapa não crescer. */
-function limparExpiradas() {
-  const agora = agoraMs();
-  for (const [token, sessao] of sessoes) {
-    if (sessao.expiraEm <= agora) sessoes.delete(token);
-  }
-}
+/** Cria token assinado aceito por qualquer processo/instância durante 30 minutos. */
+function criarSessao() {
+  const chave = chaveSessao();
+  if (!chave) throw new Error('Segredo TOTP administrativo indisponível para assinatura da sessão.');
 
-/**
- * Cria uma sessão e devolve o token opaco (32 bytes em hex).
- * O token é aleatório (crypto.randomBytes) — não é derivado do
- * identificador nem da hora, então não vaza nada.
- */
-function criarSessao(email) {
-  limparExpiradas();
-
-  const token = crypto.randomBytes(32).toString('hex');
-  const criadaEm = agoraMs();
-
-  sessoes.set(token, {
-    email: email,
-    criadaEm: criadaEm,
-    expiraEm: criadaEm + DURACAO_SESSAO_MS
-  });
+  const iat = Math.floor(agoraMs() / 1000);
+  const exp = iat + DURACAO_SESSAO_SEGUNDOS;
+  const payload = {
+    sub: 'administrador',
+    iat: iat,
+    exp: exp,
+    nonce: crypto.randomBytes(16).toString('base64url')
+  };
+  const payloadCodificado = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  const assinatura = assinarPayloadSessao(payloadCodificado, chave).toString('base64url');
 
   return {
-    token: token,
-    expiraEm: new Date(criadaEm + DURACAO_SESSAO_MS).toISOString(),
-    duracaoSegundos: Math.floor(DURACAO_SESSAO_MS / 1000)
+    token: payloadCodificado + '.' + assinatura,
+    expiraEm: new Date(exp * 1000).toISOString(),
+    duracaoSegundos: DURACAO_SESSAO_SEGUNDOS
   };
 }
 
-/** Devolve a sessão válida do token, ou null. Renova nada (expira no prazo). */
-function obterSessao(token) {
-  limparExpiradas();
-  if (!token) return null;
+/** Valida um token stateless sem depender do processo que o emitiu. */
+function obterSessao(token, agora = agoraMs()) {
+  const valor = String(token || '');
+  if (!valor || valor.length > TAMANHO_MAX_TOKEN_SESSAO || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(valor)) return null;
+  const partes = valor.split('.');
+  if (partes.length !== 2) return null;
 
-  const sessao = sessoes.get(String(token));
-  if (!sessao) return null;
-  if (sessao.expiraEm <= agoraMs()) {
-    sessoes.delete(String(token));
+  const payloadBytes = base64urlParaBuffer(partes[0]);
+  const assinaturaRecebida = base64urlParaBuffer(partes[1]);
+  if (!payloadBytes || !assinaturaRecebida || assinaturaRecebida.length !== 32) return null;
+
+  const chave = chaveSessao();
+  if (!chave) return null;
+  const assinaturaEsperada = assinarPayloadSessao(partes[0], chave);
+  if (!crypto.timingSafeEqual(assinaturaEsperada, assinaturaRecebida)) return null;
+
+  let payload;
+  try {
+    payload = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(payloadBytes));
+  } catch (_) {
     return null;
   }
-  return sessao;
+
+  const agoraSegundos = Math.floor(Number(agora) / 1000);
+  const camposPayload = payload && typeof payload === 'object' && !Array.isArray(payload)
+    ? Object.keys(payload).sort().join(',')
+    : '';
+  if (!payload || camposPayload !== 'exp,iat,nonce,sub' || payload.sub !== 'administrador' ||
+      !Number.isSafeInteger(payload.iat) || !Number.isSafeInteger(payload.exp) ||
+      payload.iat > agoraSegundos || payload.exp <= agoraSegundos ||
+      payload.exp <= payload.iat || payload.exp - payload.iat > DURACAO_SESSAO_SEGUNDOS ||
+      !/^[A-Za-z0-9_-]{22}$/.test(payload.nonce || '') ||
+      !base64urlParaBuffer(payload.nonce) || base64urlParaBuffer(payload.nonce).length !== 16) {
+    return null;
+  }
+
+  return { sub: payload.sub, criadaEm: payload.iat * 1000, expiraEm: payload.exp * 1000 };
 }
 
-/** Derruba a sessão. Devolve true se havia algo para derrubar. */
-function encerrarSessao(token) {
-  if (!token) return false;
-  return sessoes.delete(String(token));
-}
 
-/** Útil para diagnóstico no /api/health — nunca devolve o token. */
-function sessoesAtivas() {
-  limparExpiradas();
-  return sessoes.size;
-}
-
-/** Encerra todas as sessões (usado nos testes). */
-function encerrarTodas() {
-  const n = sessoes.size;
-  sessoes.clear();
-  return n;
-}
 
 /**
  * Extrai o token do header Authorization: Bearer <token>.
@@ -271,8 +287,7 @@ function tokenDaRequisicao(req) {
 const texto = (v) => String(v === null || v === undefined ? '' : v).trim();
 
 /**
- * Verifica se a string tem caracteres de controle (que quebrariam
- * log, print ou o resumo colado na YouDraw).
+ * Verifica se a string tem caracteres de controle que quebrariam o resumo.
  */
 function temCaractereDeControle(valor) {
   return /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/.test(valor);
@@ -300,10 +315,12 @@ function validarAtualizacao(corpo) {
   const alteracoes = {};
   const tem = (chave) => Object.prototype.hasOwnProperty.call(corpo, chave);
 
-  /* ── statusPedido ── */
+  /* ── statusPedido: aguardando_pagamento e pago são exclusivamente automáticos ── */
   if (tem('statusPedido')) {
     const status = texto(corpo.statusPedido);
-    if (STATUS_PERMITIDOS.indexOf(status) === -1) {
+    if (status === 'aguardando_pagamento' || status === 'pago') {
+      erros.push({ campo: 'statusPedido', mensagem: 'Este status é definido automaticamente pelo fluxo do pedido e do pagamento.' });
+    } else if (STATUS_MANUAIS.indexOf(status) === -1) {
       erros.push({
         campo: 'statusPedido',
         mensagem: 'Status inválido. Permitidos: ' + STATUS_PERMITIDOS.join(', ') + '.'
@@ -326,15 +343,15 @@ function validarAtualizacao(corpo) {
     }
   }
 
-  /* ── pedidoYouDraw ── */
-  if (tem('pedidoYouDraw')) {
-    const numero = texto(corpo.pedidoYouDraw);
-    if (temCaractereDeControle(numero)) {
-      erros.push({ campo: 'pedidoYouDraw', mensagem: 'O número da YouDraw tem caracteres inválidos.' });
-    } else if (numero.length > TAMANHO_MAX_YOUDRAW) {
-      erros.push({ campo: 'pedidoYouDraw', mensagem: 'Número da YouDraw muito longo (máx. ' + TAMANHO_MAX_YOUDRAW + ').' });
+  /* ── referenciaFornecedor ── */
+  if (tem('referenciaFornecedor')) {
+    const referencia = texto(corpo.referenciaFornecedor);
+    if (temCaractereDeControle(referencia)) {
+      erros.push({ campo: 'referenciaFornecedor', mensagem: 'A referência do fornecedor contém caracteres inválidos.' });
+    } else if (referencia.length > TAMANHO_MAX_REFERENCIA_FORNECEDOR) {
+      erros.push({ campo: 'referenciaFornecedor', mensagem: 'Referência do fornecedor muito longa (máx. ' + TAMANHO_MAX_REFERENCIA_FORNECEDOR + ').' });
     } else {
-      alteracoes.pedidoYouDraw = numero || null;
+      alteracoes.referenciaFornecedor = referencia || null;
     }
   }
 
@@ -381,17 +398,9 @@ function validarAtualizacao(corpo) {
     }
   }
 
-  /* ── statusPagamento (opcional: permite marcar "pago" sem Mercado Pago) ── */
+  /* O pagamento é atualizado exclusivamente pelo processamento verificado do Mercado Pago. */
   if (tem('statusPagamento')) {
-    const status = texto(corpo.statusPagamento);
-    if (STATUS_PAGAMENTO_PERMITIDOS.indexOf(status) === -1) {
-      erros.push({
-        campo: 'statusPagamento',
-        mensagem: 'Status de pagamento inválido. Permitidos: ' + STATUS_PAGAMENTO_PERMITIDOS.join(', ') + '.'
-      });
-    } else {
-      alteracoes.statusPagamento = status;
-    }
+    erros.push({ campo: 'statusPagamento', mensagem: 'O status do pagamento não pode ser alterado manualmente.' });
   }
 
   /* ── observacoes (adiciona ou substitui) ── */
@@ -414,7 +423,7 @@ function validarAtualizacao(corpo) {
       ok: false,
       erros: [{
         campo: 'corpo',
-        mensagem: 'Nada para atualizar. Envie ao menos um de: statusPedido, statusPagamento, rastreio, transportadora, rastreioUrl, pedidoYouDraw, observacaoPublica, observacoes.'
+        mensagem: 'Nada para atualizar. Envie ao menos um campo administrativo permitido.'
       }]
     };
   }
@@ -423,9 +432,8 @@ function validarAtualizacao(corpo) {
 }
 
 /* ─────────────────────────────────────────────
-   RESUMO PARA A YOUDRAW
-   Texto puro, pronto para colar. Sem HTML, sem emoji, sem acento
-   problemático — só o que a produção precisa saber.
+   RESUMO PARA O FORNECEDOR
+   Texto puro para encaminhamento, com os dados necessários à produção.
    ───────────────────────────────────────────── */
 
 const moeda = (centavos) => {
@@ -438,10 +446,10 @@ const semAcento = (texto) => String(texto || '')
   .replace(/[\u0300-\u036f]/g, '');
 
 /**
- * Monta o resumo do pedido para colar na YouDraw.
+ * Monta o resumo do pedido para encaminhar ao fornecedor.
  * É a fonte única desse texto: o painel só copia o que vier daqui.
  */
-function resumoParaYouDraw(pedido) {
+function resumoParaFornecedor(pedido) {
   if (!pedido) return '';
 
   const linhas = [];
@@ -449,10 +457,11 @@ function resumoParaYouDraw(pedido) {
   const endereco = pedido.endereco || {};
   const itens = Array.isArray(pedido.itens) ? pedido.itens : [];
 
+  linhas.push('PEDIDO ENVIADO AO FORNECEDOR');
   linhas.push('PEDIDO ' + pedido.id);
   linhas.push('Data: ' + String(pedido.criadoEm || '').replace('T', ' ').slice(0, 19));
   linhas.push('Status: ' + (ROTULOS_STATUS[pedido.statusPedido] || pedido.statusPedido || '-'));
-  if (pedido.pedidoYouDraw) linhas.push('Pedido YouDraw: ' + pedido.pedidoYouDraw);
+  if (pedido.referenciaFornecedor) linhas.push('Referência do fornecedor: ' + pedido.referenciaFornecedor);
   linhas.push('');
 
   linhas.push('CLIENTE');
@@ -506,8 +515,8 @@ function resumoParaYouDraw(pedido) {
 
 module.exports = {
   STATUS_PERMITIDOS: STATUS_PERMITIDOS,
+  STATUS_MANUAIS: STATUS_MANUAIS,
   ROTULOS_STATUS: ROTULOS_STATUS,
-  STATUS_PAGAMENTO_PERMITIDOS: STATUS_PAGAMENTO_PERMITIDOS,
   DURACAO_SESSAO_MS: DURACAO_SESSAO_MS,
 
   configurado: configurado,
@@ -517,11 +526,9 @@ module.exports = {
 
   criarSessao: criarSessao,
   obterSessao: obterSessao,
-  encerrarSessao: encerrarSessao,
-  encerrarTodas: encerrarTodas,
-  sessoesAtivas: sessoesAtivas,
   tokenDaRequisicao: tokenDaRequisicao,
+  _test: { DURACAO_SESSAO_SEGUNDOS: DURACAO_SESSAO_SEGUNDOS },
 
   validarAtualizacao: validarAtualizacao,
-  resumoParaYouDraw: resumoParaYouDraw
+  resumoParaFornecedor: resumoParaFornecedor
 };

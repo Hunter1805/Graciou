@@ -23,7 +23,7 @@ Conclusões diretas:
 | Existe dependência do Shopify? | **Sim, como código-fonte.** Todo o diretório Liquid é um tema Shopify. Ele deve ser **arquivado, não apagado**, porque o conteúdo visual (seções, classes, textos) é a fonte do design |
 | Existe código reaproveitável? | **Sim:** todo o CSS/HTML/JS visual (≈ 6 arquivos), os 8 produtos já catalogados em JS, e os textos da marca |
 
-**Recomendação central:** manter o protótipo **intacto** como "fonte de design", extrair dele o HTML/CSS e reconstruir por cima uma aplicação própria (frontend independente + API + banco + Mercado Pago + painel admin). A YouDraw permanece **fora do sistema**, como operação manual — o sistema entrega apenas um *pedido formatado* para ser lançado na plataforma da YouDraw.
+**Recomendação central:** manter o protótipo **intacto** como "fonte de design", extrair dele o HTML/CSS e reconstruir por cima uma aplicação própria (frontend independente + API + banco + Mercado Pago + painel admin). A identificação específica do fornecedor não faz parte da interface; o sistema gera um *pedido formatado* para a operação manual de produção.
 
 ---
 
@@ -159,7 +159,7 @@ Nenhum arquivo, rota, formulário de endereço, cálculo de frete ou etapa de pa
 | 6 | Criação e gestão de pedidos | ❌ |
 | 7 | Painel administrativo (produtos, pedidos, cupons, estoque) | ❌ |
 | 8 | Autenticação do admin | ❌ |
-| 9 | Integração de saída para a **YouDraw** (exportação manual do pedido) | ❌ |
+| 9 | Integração de saída para fornecedor (exportação manual do pedido) | ❌ |
 | 10 | E-mails transacionais (confirmação, pagamento aprovado) | ❌ |
 | 11 | Fiscal / LGPD / termos / política de trocas | ❌ |
 | 12 | Deploy, domínio, HTTPS, backups, monitoramento | ❌ |
@@ -172,8 +172,8 @@ Nenhum arquivo, rota, formulário de endereço, cálculo de frete ou etapa de pa
 
 1. **Não substituir o design atual.** O protótipo é a fonte visual. A nova loja deve reproduzir fielmente hero, ticker, grid assimétrico, filosofia, footer, paleta e tipografia — reaproveitando o CSS existente como base, e não redesenhando.
 2. **Frontend desacoplado do backend.** O visual vira uma SPA/MPA leve; os dados vêm de uma API própria.
-3. **A YouDraw fica fora do sistema.** Nenhuma integração automática nesta fase (eles não expõem API pública de pedidos para o plano padrão). O sistema apenas **gera o pedido pronto para digitação** — um resumo formatado (SKU, tamanho, cor, quantidade, dados do cliente) copiável/exportável, para lançamento manual.
-4. **Mercado Pago entra por último, mas é desenhado desde o início.** A ordem `pedido criado → pagamento pendente → pago → enviado à YouDraw` deve existir na modelagem de dados desde a primeira migração.
+3. **A integração com o fornecedor fica fora do sistema.** Nesta fase, o sistema apenas **gera o pedido pronto para encaminhamento** — um resumo formatado (SKU, tamanho, cor, quantidade, dados do cliente) copiável/exportável.
+4. **Mercado Pago entra último, mas é desenhado desde o início.** A ordem `pedido criado → pagamento pendente → pago → produção solicitada` deve existir na modelagem de dados desde a primeira migração.
 
 ### 5.2 Stack sugerida (a confirmar com você)
 
@@ -197,11 +197,11 @@ Stack mínima, uma linguagem só, barata de hospedar:
 ```
 products        id, slug, name, description, category, base_price, active, drop
 product_colors  id, product_id, name, hex
-variants        id, product_id, color_id, size, sku, price, stock, youdraw_id
+variants        id, product_id, color_id, size, sku, price, stock, supplier_id
 carts           id, token, created_at, updated_at
 cart_items      id, cart_id, variant_id, quantity, unit_price
 orders          id, code, customer_id, status, subtotal, discount, shipping, total,
-                payment_status, payment_id, mp_preference_id, youdraw_status, created_at
+                payment_status, payment_id, mp_preference_id, supplier_status, created_at
 order_items     id, order_id, variant_id, quantity, unit_price, snapshot_json
 customers       id, name, email, phone, cpf, address_json
 coupons         id, code, type, value, min_subtotal, usage_limit, uses, expires_at, active
@@ -211,7 +211,7 @@ admins          id, email, password_hash, role
 **Máquina de estados do pedido (proposta):**
 
 ```
-carrinho → pedido_criado → aguardando_pagamento → pago → lancado_youdraw → enviado → entregue
+carrinho → pedido_criado → aguardando_pagamento → pago → producao_solicitada → enviado → entregue
                                   ↓                   ↓
                               expirado/cancelado   reembolsado
 ```
@@ -239,7 +239,7 @@ Estas regras foram extraídas do seu contexto e **devem virar requisito do catá
 | 7 | Camiseta Dryfit Forte e Serena | GRACIOU Move | Verde militar | P–GG |
 | 8 | Short 2 em 1 Graciou Move | GRACIOU Move | Preto | P–GG |
 
-`price: 0` em todos — **placeholders até receber a tabela de preços da YouDraw**.
+`price: 0` em todos — **placeholders até receber a tabela de preços do fornecedor**.
 
 ---
 
@@ -248,14 +248,14 @@ Estas regras foram extraídas do seu contexto e **devem virar requisito do catá
 | Fase | Entrega | Depende de |
 |---|---|---|
 | **0. Fundação** *(pode começar já)* | Git init + `.gitignore`; arquivar o tema Shopify em `_arquivo/shopify-theme/` **sem apagar**; extrair CSS/HTML do protótipo para componentes; definir modelo de dados | nada |
-| **1. Catálogo** | Banco + API de produtos + listagem e PDP reais usando o design atual | Fase 0; **preços e estoque da YouDraw** |
+| **1. Catálogo** | Banco + API de produtos + listagem e PDP reais usando o design atual | Fase 0; **preços e estoque do fornecedor** |
 | **2. Carrinho** | Carrinho persistente ponta a ponta (substitui o `localStorage`) | Fase 1 |
 | **3. Checkout + Cupons** | Dados do cliente, endereço, frete, cupons, revisão do pedido, criação do pedido `aguardando_pagamento` | Fase 2 |
 | **4. Mercado Pago** | Preferência de pagamento, Pix/cartão, webhook, conciliação `pago` | Fase 3 + credenciais MP |
-| **5. Painel Admin** | Login, CRUD de produtos/estoque, pedidos, cupons, exportação para a YouDraw | Fases 1–4 |
+| **5. Painel Admin** | Login, CRUD de produtos/estoque, pedidos, cupons, exportação para o fornecedor | Fases 1–4 |
 | **6. Operação** | E-mails transacionais, políticas (LGPD/trocas), domínio, HTTPS, backups, métricas | Fase 5 |
 
-**Bloqueio imediato:** fases 1 em diante dependem de duas informações suas — **(a)** tabela de preços e SKUs da YouDraw; **(b)** definição de quem hospeda e paga a infraestrutura.
+**Bloqueio imediato:** fases 1 em diante dependem de duas informações suas — **(a)** tabela de preços e SKUs do fornecedor; **(b)** definição de quem hospeda e paga a infraestrutura.
 
 ---
 
@@ -270,7 +270,7 @@ Estas regras foram extraídas do seu contexto e **devem virar requisito do catá
 | R3 | **Duas listas de produtos divergentes.** `graciou-store.js` tem os 8 itens corretos do Drop 01; os HTMLs exibem **12 produtos fictícios** ("Hoodie Oversized Raízes", "Cargo Pant Shadow", "Bucket Hat Terra", "Meia Árvore", "Shoulder Bag Terra"...) que **não fazem parte do Drop 01** | `graciou-store.js:8–15` vs `collection.html:646–1117` e `preview.html:1039–1154` | Tornar `graciou-store.js` (ou o banco) a **única** fonte de verdade. Toda a listagem deve ser renderizada a partir de dados |
 | R4 | **Colisão de ID no catálogo JS.** Dois produtos diferentes usam `id: 'tee-graca'` (linhas 8 e 11) | `graciou-store.js:8,11` | Bug real: `getProduct('tee-graca')` retorna o errado e o carrinho faria merge indevido de dois produtos distintos. Corrigir para `tee-graca-permanece` e `tee-pela-graca` |
 | R5 | **Dependência de Tailwind via CDN** em `layout/theme.liquid:37` (`cdn.tailwindcss.com`) | — | CDN do Tailwind **não deve ir para produção** (peso, sem purge, aviso do próprio Tailwind). Como as páginas reais não usam Tailwind, o caminho certo é **remover**, não compilar |
-| R6 | **Produtos sem preço.** Todos com `price: 0` | `graciou-store.js:8–15` | Bloqueia go-live. Sem preços da YouDraw não é possível calcular carrinho, cupom, frete nem pagamento |
+| R6 | **Produtos sem preço.** Todos com `price: 0` | `graciou-store.js:8–15` | Bloqueia go-live. Sem preços do fornecedor não é possível calcular carrinho, cupom, frete nem pagamento |
 | R7 | **Sem imagens reais.** Existe **um** asset no projeto (`tree-icon.png`). Todos os "produtos" são placeholders em SVG/gradiente | `glob` de imagens → 1 arquivo | Sem fotos de frente, costas e detalhes não há loja real. Depende de ensaio fotográfico |
 
 ### 7.2 Inconsistências técnicas menores (documentadas, não corrigidas)
@@ -293,11 +293,11 @@ Estas regras foram extraídas do seu contexto e **devem virar requisito do catá
 1. **Arquivar ou apagar o tema Shopify?** Recomendo **arquivar** (`_arquivo/shopify-theme/`) e adicionar um comentário no topo de cada arquivo Liquid: `ARQUIVADO — referência de design, não executar`. Você pediu para não apagar nada; o arquivamento cumpre isso e evita que alguém tente "consertar o tema".
 2. **SPA ou MPA?** SPA (React/Preact) reaproveita os componentes com mais facilidade; MPA é mais simples e mantém o HTML atual praticamente como está. **Recomendo MPA/Vite no início**, migrando para componentes só onde há repetição (card de produto, header, footer).
 3. **Mercado Pago: Checkout Pro ou Bricks?** Checkout Pro é muito mais rápido de integrar e resolve Pix/cartão/boleto; Bricks dá controle visual (mais alinhado à marca) mas exige mais trabalho e PCI. **Recomendo Checkout Pro na primeira versão.**
-4. **Preços e SKUs da YouDraw:** sem eles, nada além da Fase 0 pode ser concluído.
+4. **Preços e SKUs do fornecedor:** sem eles, nada além da Fase 0 pode ser concluído.
 5. **Cupons:** precisam ser decididos como **regra de negócio** antes da modelagem — percentual, valor fixo, frete grátis, primeira compra, acúmulo com promoções?
 6. **Frete:** cálculo por CEP (Correios/transportadora) ou valor fixo/tabela por região? Isso muda o modelo de dados e a complexidade do checkout.
 7. **Login de cliente (conta) ou apenas e-mail no checkout?** Loja pequena costuma funcionar melhor **sem** conta obrigatória.
-8. **Definição de "lançado na YouDraw":** o painel deve gerar (a) resumo em texto copiável, (b) planilha CSV, ou (c) PDF do pedido? Recomendo **CSV + resumo copiável**, com um campo de status manual por pedido.
+8. **Definição de "produção solicitada":** o painel deve gerar (a) resumo em texto copiável, (b) planilha CSV, ou (c) PDF do pedido? Recomendo **CSV + resumo copiável**, com um campo de status manual por pedido.
 9. **Fiscal:** a loja independente emite nota fiscal? Se sim, é uma integração adicional (ou processo manual) a prever.
 
 ---

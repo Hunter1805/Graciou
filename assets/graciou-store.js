@@ -14,7 +14,7 @@
  *   - continha ID DUPLICADO: dois produtos usavam `tee-graca`
  *     (Camiseta A Graça Permanece e Camiseta Pela Graça);
  *   - não tinha SKU, tipo de peça, imagem de frente/costas, custo
- *     na YouDraw nem flag ativo/inativo.
+ *     do fornecedor nem flag ativo/inativo.
  *
  * O array `products` abaixo é mantido apenas como REGISTRO HISTÓRICO.
  * Está marcado como vazio de propósito e não deve ser repovoado:

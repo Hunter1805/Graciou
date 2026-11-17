@@ -35,14 +35,15 @@ const ETAPAS = [
   { chave: 'entregue', rotulo: 'Entregue' }
 ];
 
-/* Cada status oficial mapeia para UMA etapa da timeline. Status
-   intermediários da produção (YouDraw) contam como "Em preparação". */
+/* Cada status oficial mapeia para UMA etapa da timeline. Os estados
+   intermediários da produção contam como "Em preparação". */
 const ETAPA_POR_STATUS = {
   aguardando_pagamento: 'recebido',
   pago: 'pago',
-  encomendar_na_youdraw: 'em_preparacao',
-  pedido_na_youdraw: 'em_preparacao',
+  preparando_pedido: 'em_preparacao',
+  producao_solicitada: 'em_preparacao',
   em_producao: 'em_preparacao',
+  pronto_para_envio: 'em_preparacao',
   enviado: 'enviado',
   entregue: 'entregue'
 };

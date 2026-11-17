@@ -5,8 +5,8 @@
 A GRACIOU é uma loja independente: frontend estático servido pelo Vite, API
 serverless compatível com Vercel usando Supabase em produção (SQLite somente
 no desenvolvimento local), carrinho persistente, checkout, cupons e um painel
-de pedidos para a operação. A produção é feita na **YouDraw**, por lançamento
-manual de um pedido formatado — o sistema gera o resumo, o operador cola.
+de pedidos para a operação. A produção é solicitada ao fornecedor pelo operador,
+com um resumo formatado gerado pelo sistema.
 
 ---
 
@@ -39,7 +39,7 @@ GRACIOU/
 │   ├── repositorio.js   # Supabase em produção; SQLite local como fallback
 │   ├── acompanhamento.js# Consulta pública: resposta mínima, timeline, rate limit
 │   ├── regras.js        # Validação e recálculo no servidor
-│   ├── admin.js         # Sessões, validação do painel, resumo da YouDraw
+│   ├── admin.js         # Sessões, validação do painel e resumo para o fornecedor
 │   └── db.js            # SQLite somente no desenvolvimento local
 │
 ├── supabase/migrations/ # Migrações incrementais (aplicar no Supabase)
@@ -141,11 +141,13 @@ collection.html → cart.html → checkout.html → API /api/orders
                                                      ↓
                                     webhook assinado → consulta MP → pago
                                                      ↓
-                                     admin.html: operador lança na YouDraw
+                                  admin.html: produção solicitada ao fornecedor
 ```
 
-Estados do pedido: `aguardando_pagamento → pago → encomendar_na_youdraw →
-pedido_na_youdraw → em_producao → enviado → entregue` (ou `cancelado`).
+Estados do pedido: `aguardando_pagamento → pago → preparando_pedido →
+producao_solicitada → em_producao → pronto_para_envio → enviado → entregue`
+(ou `cancelado`). Pagamento e status inicial são automáticos; `pago` depende da
+confirmação verificada do Mercado Pago.
 
 ### Acompanhamento do pedido
 
@@ -161,9 +163,9 @@ observação pública) fica registrada em `order_events` com data e hora — e a
 imediatamente na consulta do cliente. O pagamento **não** é marcado como
 confirmado só porque o pedido foi criado.
 
-> **Antes de publicar no Supabase:** aplique a migração
-> `supabase/migrations/20261007_acompanhamento_pedidos.sql`. Localmente o SQLite
-> se migra sozinho no boot.
+> **Antes de publicar no Supabase:** migrações precisam de revisão e autorização
+> explícita. A nova migração de referência preparada nesta alteração ainda não foi
+> executada. Localmente o SQLite se migra sozinho no boot.
 
 ---
 
@@ -176,7 +178,7 @@ confirmado só porque o pedido foi criado.
 - **E-mail de rastreio, nota fiscal e LGPD.** O e-mail de **confirmação do
   pedido** já sai pela Brevo (`backend/email.js`, idempotente); falta o e-mail de
   rastreio, a emissão fiscal e a política de retenção de dados.
-- **Preços e imagens reais.** Os preços vêm da tabela da YouDraw; as fotos de
+- **Preços e imagens reais.** Os preços vêm da tabela do fornecedor; as fotos de
   frente/costas/detalhes dependem de ensaio. Enquanto faltarem, a loja não deve
   ir ao ar.
 

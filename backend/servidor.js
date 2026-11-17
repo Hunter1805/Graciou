@@ -207,6 +207,52 @@ function semUsoInternoDoEmail(pedido) {
   return copia;
 }
 
+/* Lista explícita dos campos operacionais do detalhe autenticado. Não repassa
+   IDs/dados internos do provedor de pagamento nem colunas técnicas do banco. */
+function detalheSeguroDoPedido(pedido) {
+  return {
+    id: pedido.id,
+    criadoEm: pedido.criadoEm,
+    atualizadoEm: pedido.atualizadoEm,
+    cliente: {
+      nome: pedido.cliente && pedido.cliente.nome,
+      email: pedido.cliente && pedido.cliente.email,
+      telefone: pedido.cliente && pedido.cliente.telefone,
+      cpf: pedido.cliente && pedido.cliente.cpf
+    },
+    endereco: pedido.endereco || {},
+    itens: Array.isArray(pedido.itens) ? pedido.itens.map((item) => ({
+      productId: item.productId || item.id || item.produtoId,
+      nome: item.nome,
+      tamanho: item.tamanho,
+      cor: item.cor,
+      quantidade: item.quantidade,
+      precoUnitario: item.precoUnitario,
+      subtotal: item.subtotal
+    })) : [],
+    pagamento: pedido.pagamento ? {
+      forma: pedido.pagamento.forma,
+      status: pedido.pagamento.status
+    } : {},
+    cupom: pedido.cupom ? {
+      codigo: pedido.cupom.codigo,
+      tipo: pedido.cupom.tipo,
+      valor: pedido.cupom.valor
+    } : null,
+    subtotal: pedido.subtotal,
+    desconto: pedido.desconto,
+    frete: pedido.frete,
+    total: pedido.total,
+    statusPedido: pedido.statusPedido,
+    rastreio: pedido.rastreio || null,
+    transportadora: pedido.transportadora || null,
+    rastreioUrl: pedido.rastreioUrl || null,
+    observacoes: pedido.observacoes || null,
+    observacaoPublica: pedido.observacaoPublica || null,
+    referenciaFornecedor: pedido.referenciaFornecedor || null
+  };
+}
+
 /* Resumo MINIMO de um pedido para as respostas sem sessão.
    Só o que identifica e localiza o pedido. NUNCA sai daqui: nome,
    e-mail, telefone, CPF, endereço, dados de pagamento ou observações
@@ -326,8 +372,8 @@ app.get('/api/health', async (req, res) => {
     painelAdmin: {
       configurado: admin.configurado(),
       totpConfigurado: Boolean(String(process.env.ADMIN_TOTP_SECRET || '').trim()),
-      sessoesAtivas: admin.sessoesAtivas(),
-      duracaoSessaoMinutos: Math.floor(admin.DURACAO_SESSAO_MS / 60000)
+      modeloSessao: 'token_assinado',
+      duracaoSessaoMinutos: 30
     },
     rotaAdmin: '/admin.html',
     origemFrontPermitida: [
@@ -663,7 +709,7 @@ function exigirAdmin(req, res, next) {
     });
   }
 
-  req.admin = { email: sessao.email, expiraEm: sessao.expiraEm };
+  req.admin = { sub: sessao.sub, expiraEm: sessao.expiraEm };
   return next();
 }
 
@@ -743,7 +789,7 @@ app.post('/api/admin/login', (req, res) => {
     });
   }
 
-  const sessao = admin.criarSessao('administrador');
+  const sessao = admin.criarSessao();
   falhasLoginAdmin.delete(ip);
 
   log('admin login OK');
@@ -753,20 +799,17 @@ app.post('/api/admin/login', (req, res) => {
     token: sessao.token,
     expiraEm: sessao.expiraEm,
     duracaoSegundos: sessao.duracaoSegundos,
-    aviso: 'Sessão temporária mantida apenas na memória do servidor. Reiniciar a API encerra todas as sessões.'
+    aviso: 'Sessão stateless assinada válida por 30 minutos. O token fica somente na memória deste navegador; se for copiado, permanece válido até expirar.'
   });
 });
 
 /* ─────────────────────────────────────────────
-   POST /api/admin/logout — exige sessão e a invalida
+   POST /api/admin/logout — confirma logout local; token stateless não tem revogação global
    ───────────────────────────────────────────── */
 app.post('/api/admin/logout', exigirAdmin, (req, res) => {
-  const encerrada = admin.encerrarSessao(admin.tokenDaRequisicao(req));
-  log('admin logout' + (encerrada ? '' : ' (sessão já inexistente)'));
-
   return res.json({
     ok: true,
-    mensagem: 'Sessão encerrada. O token não é mais aceito.'
+    mensagem: 'Token apagado pelo cliente. Se tiver sido copiado, permanece válido até expirar.'
   });
 });
 
@@ -804,7 +847,7 @@ app.get('/api/admin/orders', exigirAdmin, async (req, res) => {
     meta: {
       statusPermitidos: admin.STATUS_PERMITIDOS,
       rotulosStatus: admin.ROTULOS_STATUS,
-      statusPagamentoPermitidos: admin.STATUS_PAGAMENTO_PERMITIDOS,
+      statusManuais: admin.STATUS_MANUAIS,
       /* O painel monta o <select> a partir daqui: uma lista só,
          servida pelo servidor, sem duplicar em HTML. */
       moeda: 'BRL'
@@ -829,7 +872,7 @@ app.get('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
   }
 
   /* Log só com o número do pedido — nunca nome, e-mail, telefone,
-     CPF ou endereço. O resumo da YouDraw vai no corpo, não no log. */
+     CPF ou endereço. O resumo administrativo não vai para o log. */
   log(`admin consultou pedido ${id}`);
 
   let historico = [];
@@ -837,14 +880,14 @@ app.get('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
 
   return res.json({
     ok: true,
-    pedido: semUsoInternoDoEmail(pedido),
+    pedido: detalheSeguroDoPedido(pedido),
     historico: historico,
     meta: {
       statusPermitidos: admin.STATUS_PERMITIDOS,
-      rotulosStatus: admin.ROTULOS_STATUS,
-      statusPagamentoPermitidos: admin.STATUS_PAGAMENTO_PERMITIDOS
+      statusManuais: admin.STATUS_MANUAIS,
+      rotulosStatus: admin.ROTULOS_STATUS
     },
-    resumoYouDraw: admin.resumoParaYouDraw(pedido)
+    resumoFornecedor: admin.resumoParaFornecedor(pedido)
   });
 });
 
@@ -898,10 +941,10 @@ app.patch('/api/admin/orders/:id', exigirAdmin, async (req, res) => {
 
   return res.json({
     ok: true,
-    pedido: semUsoInternoDoEmail(pedido),
+    pedido: detalheSeguroDoPedido(pedido),
     alterado: Object.keys(validacao.alteracoes).filter((c) => c !== 'observacoesModo'),
     historico: historico,
-    resumoYouDraw: admin.resumoParaYouDraw(pedido)
+    resumoFornecedor: admin.resumoParaFornecedor(pedido)
   });
 });
 

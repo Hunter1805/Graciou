@@ -17,7 +17,7 @@
  *   Short:                         Pix 7990  · Cartão 7990 (temporário)
  *
  * `precoConfirmado: true` nos 8 produtos: os valores acima são oficiais.
- * `custoYouDraw` continua `null` — o custo de fornecedor NÃO foi informado,
+ * `custoFornecedor` continua `null` — o custo de fornecedor NÃO foi informado,
  * e nenhum valor será inventado.
  *
  * ─── SOBRE O FRETE ───────────────────────────────────────────
@@ -58,7 +58,7 @@
   var META = {
     marca: 'GRACIOU',
     slogan: 'Graça em cada fio',
-    fornecedor: 'YouDraw',
+    fornecedor: 'fornecedor',
     pedidoManual: true,
     /* Tabela oficial recebida: preços reais, confirmados. */
     precosConfirmados: true,
@@ -151,7 +151,7 @@
       /* Camiseta: Pix 99,90 · Cartão 109,90 (centavos) */
       precoVenda: 9990,
       precoCartao: 10990,
-      custoYouDraw: null,
+      custoFornecedor: null,
       precoConfirmado: true,
       sku: null,
       imagemFrente: null,
@@ -173,7 +173,7 @@
       /* Camiseta: Pix 99,90 · Cartão 109,90 (centavos) */
       precoVenda: 9990,
       precoCartao: 10990,
-      custoYouDraw: null,
+      custoFornecedor: null,
       precoConfirmado: true,
       sku: null,
       imagemFrente: null,
@@ -195,7 +195,7 @@
       /* Camiseta: Pix 99,90 · Cartão 109,90 (centavos) */
       precoVenda: 9990,
       precoCartao: 10990,
-      custoYouDraw: null,
+      custoFornecedor: null,
       precoConfirmado: true,
       sku: null,
       imagemFrente: null,
@@ -217,7 +217,7 @@
       /* Camiseta: Pix 99,90 · Cartão 109,90 (centavos) */
       precoVenda: 9990,
       precoCartao: 10990,
-      custoYouDraw: null,
+      custoFornecedor: null,
       precoConfirmado: true,
       sku: null,
       imagemFrente: null,
@@ -239,7 +239,7 @@
       /* Camiseta: Pix 99,90 · Cartão 109,90 (centavos) */
       precoVenda: 9990,
       precoCartao: 10990,
-      custoYouDraw: null,
+      custoFornecedor: null,
       precoConfirmado: true,
       sku: null,
       imagemFrente: null,
@@ -261,7 +261,7 @@
       /* Camiseta dryfit: Pix 99,90 · Cartão 109,90 (centavos) */
       precoVenda: 9990,
       precoCartao: 10990,
-      custoYouDraw: null,
+      custoFornecedor: null,
       precoConfirmado: true,
       sku: null,
       imagemFrente: null,
@@ -283,7 +283,7 @@
       /* Camiseta dryfit: Pix 99,90 · Cartão 109,90 (centavos) */
       precoVenda: 9990,
       precoCartao: 10990,
-      custoYouDraw: null,
+      custoFornecedor: null,
       precoConfirmado: true,
       sku: null,
       imagemFrente: null,
@@ -305,7 +305,7 @@
       /* Short: Pix 79,90 · Cartão 79,90 (temporário) — centavos */
       precoVenda: 7990,
       precoCartao: 7990,
-      custoYouDraw: null,
+      custoFornecedor: null,
       precoConfirmado: true,
       sku: null,
       imagemFrente: null,
@@ -321,7 +321,7 @@
      ───────────────────────────────────────────── */
   var CAMPOS_OBRIGATORIOS = [
     'id', 'slug', 'nome', 'categoria', 'categoriaId', 'tipo', 'corPrincipal',
-    'cores', 'tamanhos', 'descricao', 'precoVenda', 'precoCartao', 'custoYouDraw',
+    'cores', 'tamanhos', 'descricao', 'precoVenda', 'precoCartao', 'custoFornecedor',
     'precoConfirmado', 'sku', 'imagemFrente', 'imagemCostas', 'imagensDetalhe', 'ativo'
   ];
 
@@ -696,8 +696,8 @@
       if (p.precoCartao !== null && p.precoCartao !== undefined && p.precoConfirmado !== true) {
         problemas.push('ERRO [' + ref + ']: possui precoCartao mas precoConfirmado !== true');
       }
-      if (p.custoYouDraw !== null && (typeof p.custoYouDraw !== 'number' || p.custoYouDraw < 0)) {
-        problemas.push('ERRO [' + ref + ']: custoYouDraw inválido (deve ser inteiro em centavos ou null)');
+      if (p.custoFornecedor !== null && (typeof p.custoFornecedor !== 'number' || p.custoFornecedor < 0)) {
+        problemas.push('ERRO [' + ref + ']: custoFornecedor inválido (deve ser inteiro em centavos ou null)');
       }
     }
 

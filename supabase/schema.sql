@@ -40,6 +40,7 @@ create table if not exists public.pedidos (
   endereco              jsonb not null default '{}'::jsonb,
   rastreio              text,
   observacoes           text,
+  referencia_fornecedor text,
   transportadora        text,
   rastreio_url          text,
   observacao_publica    text,
@@ -71,6 +72,8 @@ alter table public.pedidos
   add column if not exists rastreio_url text;
 alter table public.pedidos
   add column if not exists observacao_publica text;
+alter table public.pedidos
+  add column if not exists referencia_fornecedor text;
 
 create index if not exists idx_pedidos_created_at on public.pedidos (created_at desc);
 create index if not exists idx_pedidos_status on public.pedidos (status);

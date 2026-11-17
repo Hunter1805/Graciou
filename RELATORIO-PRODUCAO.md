@@ -18,7 +18,7 @@ controles operacionais essenciais:
 - falta rate limiting/proteção adicional no login administrativo;
 - não há páginas legais completas nem política de retenção de dados;
 - o fluxo de produção ainda depende de configuração manual do domínio, webhook,
-  segredos e operação da YouDraw.
+  segredos e operação com o fornecedor.
 
 **Nenhuma publicação foi feita. Nenhuma credencial real foi usada. Nenhum banco
 foi migrado.**
@@ -221,17 +221,17 @@ O backend deve permitir somente essa origem HTTPS, removendo `Origin: null` e
 as origens locais do ambiente de produção.
 
 ### Admin
-As rotas administrativas usam `Authorization: Bearer` e sessão em memória.
-Sem sessão, o painel não lista nem abre pedidos. Isso foi validado na suíte.
+As rotas administrativas usam `Authorization: Bearer` e tokens stateless assinados
+com validade de 30 minutos; qualquer instância valida a assinatura com a mesma chave
+derivada do segredo administrativo. Sem sessão válida, o painel não lista nem abre
+pedidos. O botão de saída apaga o token do navegador; não há revogação global, então
+uma cópia do token permanece válida até expirar.
 
 Riscos restantes antes de produção:
 
-- sessão em memória é perdida no restart;
-- não há rate limiting no login;
-- não há bloqueio progressivo de tentativas;
-- não há MFA;
+- o rate limiting/bloqueio do login permanece em memória por instância;
 - não há auditoria persistente das alterações administrativas;
-- o token de sessão não usa cookie seguro, pois fica em memória no frontend.
+- o token de sessão não usa cookie seguro, pois fica em memória no frontend;
 
 Para uma primeira versão pequena, pode permanecer temporariamente, mas deve
 ser tratado como risco operacional alto.
@@ -322,7 +322,7 @@ Não foram encontradas páginas completas para:
 - Política de Entrega e Frete;
 - contato e canal de atendimento;
 - identificação comercial, razão social/CNPJ quando aplicável;
-- informação clara sobre prazo de entrega e produção pela YouDraw.
+- informação clara sobre prazo de entrega e produção pelo fornecedor.
 
 Também falta definir:
 
@@ -384,7 +384,7 @@ Sem isso, a loja não deve iniciar venda pública.
 - [ ] Publicar Entrega/Frete.
 - [ ] Definir atendimento, prazos e identificação comercial.
 - [ ] Definir emissão fiscal.
-- [ ] Confirmar preços, SKUs, estoque e imagens reais da YouDraw.
+- [ ] Confirmar preços, SKUs, estoque e imagens reais do fornecedor.
 
 ### Homologação final
 - [ ] Criar pedido de teste com cada grupo de frete.

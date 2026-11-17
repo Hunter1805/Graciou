@@ -461,7 +461,7 @@
     .product-card__price { font-size:0.85rem; color:var(--ecru-70); font-weight:300; }
     .product-card__price strong { color:var(--ecru); font-weight:500; }
 
-    /* Preço ainda não confirmado pela YouDraw.
+    /* Preço ainda não confirmado pelo fornecedor.
        A interface nunca inventa valor: mostra este rótulo.
        Controlado por META.avisoPreco em dados/catalogo.js. */
     .product-card__price-pendente {
@@ -1744,7 +1744,7 @@
     var r = c.resumo();
     box.textContent = 'Catálogo central · ' + r.total + ' produtos · IDs únicos: ' +
       (r.todosIdsUnicos ? 'sim' : 'NÃO') + ' · mostrando ' + QUANTOS_NO_PREVIEW +
-      ' no preview · preços: aguardando YouDraw · ' + c.META.avisoPreco;
+      ' no preview · preços: aguardando fornecedor · ' + c.META.avisoPreco;
   });
 </script>
 

@@ -330,7 +330,7 @@
     .p-card__price strong { color:var(--navy); font-weight:500; }
     .p-card__price s { margin-right:.4rem; }
 
-    /* Preço ainda não confirmado pela YouDraw.
+    /* Preço ainda não confirmado pelo fornecedor.
        A interface nunca inventa valor: mostra este rótulo.
        Controlado por META.avisoPreco em dados/catalogo.js. */
     .p-card__price--pendente {
@@ -1457,7 +1457,7 @@ function revelarPendentesVisiveis() {
 window.addEventListener('load', revelarPendentesVisiveis);
 setTimeout(revelarPendentesVisiveis, 1500);
 
-/* Preços oficiais da YouDraw ainda não recebidos.
+/* Preços oficiais do fornecedor ainda não recebidos.
    Enquanto false, a ordenação por preço fica desabilitada —
    o catálogo central nunca fornece um valor inventado. */
 const PRECOS_CONFIRMADOS = (typeof GRACIOU_CATALOGO !== 'undefined' && GRACIOU_CATALOGO)
@@ -1672,7 +1672,7 @@ function toggleWish(btn) {
     var r = c.resumo();
     box.textContent = 'Catálogo central · ' + r.total + ' produtos · IDs únicos: ' +
       (r.todosIdsUnicos ? 'sim' : 'NÃO') + ' · preços: ' +
-      (r.precosConfirmados ? 'oficiais confirmados' : 'aguardando YouDraw') +
+      (r.precosConfirmados ? 'oficiais confirmados' : 'aguardando do fornecedor') +
       ' · frete grátis a partir de ' + r.freteGratisQuantidadeMinima + ' peças';
   });
 </script>

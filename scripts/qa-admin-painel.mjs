@@ -20,7 +20,7 @@
  *   2. a tela de login aparece e recusa credencial errada;
  *   3. o login correto troca para a lista de pedidos;
  *   4. a lista renderiza linhas reais vindas da API;
- *   5. clicar num pedido abre o detalhe com o resumo da YouDraw;
+ *   5. clicar num pedido abre o detalhe com o resumo para o fornecedor;
  *   6. salvar uma alteração faz o PATCH e o servidor confirma.
  */
 export default async function run(page, ui) {
@@ -86,7 +86,7 @@ export default async function run(page, ui) {
   );
 
   const detalheId = await page.textContent('#detalhe-id');
-  const youdraw = await page.inputValue('#youdraw-texto');
+  const resumoFornecedor = await page.inputValue('#resumo-fornecedor-texto');
   const itens = await page.$$eval('#detalhe-itens .pb-item', (els) => els.length);
   const cliente = await page.textContent('#detalhe-cliente');
 
@@ -94,17 +94,17 @@ export default async function run(page, ui) {
     id: detalheId.trim(),
     itens: itens,
     temCpfNoDetalhe: cliente.includes('CPF'),
-    resumoYouDrawTemPedido: youdraw.includes('PEDIDO ' + detalheId.trim()),
-    resumoYouDrawTemItens: youdraw.includes('ITENS')
+    resumoFornecedorTemPedido: resumoFornecedor.includes('PEDIDO ' + detalheId.trim()),
+    resumoFornecedorTemItens: resumoFornecedor.includes('ITENS')
   });
 
   /* ── 6. Atualização real via PATCH ── */
   const statusAntes = await page.inputValue('#up-status');
-  const novoStatus = statusAntes === 'pago' ? 'encomendar_na_youdraw' : 'pago';
+  const novoStatus = statusAntes === 'em_producao' ? 'producao_solicitada' : 'em_producao';
 
   await page.selectOption('#up-status', novoStatus);
   await page.fill('#up-rastreio', 'BR123456789BR');
-  await page.fill('#up-youdraw', 'YD-QA-001');
+  await page.fill('#up-referencia-fornecedor', 'REF-QA-001');
   await page.fill('#up-observacoes', 'Verificacao automatizada do painel.');
   await page.click('#btn-salvar');
 
@@ -143,7 +143,7 @@ export default async function run(page, ui) {
     return {
       status: p.statusPedido,
       rastreio: p.rastreio,
-      youdraw: p.pedidoYouDraw,
+      referenciaFornecedor: p.referenciaFornecedor,
       observacoes: p.observacoes,
       clientePreservado: Boolean(p.cliente && p.cliente.nome),
       enderecoPreservado: Boolean(p.endereco && p.endereco.rua),

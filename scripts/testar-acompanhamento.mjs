@@ -28,6 +28,7 @@ import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { __test as proxyAdminTest } from '../proxy.js';
 
 const RAIZ = fileURLToPath(new URL('..', import.meta.url));
 const PORTA = 3988;
@@ -62,7 +63,11 @@ const servidor = spawn(process.execPath, ['--no-warnings', 'backend/servidor.js'
     BREVO_API_KEY: '',
     BREVO_SENDER_EMAIL: '',
     MP_ACCESS_TOKEN: '',
-    ADMIN_TOTP_SECRET: SEGREDO_TOTP_QA
+    ADMIN_TOTP_SECRET: SEGREDO_TOTP_QA,
+    ADMIN_GATE_USER: 'usuario-de-teste',
+    ADMIN_GATE_PASSWORD: 'senha-falsa-somente-para-testes',
+    GRACIOU_SKIP_DOTENV: '1',
+    VERCEL: ''
   },
   stdio: ['ignore', 'pipe', 'pipe']
 });
@@ -164,6 +169,7 @@ try {
   ok(!texto.includes('Avenida Paulista') && !texto.includes('Bela Vista'), 'endereço completo não aparece');
   ok(!texto.includes('Apto 42'), 'complemento do endereço não aparece');
   ok(!/mp_payment_id|mpPaymentId|mercadoPago/i.test(texto), 'dados internos de pagamento não aparecem');
+  ok(!/referenciaFornecedor|referencia_fornecedor|pedido_youdraw|youdraw/i.test(texto), 'resposta pública não expõe referência do fornecedor ou nomes legados');
 
   console.log('\n5) Pedido sem rastreio');
   ok(correta.corpo.pedido.rastreio.disponivel === false, 'rastreio marcado como indisponível');
@@ -178,9 +184,12 @@ try {
   ok(!/e-mail|email/i.test(emailErrado.corpo.erro) || /número e e-mail/.test(emailErrado.corpo.erro), 'mensagem não revela qual campo falhou');
 
   console.log('\n7) Login admin + atualização manual');
+  const cookieBarreira = await proxyAdminTest.criarCookieBarreira(
+    'usuario-de-teste', 'senha-falsa-somente-para-testes'
+  );
   const login = await fetch(`${BASE}/api/admin/login`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Cookie: cookieBarreira.split(';')[0] },
     body: JSON.stringify({
       codigo: admin.codigoTotp(SEGREDO_TOTP_QA, Math.floor(Date.now() / 30000))
     })
@@ -197,6 +206,11 @@ try {
     body: JSON.stringify({ rastreioUrl: 'http://inseguro.exemplo.com/rastreio' })
   });
   ok(linkInvalido.status === 400, 'link http:// é recusado (400)');
+  const multiplosPedidos = await Promise.all([1, 2, 3].map(() =>
+    fetch(`${BASE}/api/admin/orders/${idPedido}`, { headers: cabecalhosAdmin })
+ ));
+  ok(multiplosPedidos.every((resposta) => resposta.status === 200),
+    'consultas de vários pedidos/detalhes em sequência não invalidam a sessão stateless');
 
   /* Atualização válida: status + transportadora + código + link https + observação pública. */
   const atualizacao = await fetch(`${BASE}/api/admin/orders/${idPedido}`, {
@@ -204,6 +218,7 @@ try {
     headers: cabecalhosAdmin,
     body: JSON.stringify({
       statusPedido: 'enviado',
+      referenciaFornecedor: 'PRIVATE-SUPPLIER-REF',
       transportadora: 'Correios',
       rastreio: 'BR123456789BR',
       rastreioUrl: 'https://rastreamento.correios.com.br/app/index.php',
