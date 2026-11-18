@@ -10,7 +10,8 @@
     "testar:vercel": "node scripts/testar-vercel-functions.mjs",
     "testar:vercel:handler": "node scripts/testar-vercel-handler.mjs",
     "testar:config-vercel": "node scripts/testar-config-vercel.mjs",
-    "testar:painel-hidden": "node scripts/testar-painel-hidden.mjs"
+    "testar:painel-hidden": "node scripts/testar-painel-hidden.mjs",
+    "testar:acessibilidade-admin": "node scripts/testar-acessibilidade-admin.mjs"
   },
   "devDependencies": {
     "vite": "^5.2.0"
